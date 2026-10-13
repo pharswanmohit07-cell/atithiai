@@ -144,7 +144,7 @@ export default function AltitudeSentinel({
         const reply = typeof payload?.reply === "string" ? payload.reply.trim() : "";
         if (reply && wordCount(reply) <= 45) {
           setCalmText(reply);
-          setTextSource("calm rephrase");
+          setTextSource(payload.source === "altitude-rephrase" ? "calm rephrase" : "rule-based fallback");
         }
       })
       .catch(() => {
