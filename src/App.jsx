@@ -375,7 +375,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     })));
     let reply = fallback;
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 9500);
+    const timeout = window.setTimeout(() => controller.abort(), 16000);
     try {
       const response = await demoFetch("/api/chat", {
         method: "POST",

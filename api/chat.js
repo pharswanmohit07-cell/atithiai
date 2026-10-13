@@ -3,6 +3,12 @@ import { detectTextLanguage, languageBase, targetLanguageTag } from "../src/i18n
 import { isBodyTooLarge, isPlainObject } from "../src/lib/apiHardening.js";
 
 const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-3.8-flash";
+// Tried in order when the configured model is overloaded, missing or slow. Lite answers fastest.
+const FALLBACK_MODELS = ["gemini-3.1-flash-lite", "gemini-3-flash-preview"];
+const CHAT_MODELS = [GEMINI_MODEL, ...FALLBACK_MODELS.filter((model) => model !== GEMINI_MODEL)];
+const TOTAL_BUDGET_MS = 14000;
+const FIRST_ATTEMPT_MS = 6000;
+const RETRYABLE_STATUS = new Set([404, 408, 429, 500, 502, 503, 504]);
 const ITEM_TYPES = new Set(["place", "experience", "dish"]);
 function send(res, status, payload) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -102,8 +108,8 @@ export default async function handler(req, res) {
   const fallback = fallbackReply(language, hasRankedItems);
   if (!process.env.GEMINI_API_KEY) return send(res, 200, { reply: fallback, source: "local-fallback", reason: "missing_api_key", language });
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8500);
+  const deadline = Date.now() + TOTAL_BUDGET_MS;
+  let timedOut = false;
   try {
     const prompt = [
       "You are Atithi AI, a personalized travel companion for hidden places, local stories and experiences that make a destination feel personal.",
@@ -145,20 +151,49 @@ export default async function handler(req, res) {
         rankedItems
       })
     ].join("\n");
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 320, thinkingConfig: { thinkingLevel: "LOW" } }
-        })
+    const callModel = async (model, timeLimitMs) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), Math.max(1000, timeLimitMs));
+      try {
+        return await fetch(
+          "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+            signal: controller.signal,
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              // Thinking tokens count against this limit, so leave room beyond the 70-word reply.
+              generationConfig: { maxOutputTokens: 1024, thinkingConfig: { thinkingLevel: "LOW" } }
+            })
+          }
+        );
+      } catch (error) {
+        if (controller.signal.aborted) return { aborted: true };
+        throw error;
+      } finally {
+        clearTimeout(timer);
       }
-    );
-    if (!response.ok) {
-      const status = response.status;
+    };
+    let response = null;
+    let model = GEMINI_MODEL;
+    let lastStatus = 0;
+    for (let index = 0; index < CHAT_MODELS.length; index += 1) {
+      const remaining = deadline - Date.now();
+      if (remaining < 1500) break;
+      model = CHAT_MODELS[index];
+      const isLast = index === CHAT_MODELS.length - 1;
+      const result = await callModel(model, index === 0 && !isLast ? Math.min(FIRST_ATTEMPT_MS, remaining) : remaining);
+      if (result.aborted) { timedOut = true; console.error("[api/chat] Gemini model timed out, trying next:", model); continue; }
+      if (result.ok) { response = result; timedOut = false; break; }
+      lastStatus = result.status;
+      // Log only the provider status, never the request URL or API key.
+      console.error("[api/chat] Gemini provider returned HTTP", lastStatus, "model", model);
+      if (!RETRYABLE_STATUS.has(lastStatus)) break;
+    }
+    if (!response) {
+      if (!lastStatus || timedOut) throw new Error(timedOut ? "timeout" : "No model attempt completed");
+      const status = lastStatus;
       const reason = status === 400 ? "provider_http_400"
         : status === 401 ? "provider_http_401"
         : status === 403 ? "provider_http_403"
@@ -166,23 +201,19 @@ export default async function handler(req, res) {
         : status === 429 ? "provider_http_429"
         : status >= 500 ? "provider_http_5xx"
         : "provider_http_" + status;
-      // Log only the provider status, never the request URL or API key.
-      console.error("[api/chat] Gemini provider returned HTTP", status, "model", GEMINI_MODEL);
       return send(res, 200, { reply: fallback, source: "local-fallback", reason, language });
     }
     const payload = await response.json();
     const raw = payload?.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text;
     const reply = cleanText(raw, 1400);
     if (!reply || wordCount(reply) > 70 || mentionsUnrankedKnownItem(reply, rankedItems, destination)) throw new Error("Reply was incomplete, too long or mentioned an unranked pack item");
-    return send(res, 200, { reply, source: "gemini", language });
+    return send(res, 200, { reply, source: "gemini", model, language });
   } catch (error) {
-    const reason = controller.signal.aborted ? "timeout"
+    const reason = error?.message === "timeout" ? "timeout"
       : String(error?.message || "").startsWith("Reply was incomplete") ? "response_rejected"
       : "provider_error";
     // Keep logs useful while excluding the secret, prompt, and traveler message.
     console.error("[api/chat] Gemini fallback reason:", reason);
     return send(res, 200, { reply: fallback, source: "local-fallback", reason, language });
-  } finally {
-    clearTimeout(timeout);
   }
 }
