@@ -1,5 +1,5 @@
 import { PLACES, getCrowd, getCrowdLevel } from "../src/data/places.js";
-import { CORRIDOR_WAYPOINTS, DEFAULT_CORRIDOR_WAYPOINT_ID } from "../src/data/corridor.js";
+import { CORRIDOR_WAYPOINTS, DEMO_HOMESTAYS, DEFAULT_CORRIDOR_WAYPOINT_ID, getDistanceKm } from "../src/data/corridor.js";
 
 function send(res, status, payload) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -12,6 +12,34 @@ const VALID_DISRUPTION_TYPES = new Set(["rain", "landslide", "roadblock"]);
 function safeContext(input = {}) {
   const guestInput = input.guest && typeof input.guest === "object" ? input.guest : {};
   const preferencesInput = input.preferences && typeof input.preferences === "object" ? input.preferences : {};
+  const routeGuardInput = input.routeGuard && typeof input.routeGuard === "object" ? input.routeGuard : {};
+  const routeDisruptionInput = routeGuardInput.disruption && typeof routeGuardInput.disruption === "object" ? routeGuardInput.disruption : {};
+  const routeSegmentInput = Array.isArray(routeDisruptionInput.segment) ? routeDisruptionInput.segment.slice(0, 2) : [];
+  const firstSegmentIndex = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === routeSegmentInput[0]);
+  const secondSegmentIndex = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === routeSegmentInput[1]);
+  const validRouteSegment = routeSegmentInput.length === 2
+    && firstSegmentIndex >= 0 && secondSegmentIndex >= 0
+    && Math.abs(firstSegmentIndex - secondSegmentIndex) === 1;
+  const routeDisruption = ["rain", "landslide"].includes(routeDisruptionInput.type) && validRouteSegment
+    ? {
+        id: typeof routeDisruptionInput.id === "string" ? routeDisruptionInput.id.slice(0, 100) : "route-guard-disruption",
+        type: routeDisruptionInput.type,
+        segment: routeSegmentInput,
+        severity: ["low", "moderate", "high"].includes(routeDisruptionInput.severity) ? routeDisruptionInput.severity : "moderate",
+        source: routeDisruptionInput.source === "demo" ? "demo" : "live",
+        detectedAt: typeof routeDisruptionInput.detectedAt === "string" ? routeDisruptionInput.detectedAt.slice(0, 40) : "",
+      }
+    : null;
+  const personaInput = routeGuardInput.persona && typeof routeGuardInput.persona === "object" ? routeGuardInput.persona : {};
+  const routePersona = ["pilgrim", "trekker", "tourism-officer"].includes(personaInput.id)
+    ? {
+        id: personaInput.id,
+        name: typeof personaInput.name === "string" ? personaInput.name.slice(0, 60) : "",
+        age: Number.isFinite(Number(personaInput.age)) ? Math.max(0, Math.min(120, Number(personaInput.age))) : null,
+        ageGroup: typeof personaInput.ageGroup === "string" ? personaInput.ageGroup.slice(0, 20) : "",
+        healthTags: Array.isArray(personaInput.healthTags) ? personaInput.healthTags.filter((tag) => ["BP", "heart", "asthma", "none"].includes(tag)).slice(0, 4) : [],
+      }
+    : { id: "trekker", name: "", age: null, ageGroup: "", healthTags: [] };
   const preferenceInterests = Array.isArray(preferencesInput.interests)
     ? preferencesInput.interests.filter((item) => typeof item === "string").slice(0, 7)
     : [];
@@ -29,7 +57,10 @@ function safeContext(input = {}) {
       source: item.source === "demo" ? "demo" : "live",
     }));
   const waypointInput = input.selectedWaypoint && typeof input.selectedWaypoint === "object" ? input.selectedWaypoint : {};
-  const requestedWaypointId = typeof waypointInput.id === "string" ? waypointInput.id : DEFAULT_CORRIDOR_WAYPOINT_ID;
+  const routeCurrentWaypointInput = routeGuardInput.currentWaypoint && typeof routeGuardInput.currentWaypoint === "object" ? routeGuardInput.currentWaypoint : {};
+  const requestedWaypointId = typeof waypointInput.id === "string"
+    ? waypointInput.id
+    : typeof routeCurrentWaypointInput.id === "string" ? routeCurrentWaypointInput.id : DEFAULT_CORRIDOR_WAYPOINT_ID;
   const selectedWaypoint = CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === requestedWaypointId)
     || CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === DEFAULT_CORRIDOR_WAYPOINT_ID);
   const weatherInput = input.weatherObservation && typeof input.weatherObservation === "object" ? input.weatherObservation : null;
