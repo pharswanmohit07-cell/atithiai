@@ -332,7 +332,7 @@ export default function AtithiAI({ mode = "guest" }) {
   };
 
   if (mode === "admin" || user?.role === "manager") {
-    return <ManagerDashboard destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} requests={requests} updateRequestStatus={updateRequestStatus} onSwitch={switchPersona} selectDestination={selectDestination} destinations={destinations} formatCurrency={formatCurrency} />;
+    return <ManagerDashboard destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} requests={requests} updateRequestStatus={updateRequestStatus} onSwitch={switchPersona} selectDestination={selectDestination} destinations={destinations} />;
   }
 
   return (
