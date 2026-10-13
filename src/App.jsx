@@ -226,7 +226,7 @@ function HomeView({ user, destination, weather, weatherLoading, weatherError, it
   );
 }
 
-function ProfileView({ user, preferences, updatePreferences, destination, selectDestination, destinations, formatCurrency, cachedDemoMode, setCachedDemoMode, onSwitch }) {
+function ProfileView({ user, preferences, updatePreferences, destination, selectDestination, destinations, cachedDemoMode, setCachedDemoMode, onSwitch }) {
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
@@ -345,7 +345,7 @@ export default function AtithiAI({ mode = "guest" }) {
           <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Discover {destination.city}</h2><p className="mt-1 text-sm text-muted">Curated destination-pack places with approximate coordinates. Suggestions are not bookings.</p><div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{destination.places.map((place) => <article key={place.id} className="rounded-xl border border-border bg-bg p-3"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="text-sm font-bold">{place.name}</h3><p className="mt-1 text-xs text-muted">{place.category} · {place.rainFriendly ? "Indoor / rain-friendly" : "Weather dependent"}</p></div>{place.lowCrowd && <span className="rounded-full bg-emerald-100 px-2 py-1 text-[9px] font-bold text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">Estimated quieter</span>}</div><button type="button" onClick={() => addItineraryStop(place)} className="mt-3 min-h-10 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-bold text-text">{itinerary.some((stop) => stop.placeId === place.id) ? "Already in itinerary" : "Add to itinerary"}</button></article>)}</div></section>
           <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Price Lens</h2><p className="mb-3 mt-1 text-xs text-muted">Image analysis is an AI estimate, not a tariff or a finding of overcharging. Ask the hotel team to verify before making a payment.</p><LensTab onRequest={(request) => addRequest({ title: request.title, category: "Price Lens", detail: request.detail })} /></section>
         </div>}
-        {activeTab === "profile" && <ProfileView user={user} preferences={preferences} updatePreferences={updatePreferences} destination={destination} selectDestination={selectDestination} destinations={destinations} formatCurrency={formatCurrency} cachedDemoMode={cachedDemoMode} setCachedDemoMode={setCachedDemoMode} onSwitch={switchPersona} />}
+        {activeTab === "profile" && <ProfileView user={user} preferences={preferences} updatePreferences={updatePreferences} destination={destination} selectDestination={selectDestination} destinations={destinations} cachedDemoMode={cachedDemoMode} setCachedDemoMode={setCachedDemoMode} onSwitch={switchPersona} />}
         {activeTab === "pass" && <StayPass guest={user} />}
       </div>
       <nav aria-label="Guest navigation" className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface/95 px-1 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur">
