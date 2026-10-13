@@ -112,6 +112,23 @@ for (const pack of registryModule.DESTINATIONS) {
   if ((pack.places || []).some((place) => !place.id || !place.name || !place.localStory || !place.category || !place.bestTime || !Array.isArray(place.tags))) failures.push(prefix + " contains an incomplete place.");
 }
 
+const intentModule = await import(pathToFileURL(path.join(root, "api", "intent.js")));
+const lisbonPack = registryModule.DESTINATIONS.find((pack) => pack.id === "lisbon");
+const jaipurPack = registryModule.DESTINATIONS.find((pack) => pack.id === "jaipur");
+const selectedCurrencyBudget = intentModule.extractIntentFallback(
+  "under " + lisbonPack.currency.symbol + "10",
+  [],
+  lisbonPack.currency.symbol
+).filters.maxBudgetLocal;
+const mismatchedCurrencyBudget = intentModule.extractIntentFallback(
+  "under " + jaipurPack.currency.symbol + "10",
+  [],
+  lisbonPack.currency.symbol
+).filters.maxBudgetLocal;
+if (selectedCurrencyBudget !== 10 || mismatchedCurrencyBudget !== null) {
+  failures.push("Intent fallback must interpret budget amounts only with the selected destination pack currency symbol.");
+}
+
 const rank = await import(pathToFileURL(path.join(root, "src", "lib", "rank.js")));
 const veganResults = rank.rankDishes([
   { id: "vegan", name: "Vegan dish", diet: { veg: true, vegan: true, nonVeg: false, halal: null, glutenFree: true }, spiceLevel: 1, priceRangeLocal: [10, 20], durationMin: 15 },
