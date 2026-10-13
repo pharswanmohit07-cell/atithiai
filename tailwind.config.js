@@ -5,9 +5,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Manrope", "sans-serif"],
-        serif: ["Cormorant Garamond", "serif"],
-        display: ["Cormorant Garamond", "serif"],
+        sans: ["Barlow", "sans-serif"],
+        serif: ["Barlow Condensed", "sans-serif"],
+        display: ["Bebas Neue", "Barlow Condensed", "sans-serif"],
       },
       colors: {
         bg: "rgb(var(--bg-rgb) / <alpha-value>)",
@@ -23,6 +23,7 @@ export default {
         coral: "rgb(var(--coral-rgb) / <alpha-value>)",
         teal: "rgb(var(--teal-rgb) / <alpha-value>)",
         "accent-text": "rgb(var(--accent-text-rgb) / <alpha-value>)",
+        "destination-accent": "rgb(var(--destination-accent-rgb) / <alpha-value>)",
       },
       backgroundImage: {
         "sunrise": "linear-gradient(120deg, rgb(var(--brand-rgb)) 0%, rgb(var(--indigo-rgb)) 58%, rgb(var(--coral-rgb)) 120%)",
@@ -32,14 +33,11 @@ export default {
       boxShadow: {
         glow: "0 10px 28px rgb(var(--brand-rgb) / 0.22)",
         "glow-amber": "0 8px 24px rgb(var(--amber-rgb) / 0.25)",
-        glass: "0 16px 40px rgb(11 29 43 / 0.12)",
+        glass: "0 16px 40px rgb(11 29 43 / 0.18)",
       },
-      minHeight: {
-        touch: "44px",
-      },
-      minWidth: {
-        touch: "44px",
-      },
+      minHeight: { touch: "44px" },
+      minWidth: { touch: "44px" },
+      borderRadius: { "4xl": "2rem" },
     },
   },
   plugins: [],
