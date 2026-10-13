@@ -1,4 +1,5 @@
 import { detectTextLanguage, languageBase, targetLanguageTag } from "../src/i18n.js";
+import { isBodyTooLarge, isPlainObject } from "./_shared.js";
 
 const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
 const INTENTS = new Set(["find_place", "find_food", "find_experience", "plan_day", "help", "other"]);
@@ -37,6 +38,7 @@ function nullableText(value, max = 100) {
   if (value === null || value === undefined || value === "") return null;
   return typeof value === "string" ? value.trim().slice(0, max) || null : null;
 }
+function escapeRegExp(value) { return String(value || "").replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\function languageTag(value, message) {"); }
 function languageTag(value, message) {
   const input = cleanText(value, 45).replace(/_/g, "-");
   if (input && input.toLowerCase() !== "auto") {
@@ -44,7 +46,7 @@ function languageTag(value, message) {
   }
   return targetLanguageTag(detectTextLanguage(message));
 }
-export function extractIntentFallback(text, languages = []) {
+export function extractIntentFallback(text, languages = [], currencySymbol = "") {
   const value = String(text || "").toLowerCase();
   let intent = "other";
   if (/\b(plan|itinerary|day plan|organize my day|today's plan|plan my day|planear|itinéraire|itinerario|日程|行程|योजना)\b/i.test(value)) intent = "plan_day";
@@ -152,12 +154,14 @@ function intentSchema() {
   };
 }
 export default async function handler(req, res) {
-  if (req.method !== "POST") return send(res, 405, { error: "Use POST to interpret a travel request." });
-  const body = req.body && typeof req.body === "object" ? req.body : {};
+  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return send(res, 405, { error: "Use POST to interpret a travel request." }); }
+  if (isBodyTooLarge(req, req.body, 12 * 1024)) return send(res, 413, { error: "Request is too large. Shorten your travel request and try again." });
+  const body = isPlainObject(req.body) ? req.body : {};
   const text = cleanText(body.text, 1200);
+  const currencySymbol = cleanText(body.currencySymbol, 8);
   const languages = Array.isArray(body.languages) ? body.languages.filter((item) => typeof item === "string").slice(0, 3).map((item) => cleanText(item, 24)) : [];
-  if (!text) return send(res, 200, extractIntentFallback("", languages));
-  const fallback = extractIntentFallback(text, languages);
+  if (!text) return send(res, 200, extractIntentFallback("", languages, currencySymbol));
+  const fallback = extractIntentFallback(text, languages, currencySymbol);
   if (!process.env.GEMINI_API_KEY) return send(res, 200, fallback);
 
   const controller = new AbortController();
@@ -169,7 +173,7 @@ export default async function handler(req, res) {
       "Detect the language used in the traveler's text as a BCP-47 language tag, even when it is not in the traveler's stated preferred language list.",
       JSON.stringify({
         text, city: cleanText(body.city, 100), country: cleanText(body.country, 100),
-        currency: cleanText(body.currency, 12), languages,
+        currency: cleanText(body.currency, 12), currencySymbol, languages,
         allowedCategories: [...CATEGORIES], allowedDiets: [...DIETS], allowedTimes: [...TIMES]
       })
     ].join("\n");
