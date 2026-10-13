@@ -6,6 +6,7 @@ const TONES = {
   violet: "from-violet-500 via-purple-600 to-indigo-700 shadow-violet-500/25",
   teal: "from-teal-400 via-emerald-500 to-cyan-600 shadow-teal-500/20",
   sky: "from-sky-400 via-blue-500 to-indigo-600 shadow-sky-500/20",
+  emerald: "from-emerald-400 via-green-500 to-teal-600 shadow-emerald-500/20",
 };
 
 export default function IconBadge({ icon: Icon, tone = "gold", size = "md", className = "" }) {

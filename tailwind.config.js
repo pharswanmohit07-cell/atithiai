@@ -7,6 +7,7 @@ export default {
       fontFamily: {
         sans: ["Barlow", "sans-serif"],
         serif: ["Barlow Condensed", "sans-serif"],
+        accent: ["Fraunces", "Georgia", "serif"],
         display: ["Bebas Neue", "Barlow Condensed", "sans-serif"],
       },
       colors: {
