@@ -11,6 +11,6 @@ const TONES = {
 
 export default function Chip({ children, tone = "gold", icon: Icon, className = "" }) {
   return <span className={"inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold leading-tight " + (TONES[tone] || TONES.gold) + " " + className}>
-    {Icon && <Icon size={12} aria-hidden="true"/ >}{children}
+    {Icon && <Icon size={12} aria-hidden="true" />}{children}
   </span>;
 }
