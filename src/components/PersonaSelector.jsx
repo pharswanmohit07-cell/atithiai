@@ -32,7 +32,8 @@ export default function PersonaSelector() {
     }
     const query = new URLSearchParams(location.search);
     const destination = persona.role === "staff" ? "/admin" : "/guest";
-    navigate(`${destination}${query.size ? `?${query.toString()}` : ""}`, { replace: true });
+    const queryString = query.toString();
+    navigate(`${destination}${queryString ? `?${queryString}` : ""}`, { replace: true });
   };
 
   return (

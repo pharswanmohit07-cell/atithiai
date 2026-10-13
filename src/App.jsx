@@ -310,7 +310,7 @@ export default function AtithiAI() {
         severity: "high",
       },
       roadblock: {
-        title: "Demo roadblock · Mussoorie approach disrupted",
+        title: "Demo roadblock · corridor access needs confirmation",
         affectedPlaceIds: ["devprayag", "srinagar-garhwal", "rudraprayag", "guptkashi", "sonprayag", "gaurikund", "mussoorie-mall-road", "kempty-falls"],
         severity: "high",
       },
@@ -376,12 +376,12 @@ export default function AtithiAI() {
       title: "Local support: review onward timing", category: "Trip Guardian",
       detail: `Itinerary timing requires a review after the ${disruption.type} disruption near ${itineraryItem.title}.`,
     });
-    setCrowdSelectionIds((current) => current.includes(place.id) ? current : [...current, place.id]);
+    setCrowdSelectionIds((current) => place.isCorridorWaypoint || current.includes(place.id) ? current : [...current, place.id]);
     const now = Date.now();
     setActionsLog((current) => [
-      { id: `hotel-action-${now}`, title: "Hotel timing adjustment requested", detail: "Staff request created to review lunch / checkout timing.", time: "Just now", source: disruption.source, kind: "staff-action" },
-      { id: `driver-action-${now+1}`, title: `Driver notification requested · ${place.name}`, detail: "Staff request created to move the pickup point.", time: "Just now", source: disruption.source, kind: "staff-action" },
-      { id: `redirect-${now+2}`, title: `Itinerary rerouted: ${itineraryItem.title} → ${place.name}`, detail: `${disruption.title}. ₹${place.localSpendINR} local spend at the alternative · estimated.`, time: "Just now", source: disruption.source, kind: "redirection", localSpendINR: place.localSpendINR },
+      { id: `timing-action-${now}`, title: "Onward timing review requested", detail: "Local support request created to review the next safe travel decision.", time: "Just now", source: disruption.source, kind: "staff-action" },
+      { id: `transport-action-${now+1}`, title: `Transport review requested · ${place.name}`, detail: "Review local access, route advisories and onward timing before movement.", time: "Just now", source: disruption.source, kind: "staff-action" },
+      { id: `redirect-${now+2}`, title: place.isCorridorWaypoint ? `Corridor hold point selected · ${place.name}` : `Itinerary rerouted: ${itineraryItem.title} → ${place.name}`, detail: place.isCorridorWaypoint ? `${disruption.title}. Pause point only; confirm current instructions from local authorities before moving.` : `${disruption.title}. ₹${place.localSpendINR} local spend at the alternative · estimated.`, time: "Just now", source: disruption.source, kind: place.isCorridorWaypoint ? "safety-action" : "redirection", localSpendINR: place.isCorridorWaypoint ? 0 : place.localSpendINR },
       ...current,
     ]);
   };
@@ -488,6 +488,7 @@ export default function AtithiAI() {
           onSavePreferences={savePreferences}
           onOpenOnboarding={() => window.dispatchEvent(new Event("atithi:reopen-onboarding"))}
           weather={weather}
+          weatherSource={weatherSource}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
           isResolving={isResolving}
@@ -518,6 +519,7 @@ export default function AtithiAI() {
           onAcceptGuardianAlternative={acceptGuardianAlternative}
           requests={requests}
           weather={weather}
+          weatherSource={weatherSource}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
           staffUser={user}
@@ -683,7 +685,7 @@ function GuestApp(props) {
 // --- TAB COMPONENTS ---
 
 function HomeTab({
-  guest, persona, preferences, weather, selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weatherObservation, weatherLoading, weatherError,
+  guest, persona, preferences, weather, weatherSource, selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weatherObservation, weatherLoading, weatherError,
   disruptions = [], actionsLog = [], guardianDisruption, affectedStop,
   guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
   itinerary,
@@ -748,7 +750,7 @@ function HomeTab({
                   <IconBadge icon={CloudRain} tone="sky" size="sm" className="!h-7 !w-7 rounded-full" />
                 )}
                 {weatherObservation ? `${weatherObservation.temperatureC}°C · ${weatherObservation.condition}` : weatherLoading ? "Checking live weather…" : weather === "sunny" ? "Weather unavailable" : "Rain override"}{" "}
-                <span className="text-white/60">{selectedWaypoint?.name || "Rudraprayag"}</span>
+                <span className="text-white/60">{selectedWaypoint?.name || "Rudraprayag"}{weatherSource === "demo" ? " · demo override" : ""}</span>
               </span>
             </div>
           </div>
@@ -1744,7 +1746,7 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
 // --- ADMIN DASHBOARD ---
 // Keeping the Admin Dashboard intact for the Demo controller
 function AdminDashboard({
-  weather, itinerary, staffUser, persona, onSwitchPersona,
+  weather, weatherSource, itinerary, staffUser, persona, onSwitchPersona,
   selectedWaypoint, selectedWaypointId, setSelectedWaypointId,
   weatherObservation, weatherLoading, weatherError,
   disruptions = [], actionsLog = [], redirectionsCount = 0, localSpendRedirected = 0, requests = [],
@@ -1755,7 +1757,7 @@ function AdminDashboard({
     return stopId && event.affectedPlaceIds.includes(stopId);
   }));
   const isResolved = itinerary.some((item) => item.guardianAdjusted || item.aiAdjusted);
-  const weatherSourceLabel = weather === "rainy" ? "Rain signal / override" : weatherObservation ? "Live signal" : "No observation";
+  const weatherSourceLabel = weatherSource === "demo" ? "Manual rain override" : weatherObservation ? "Live Open-Meteo" : "No observation";
 
   return (
     <div className="min-h-screen flex bg-surface-2">
@@ -1805,7 +1807,7 @@ function AdminDashboard({
                 <span className="text-sm font-medium capitalize text-text">
                   {weatherObservation ? `${weatherObservation.temperatureC}°C · ${weatherObservation.condition}` : weatherLoading ? "Updating live weather…" : "Weather unavailable"}
                 </span>
-                <span className="mt-0.5 block text-[10px] text-muted">{selectedWaypoint?.name || "Rudraprayag"} · {weatherSourceLabel(weather, weatherObservation)}</span>
+                <span className="mt-0.5 block text-[10px] text-muted">{selectedWaypoint?.name || "Rudraprayag"} · {weatherSourceLabel}</span>
               </div>
             </div>
             <ThemeToggle compact />
