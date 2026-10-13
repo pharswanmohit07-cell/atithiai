@@ -201,6 +201,74 @@ export function AppProvider({ children }) {
   const weather = manualRainOverride ? "rainy" : (liveObservation?.kind === "rainy" ? "rainy" : "sunny");
   const weatherSource = manualRainOverride ? "demo" : "live";
 
+  useEffect(() => {
+    const rainDetected = Boolean(
+      liveObservation && (
+        Number(liveObservation.precipitationMm) > 0 ||
+        Number(liveObservation.precipitationProbability) >= 60
+      ),
+    );
+    const segment = segmentForWaypoint(selectedWaypointId);
+    const disruptionId = "live-rain-" + segment[0] + "-" + segment[1];
+    setDisruptions((current) => {
+      const existing = current.find((item) => item.id === disruptionId && item.source === "live");
+      if (!rainDetected) return current.filter((item) => !(item.type === "rain" && item.source === "live"));
+      if (existing) return current;
+      return [
+        ...current.filter((item) => !(item.type === "rain" && item.source === "live")),
+        {
+          id: disruptionId,
+          type: "rain",
+          segment,
+          severity: Number(liveObservation.precipitationProbability) >= 80 || Number(liveObservation.precipitationMm) >= 5 ? "high" : "moderate",
+          source: "live",
+          detectedAt: new Date().toISOString(),
+        },
+      ];
+    });
+  }, [liveObservation, selectedWaypointId]);
+
+  useEffect(() => {
+    const segment = segmentForWaypoint(selectedWaypointId);
+    setDisruptions((current) => {
+      const existing = current.find((item) => item.id === "demo-rain-override");
+      if (!manualRainOverride) return current.filter((item) => item.id !== "demo-rain-override");
+      if (existing && existing.segment?.[0] === segment[0] && existing.segment?.[1] === segment[1]) return current;
+      return [
+        ...current.filter((item) => item.id !== "demo-rain-override"),
+        {
+          id: "demo-rain-override",
+          type: "rain",
+          segment,
+          severity: "moderate",
+          source: "demo",
+          detectedAt: new Date().toISOString(),
+        },
+      ];
+    });
+  }, [manualRainOverride, selectedWaypointId]);
+
+  const simulateLandslide = useCallback(() => {
+    const disruption = {
+      id: "demo-landslide-rudraprayag-guptkashi",
+      type: "landslide",
+      segment: ["rudraprayag", "guptkashi"],
+      severity: "high",
+      source: "demo",
+      detectedAt: new Date().toISOString(),
+    };
+    setDisruptions((current) => [
+      ...current.filter((item) => item.id !== disruption.id),
+      disruption,
+    ]);
+    return disruption;
+  }, []);
+
+  const clearDemoEvents = useCallback(() => {
+    setManualRainOverride(false);
+    setDisruptions((current) => current.filter((item) => item.source !== "demo"));
+  }, []);
+
   const isOnboardingComplete = useCallback((stayId) => Boolean(stayId && completedStays.includes(String(stayId))), [completedStays]);
   const markOnboardingComplete = useCallback((stayId) => {
     if (!stayId) return;
@@ -218,12 +286,14 @@ export function AppProvider({ children }) {
     persona, selectPersona, clearPersona, updateHealthTags,
     corridorWaypoints: CORRIDOR_WAYPOINTS, selectedWaypoint, selectedWaypointId, setSelectedWaypointId,
     weather, weatherSource, weatherObservation: liveObservation, weatherLoading, weatherError,
+    disruptions, simulateLandslide, clearDemoEvents,
     manualRainOverride, toggleManualRainOverride,
   }), [
     preferences, savePreferences, isOnboardingComplete, markOnboardingComplete,
     persona, selectPersona, clearPersona, updateHealthTags,
     selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weather, weatherSource,
-    liveObservation, weatherLoading, weatherError, manualRainOverride, toggleManualRainOverride,
+    liveObservation, weatherLoading, weatherError, disruptions, simulateLandslide, clearDemoEvents,
+    manualRainOverride, toggleManualRainOverride,
   ]);
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
