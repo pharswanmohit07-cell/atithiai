@@ -59,6 +59,13 @@ function readWaypoint() {
   const saved = safeRead(WAYPOINT_KEY, DEFAULT_CORRIDOR_WAYPOINT_ID);
   return CORRIDOR_WAYPOINTS.some((item) => item.id === saved) ? saved : DEFAULT_CORRIDOR_WAYPOINT_ID;
 }
+function segmentForWaypoint(waypointId) {
+  const index = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === waypointId);
+  if (index < 0) return ["rudraprayag", "guptkashi"];
+  if (index < CORRIDOR_WAYPOINTS.length - 1) return [CORRIDOR_WAYPOINTS[index].id, CORRIDOR_WAYPOINTS[index + 1].id];
+  return [CORRIDOR_WAYPOINTS[index - 1].id, CORRIDOR_WAYPOINTS[index].id];
+}
+
 function describeWeatherCode(code) {
   if (code === 0) return { label: "Clear sky", kind: "sunny" };
   if (code === 1) return { label: "Mainly clear", kind: "sunny" };
@@ -84,6 +91,7 @@ export function AppProvider({ children }) {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState("");
   const [manualRainOverride, setManualRainOverride] = useState(false);
+  const [disruptions, setDisruptions] = useState([]);
 
   const selectedWaypoint = useMemo(
     () => CORRIDOR_WAYPOINTS.find((item) => item.id === selectedWaypointIdState) || CORRIDOR_WAYPOINTS.find((item) => item.id === DEFAULT_CORRIDOR_WAYPOINT_ID),
@@ -146,6 +154,7 @@ export function AppProvider({ children }) {
       latitude: String(selectedWaypoint.lat),
       longitude: String(selectedWaypoint.lon),
       current: "temperature_2m,apparent_temperature,precipitation,rain,showers,weather_code,wind_speed_10m",
+      hourly: "precipitation_probability",
       timezone: "auto",
       forecast_days: "1",
     });
@@ -158,12 +167,18 @@ export function AppProvider({ children }) {
         const current = payload?.current;
         if (!current || !Number.isFinite(Number(current.temperature_2m))) throw new Error("Weather observation is incomplete.");
         const condition = describeWeatherCode(Number(current.weather_code));
+        const hourlyTimes = Array.isArray(payload?.hourly?.time) ? payload.hourly.time : [];
+        const currentHour = String(current.time || "").slice(0, 13);
+        const probabilityIndex = hourlyTimes.findIndex((time) => String(time).slice(0, 13) === currentHour);
+        const probabilityRaw = probabilityIndex >= 0 ? payload.hourly.precipitation_probability?.[probabilityIndex] : null;
+        const precipitationProbability = probabilityRaw != null && Number.isFinite(Number(probabilityRaw)) ? Number(probabilityRaw) : null;
         if (!mounted) return;
         setWeatherObservation({
           waypointId: selectedWaypoint.id,
           temperatureC: Math.round(Number(current.temperature_2m)),
           apparentTemperatureC: Number.isFinite(Number(current.apparent_temperature)) ? Math.round(Number(current.apparent_temperature)) : null,
           precipitationMm: Number(current.precipitation || 0),
+          precipitationProbability,
           rainMm: Number(current.rain || 0),
           windSpeedKmh: Number.isFinite(Number(current.wind_speed_10m)) ? Math.round(Number(current.wind_speed_10m)) : null,
           weatherCode: Number(current.weather_code),
