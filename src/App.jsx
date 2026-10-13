@@ -266,7 +266,7 @@ export default function AtithiAI() {
   const rescuePassRef = useRef(null);
   const rescuePassActions = useMemo(() => {
     const timestampFromId = (action) => {
-      const match = String(action?.id || "").match(/(\\d{10,})/);
+      const match = String(action?.id || "").match(/(\d{10,})/);
       return match ? Number(match[1]) : 0;
     };
     return [...routeActions, ...actionsLog]
