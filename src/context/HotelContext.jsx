@@ -177,6 +177,7 @@ export function HotelProvider({ children }) {
       ...(request.aiSuggested === true ? { aiSuggested: true } : {}),
       ...(typeof request.aiSuggestionReason === "string" ? { aiSuggestionReason: request.aiSuggestionReason.slice(0, 300) } : {}),
       ...(typeof request.staffNote === "string" ? { staffNote: request.staffNote.slice(0, 500) } : {}),
+      ...(typeof request.takenOverBy === "string" ? { takenOverBy: request.takenOverBy.slice(0, 80) } : {}),
       ...(typeof request.billLine === "string" ? { billLine: request.billLine.slice(0, 200) } : {}),
       ...(request.finalFee != null && Number.isFinite(Number(request.finalFee)) ? { finalFee: Number(request.finalFee) } : {}),
       ...(request.estimatedCommission != null && Number.isFinite(Number(request.estimatedCommission)) ? { estimatedCommission: Number(request.estimatedCommission) } : {}),

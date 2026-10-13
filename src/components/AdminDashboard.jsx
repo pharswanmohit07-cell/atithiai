@@ -152,10 +152,13 @@ export default function AdminDashboard({ onSwitch }) {
     }
   };
   const takeOver=(sourceRequest)=>{
-    let handoff=sourceRequest?.type==="human_handoff"?sourceRequest:currentRequests.find((request)=>request.type==="human_handoff"&&!["Staff takeover active","Declined by staff","Declined by hotel"].includes(request.status));
-    if(!handoff)handoff=addRequest({type:"human_handoff",title:"Front desk took over guest conversation",category:"Human assistance",priority:"urgent",status:"Waiting for team",detail:"Front desk takeover was started from the live conversation feed.",guestName:"Demo guest",actionActor:"Front Desk"});
     const joined=(staffName.trim()||"Front Desk")+" (Front Desk) joined";
-    updateRequest(handoff.id,{status:"Staff takeover active",takenOverBy:staffName.trim()||"Front Desk",staffNote:joined});
+    let handoff=sourceRequest?.type==="human_handoff"?sourceRequest:currentRequests.find((request)=>request.type==="human_handoff"&&!["Staff takeover active","Declined by staff","Declined by hotel"].includes(request.status));
+    if(!handoff){
+      handoff=addRequest({type:"human_handoff",title:"Front desk took over guest conversation",category:"Human assistance",priority:"urgent",status:"Staff takeover active",detail:"Front desk takeover was started from the live conversation feed.",guestName:"Demo guest",staffNote:joined,takenOverBy:staffName.trim()||"Front Desk",actionActor:"Front Desk"});
+    } else {
+      updateRequest(handoff.id,{status:"Staff takeover active",takenOverBy:staffName.trim()||"Front Desk",staffNote:joined});
+    }
     addChatMessage({role:"staff",text:joined,requestId:handoff.id});
   };
   const updateTier=(kind,index,key,value)=>{
