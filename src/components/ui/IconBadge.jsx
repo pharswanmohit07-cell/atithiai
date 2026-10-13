@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "framer-motion";
 
 const TONES = {
@@ -46,6 +45,14 @@ export default function IconBadge({
 
   const palette = TONES[tone] || TONES.teal;
   const dimensions = SIZES[size] || SIZES.md;
+  const pulseAnimation = {
+    scale: [1, 1.06, 1],
+    boxShadow: [
+      "0 0 0 rgba(244,63,94,0)",
+      "0 0 18px rgba(244,63,94,0.42)",
+      "0 0 0 rgba(244,63,94,0)",
+    ],
+  };
 
   return (
     <motion.span
@@ -53,15 +60,20 @@ export default function IconBadge({
       aria-label={label}
       aria-hidden={label ? undefined : true}
       whileTap={{ scale: 0.9 }}
-      animate={
+      animate={pulse ? pulseAnimation : { scale: 1 }}
+      transition={
         pulse
-          ? { scale: [1, 1.06, 1], boxShadow: ["0 0 0 rgba(244,63,94,0)", "0 0 18px rgba(244,63,94,0.42)", "0 0 0 rgba(244,63,94,0)"] }
-          : { scale: 1 }
+          ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+          : { type: "spring", stiffness: 420, damping: 20 }
       }
-      transition={pulse ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" } : { type: "spring", stiffness: 420, damping: 20 }}
       className={`inline-flex shrink-0 items-center justify-center bg-gradient-to-br ${palette.tile} ${palette.glow} ${dimensions.tile} ${className}`}
     >
-      <Icon size={dimensions.icon} strokeWidth={2.25} className="text-white drop-shadow-sm" aria-hidden="true" />
+      <Icon
+        size={dimensions.icon}
+        strokeWidth={2.25}
+        className="text-white drop-shadow-sm"
+        aria-hidden="true"
+      />
     </motion.span>
   );
 }
