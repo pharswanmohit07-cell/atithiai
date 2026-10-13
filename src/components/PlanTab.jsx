@@ -8,7 +8,8 @@ import { rankDishes, rankExperiences, rankPlaces } from "../lib/rank.js";
 import { useDestination } from "../context/DestinationContext.jsx";
 import { useProfile } from "../context/ProfileContext.jsx";
 import { useTravelContext } from "../context/TravelContext.jsx";
-import DemoControls from "./DemoControls.jsx";\nimport IconBadge from "./ui/IconBadge.jsx";
+import DemoControls from "./DemoControls.jsx";
+import IconBadge from "./ui/IconBadge.jsx";
 
 const FLOW = [
   { id: "planned", label: "Planned route" },
@@ -610,9 +611,8 @@ export default function PlanTab() {
   const hasNoBudgetAmount = budget == null;
 
   return <section className="space-y-4">
-    <header className="overflow-hidden rounded-3xl p-5 text-white sm:p-7" style={{ background: "linear-gradient(125deg, #163e4b 0%, #28365c 55%, " + destination.themeColors.accent + " 100%)" }}>
-      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Your personal plan · {destination.city}</p>
-      <h1 className="mt-2 font-serif text-4xl">A day with space to wander.</h1>
+    <header className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-7" style={{ "--destination-accent": destination.themeColors.accent }}>
+      <div className="flex items-center gap-3"><IconBadge icon={CalendarDays} tone="gold"/><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Your personal plan · {destination.city}</p><h1 className="deck-heading mt-1 font-display text-4xl">A day with space to wander.</h1></div></div>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/80">A rules-based day plan that adapts to your travel pace, preferences and destination weather. Nothing is booked.</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={generatePlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-slate-900"><Sparkles size={16}/>Plan my day</button>
