@@ -23,7 +23,7 @@ function safeContext(input = {}) {
       type: item.type,
       title: item.type === "rain" ? "Rain / weather disruption" : item.type === "landslide" ? "Landslide disruption" : "Roadblock disruption",
       affectedPlaceIds: Array.isArray(item.affectedPlaceIds)
-        ? [...new Set(item.affectedPlaceIds.filter((id) => PLACE_BY_ID.has(id)))].slice(0, 15)
+        ? [...new Set(item.affectedPlaceIds.filter((id) => PLACE_BY_ID.has(id) || CORRIDOR_WAYPOINTS.some((waypoint) => waypoint.id === id)))].slice(0, 15)
         : [],
       severity: ["low", "moderate", "high"].includes(item.severity) ? item.severity : "moderate",
       source: item.source === "demo" ? "demo" : "live",
