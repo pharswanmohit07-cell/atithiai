@@ -144,11 +144,13 @@ export function BeatCrowdsPanel({ search = "", onAddPlace, isWeekend = false, se
 }
 
 export function StaffRequestsPanel({ requests = [] }) {
-  const staffRequests = requests.filter((request) => request.category === "Trip Guardian").slice(0, 6);
+  const staffRequests = requests
+    .filter((request) => ["Trip Guardian", "Price Lens"].includes(request.category))
+    .slice(0, 10);
   return (
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
-      <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Operations follow-up</p><h2 className="mt-1 font-serif text-xl text-text">Guardian staff requests</h2></div><span className="rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-text">{staffRequests.length}</span></div>
-      {staffRequests.length ? <div className="space-y-3">{staffRequests.map((request) => <article key={request.id} className="flex items-start gap-3 border-t border-border pt-3 first:border-0 first:pt-0"><span className="mt-0.5 text-accent-text"><CheckCircle2 size={16}/></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-text">{request.title}</p><p className="mt-1 text-xs leading-relaxed text-muted">{request.detail}</p><p className="mt-1 text-[10px] text-muted">{request.status || "Received"} · {request.time || "Just now"}</p></div></article>)}</div> : <p className="rounded-xl bg-surface-2 p-3 text-xs text-muted">Accepted reroutes will create driver and hotel timing requests here.</p>}
+      <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Operations follow-up</p><h2 className="mt-1 font-serif text-xl text-text">Guardian & price complaints</h2><p className="mt-1 text-[10px] text-muted">Price complaints are demo requests and do not establish overcharging.</p></div><span className="rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-text">{staffRequests.length}</span></div>
+      {staffRequests.length ? <div className="space-y-3">{staffRequests.map((request) => <article key={request.id} className="flex items-start gap-3 border-t border-border pt-3 first:border-0 first:pt-0"><span className="mt-0.5 text-accent-text"><CheckCircle2 size={16}/></span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-text">{request.title}</p>{request.category === "Price Lens" && <span className="rounded-full bg-amber-100 px-2 py-1 text-[9px] font-bold text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">DEMO COMPLAINT</span>}</div><p className="mt-1 text-xs leading-relaxed text-muted">{request.detail}</p><p className="mt-1 text-[10px] text-muted">{request.status || "Received"} · {request.time || "Just now"}</p></div></article>)}</div> : <p className="rounded-xl bg-surface-2 p-3 text-xs text-muted">Accepted reroutes and tourist price complaints will appear here as demo requests.</p>}
     </section>
   );
 }
