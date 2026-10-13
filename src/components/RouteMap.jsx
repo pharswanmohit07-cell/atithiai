@@ -71,12 +71,12 @@ export default function RouteMap({
         style={{ height: `${height}px`, width: "100%" }}
       >
         <TileLayer url={tileUrl} attribution={attribution} maxZoom={19} />
-        <Polyline positions={routePositions} pathOptions={{ color: isDark ? "rgb(var(--accent-rgb))" : "rgb(var(--indigo-rgb)), weight: 4, opacity: 0.78 }} />
+        <Polyline positions={routePositions} pathOptions={{ color: isDark ? "rgb(var(--accent-rgb))" : "rgb(var(--indigo-rgb))", weight: 4, opacity: 0.78 }} />
         {blockedSegments.map(({ disruption, positions }) => (
           <Polyline
             key={disruption.id}
             positions={positions}
-            pathOptions={{ color: "rgb(var(--coral-rgb)), weight: 6, opacity: 0.98, dashArray: "10 8", lineCap: "round" }}
+            pathOptions={{ color: "rgb(var(--coral-rgb))", weight: 6, opacity: 0.98, dashArray: "10 8", lineCap: "round" }}
           >
             <Popup>
               <div className="route-guard-map-popup">
@@ -89,7 +89,7 @@ export default function RouteMap({
           </Polyline>
         ))}
         {detourPositions && (
-          <Polyline positions={detourPositions} pathOptions={{ color: "rgb(var(--teal-rgb)), weight: 5, opacity: 0.95, dashArray: "5 7", lineCap: "round" }}>
+          <Polyline positions={detourPositions} pathOptions={{ color: "rgb(var(--teal-rgb))", weight: 5, opacity: 0.95, dashArray: "5 7", lineCap: "round" }}>
             <Popup><strong>Estimated demo detour</strong><br />To {detourVillage.name}<br />Straight-line connection only; not a road route.</Popup>
           </Polyline>
         )}
@@ -110,7 +110,7 @@ export default function RouteMap({
           const isCurrent = waypoint.id === selectedWaypoint.id;
           return (
             <React.Fragment key={waypoint.id}>
-              {isCurrent && <CircleMarker center={[waypoint.lat, waypoint.lon]} radius={21} pathOptions={{ color: "rgb(var(--saffron-rgb)), weight: 3, opacity: 0.95, fillOpacity: 0.09 }} />}
+              {isCurrent && <CircleMarker center={[waypoint.lat, waypoint.lon]} radius={21} pathOptions={{ color: "rgb(var(--saffron-rgb))", weight: 3, opacity: 0.95, fillOpacity: 0.09 }} />}
               <Marker
                 position={[waypoint.lat, waypoint.lon]}
                 icon={waypointIcon(index + 1, isCurrent)}
