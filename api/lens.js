@@ -1,4 +1,4 @@
-import { isBodyTooLarge, isPlainObject } from "./_shared.js";
+import { isBodyTooLarge, isPlainObject } from "../src/lib/apiHardening.js";
 
 export const config = { api: { bodyParser: { sizeLimit: "6mb" } } };
 
