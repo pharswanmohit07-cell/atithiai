@@ -10,6 +10,7 @@ import React, {
 import { toPng } from "html-to-image";
 import QRCode from "qrcode";
 import { CalendarDays, Download, ExternalLink, PhoneCall, ShieldCheck, WifiOff, X } from "lucide-react";
+import { useTheme } from "../context/ThemeContext.jsx";
 
 const PREFERENCES_KEY = "atithi-rescue-pass-preferences";
 const PASS_WIDTH = 1080;
@@ -76,6 +77,18 @@ const RescuePass = forwardRef(function RescuePass({
   healthTags = [],
   actions = [],
 }, ref) {
+  const { isDark } = useTheme();
+  const passColors = isDark ? {
+    page: "#0B1421", card: "#122232", cardAlt: "#0F1E2C", text: "#EFF7F5", muted: "#B7C8CE",
+    border: "#36515E", borderAccent: "#406A70", brand: "#176878", brandText: "#95D9D6",
+    accent: "#F4BB59", accentText: "#FFD487", headerMuted: "#D7E6EA", panel: "#172D3C",
+    soft: "#183B46", warm: "#352E21", warmText: "#FFD487", warmMuted: "#E8CFA8",
+  } : {
+    page: "#F1F3EE", card: "#FFFFFF", cardAlt: "#FAFCFA", text: "#192F2C", muted: "#4A625E",
+    border: "#BFD0C7", borderAccent: passColors.borderAccent, brand: "#10434F", brandText: "#174D52",
+    accent: "#C78A25", accentText: "#765018", headerMuted: "#DBE9E4", panel: "#EDF3EF",
+    soft: "#E4F0EC", warm: "#FFF0D7", warmText: "#765018", warmMuted: passColors.warmMuted,
+  };
   const passRef = useRef(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -180,7 +193,7 @@ const RescuePass = forwardRef(function RescuePass({
         pixelRatio: 1,
         width: PASS_WIDTH,
         height: PASS_HEIGHT,
-        backgroundColor: "#F6F7F3",
+        backgroundColor: passColors.page,
         style: {
           transform: "none",
           transformOrigin: "top left",
@@ -223,7 +236,7 @@ const RescuePass = forwardRef(function RescuePass({
     } finally {
       setExporting(false);
     }
-  }, [qrCodeUrl]);
+  }, [qrCodeUrl, passColors.page]);
 
   useImperativeHandle(ref, () => ({
     openPreview,
@@ -250,8 +263,8 @@ const RescuePass = forwardRef(function RescuePass({
         height: PASS_HEIGHT,
         boxSizing: "border-box",
         padding: 44,
-        background: "#F6F7F3",
-        color: "#192B24",
+        background: passColors.page,
+        color: passColors.text,
         fontFamily: "Arial, Helvetica, sans-serif",
         position: previewOpen ? "relative" : "fixed",
         top: previewOpen ? "auto" : 0,
@@ -264,76 +277,76 @@ const RescuePass = forwardRef(function RescuePass({
         printColorAdjust: "exact",
       }}
     >
-      <div style={{ width: "100%", height: "100%", border: "3px solid #19392F", borderRadius: 28, overflow: "hidden", display: "flex", flexDirection: "column", background: "#FFFFFF" }}>
-        <div style={{ background: "#19392F", color: "#FFFFFF", padding: "31px 38px 29px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ width: "100%", height: "100%", border: "3px solid #19392F", borderRadius: 28, overflow: "hidden", display: "flex", flexDirection: "column", background: passColors.card }}>
+        <div style={{ background: passColors.brand, color: "#FFFFFF", padding: "31px 38px 29px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontSize: 16, letterSpacing: 4, fontWeight: 800, color: "#E8C18A" }}>ATITHI AI · TRAVEL SAFETY</div>
+            <div style={{ fontSize: 16, letterSpacing: 4, fontWeight: 800, color: passColors.accent }}>ATITHI AI · TRAVEL SAFETY</div>
             <div style={{ fontSize: 39, letterSpacing: 0.2, fontWeight: 800, marginTop: 10 }}>OFFLINE RESCUE PASS</div>
-            <div style={{ fontSize: 17, marginTop: 8, color: "#DDE7E0" }}>Personal trip summary · informational use only</div>
+            <div style={{ fontSize: 17, marginTop: 8, color: passColors.headerMuted }}>Personal trip summary · informational use only</div>
           </div>
-          <div style={{ width: 88, height: 88, borderRadius: 44, border: "2px solid #E8C18A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 43, color: "#E8C18A", fontWeight: 800 }}>A</div>
+          <div style={{ width: 88, height: 88, borderRadius: 44, border: "2px solid #E8C18A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 43, color: passColors.accent, fontWeight: 800 }}>A</div>
         </div>
 
         <div style={{ padding: "28px 34px 18px", display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 24 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#4F655C", letterSpacing: 2 }}>TRAVELLER</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: passColors.muted, letterSpacing: 2 }}>TRAVELLER</div>
               <div style={{ fontSize: 36, fontWeight: 800, marginTop: 6, overflowWrap: "anywhere" }}>{travelerName}</div>
-              <div style={{ fontSize: 18, marginTop: 6, color: "#50645C" }}>Persona: {personaName}</div>
+              <div style={{ fontSize: 18, marginTop: 6, color: passColors.muted }}>Persona: {personaName}</div>
             </div>
-            <div style={{ minWidth: 250, maxWidth: 350, border: "1px solid #B8C8BE", borderRadius: 15, padding: "17px 20px", background: "#EDF3EE" }}>
-              <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: "#4F655C" }}>TRIP DATES</div>
+            <div style={{ minWidth: 250, maxWidth: 350, border: "1px solid #B8C8BE", borderRadius: 15, padding: "17px 20px", background: passColors.panel }}>
+              <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: passColors.muted }}>TRIP DATES</div>
               <div style={{ fontSize: 19, fontWeight: 700, marginTop: 8 }}>{tripDates}</div>
-              <div style={{ fontSize: 13, marginTop: 7, color: "#5D7067" }}>Add or update dates in pass preview</div>
+              <div style={{ fontSize: 13, marginTop: 7, color: passColors.muted }}>Add or update dates in pass preview</div>
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.85fr", gap: 16 }}>
-            <div style={{ borderRadius: 18, padding: 20, background: "#E6F0E8", border: "1px solid #B8D1BE" }}>
-              <div style={{ fontSize: 13, color: "#486455", fontWeight: 800, letterSpacing: 1.8 }}>CURRENT WAYPOINT</div>
+            <div style={{ borderRadius: 18, padding: 20, background: passColors.soft, border: "1px solid #B8D1BE" }}>
+              <div style={{ fontSize: 13, color: passColors.brandText, fontWeight: 800, letterSpacing: 1.8 }}>CURRENT WAYPOINT</div>
               <div style={{ fontSize: 30, fontWeight: 800, marginTop: 9 }}>{waypointName}</div>
               <div style={{ fontSize: 19, marginTop: 7 }}>Elevation: {elevation == null ? "Not available" : elevation.toLocaleString("en-IN") + " m"}</div>
             </div>
-            <div style={{ borderRadius: 18, padding: 20, background: "#FFF3DC", border: "1px solid #E5C58D" }}>
-              <div style={{ fontSize: 13, color: "#80551E", fontWeight: 800, letterSpacing: 1.5 }}>ALTITUDE ADVISORY</div>
+            <div style={{ borderRadius: 18, padding: 20, background: passColors.warm, border: "1px solid #E5C58D" }}>
+              <div style={{ fontSize: 13, color: passColors.warmText, fontWeight: 800, letterSpacing: 1.5 }}>ALTITUDE ADVISORY</div>
               <div style={{ fontSize: 28, fontWeight: 800, marginTop: 13 }}>{altitudeAdvisoryLevel || "Not assessed"}</div>
-              <div style={{ fontSize: 14, marginTop: 7, color: "#795D36" }}>General guidance, not medical advice</div>
+              <div style={{ fontSize: 14, marginTop: 7, color: passColors.warmMuted }}>General guidance, not medical advice</div>
             </div>
           </div>
 
           <div style={{ border: "1px solid #C9D3CD", borderRadius: 17, padding: "17px 20px" }}>
-            <div style={{ fontSize: 14, color: "#4F655C", fontWeight: 800, letterSpacing: 1.6 }}>HEALTH TAGS · DEMO PROFILE</div>
+            <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.6 }}>HEALTH TAGS · DEMO PROFILE</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginTop: 12 }}>
-              {tagLabels.map((tag) => <span key={tag} style={{ fontSize: 15, fontWeight: 700, color: "#19392F", background: "#EAF0EB", border: "1px solid #C5D5CA", borderRadius: 40, padding: "9px 15px" }}>{tag}</span>)}
+              {tagLabels.map((tag) => <span key={tag} style={{ fontSize: 15, fontWeight: 700, color: passColors.brand, background: passColors.soft, border: "1px solid #C5D5CA", borderRadius: 40, padding: "9px 15px" }}>{tag}</span>)}
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 18, minHeight: 325 }}>
             <div style={{ border: "1px solid #CAD3CE", borderRadius: 17, padding: "17px 20px" }}>
-              <div style={{ fontSize: 14, color: "#4F655C", fontWeight: 800, letterSpacing: 1.6 }}>ITINERARY SUMMARY</div>
+              <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.6 }}>ITINERARY SUMMARY</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
                 {itinerary.map((stop, index) => (
                   <div key={stop.day + stop.title + index} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                    <div style={{ width: 27, height: 27, borderRadius: 14, flexShrink: 0, background: "#19392F", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 }}>{index + 1}</div>
+                    <div style={{ width: 27, height: 27, borderRadius: 14, flexShrink: 0, background: passColors.brand, color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800 }}>{index + 1}</div>
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: 15, lineHeight: 1.25, fontWeight: 800 }}>{stop.title}</div>
-                      <div style={{ fontSize: 11, lineHeight: 1.3, marginTop: 3, color: "#607067" }}>{stop.day}{stop.elevationM == null ? "" : " · approx. " + stop.elevationM.toLocaleString("en-IN") + " m"}</div>
+                      <div style={{ fontSize: 11, lineHeight: 1.3, marginTop: 3, color: passColors.muted }}>{stop.day}{stop.elevationM == null ? "" : " · approx. " + stop.elevationM.toLocaleString("en-IN") + " m"}</div>
                     </div>
                   </div>
                 ))}
-                {!itinerary.length && <div style={{ fontSize: 15, color: "#5D7067" }}>No itinerary stops are currently listed.</div>}
+                {!itinerary.length && <div style={{ fontSize: 15, color: passColors.muted }}>No itinerary stops are currently listed.</div>}
               </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-              <div style={{ border: "1px solid #C5D1C9", borderRadius: 17, padding: "15px 17px", background: "#FBFCFA" }}>
-                <div style={{ fontSize: 14, color: "#4F655C", fontWeight: 800, letterSpacing: 1.4 }}>EMERGENCY CONTACTS</div>
+              <div style={{ border: "1px solid #C5D1C9", borderRadius: 17, padding: "15px 17px", background: passColors.cardAlt }}>
+                <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.4 }}>EMERGENCY CONTACTS</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 13 }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 12, background: "#19392F", color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 20, fontWeight: 800 }}>112</span></div>
-                  <div><div style={{ fontSize: 17, fontWeight: 800 }}>112</div><div style={{ fontSize: 12, marginTop: 3, color: "#5D7067" }}>General emergency</div></div>
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: passColors.brand, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 20, fontWeight: 800 }}>112</span></div>
+                  <div><div style={{ fontSize: 17, fontWeight: 800 }}>112</div><div style={{ fontSize: 12, marginTop: 3, color: passColors.muted }}>General emergency</div></div>
                 </div>
                 <div style={{ marginTop: 15, borderTop: "1px solid #D7DED9", paddingTop: 12 }}>
-                  <div style={{ fontSize: 12, color: "#5D7067" }}>Traveller's own contact</div>
+                  <div style={{ fontSize: 12, color: passColors.muted }}>Traveller's own contact</div>
                   <div style={{ fontSize: 17, fontWeight: 700, marginTop: 4, overflowWrap: "anywhere" }}>{emergencyContact.trim() || "Not provided"}</div>
                 </div>
               </div>
@@ -341,33 +354,33 @@ const RescuePass = forwardRef(function RescuePass({
               <div style={{ border: "1px solid #C5D1C9", borderRadius: 17, padding: "15px 17px", textAlign: "center", flex: 1 }}>
                 {qrCodeUrl
                   ? <img src={qrCodeUrl} alt="Self-generated Rescue Pass QR code" style={{ width: 190, height: 190, margin: "0 auto", imageRendering: "pixelated" }}/>
-                  : <div style={{ width: 190, height: 190, margin: "0 auto", background: "#E8EDE9", borderRadius: 10 }}/>}
+                  : <div style={{ width: 190, height: 190, margin: "0 auto", background: passColors.soft, borderRadius: 10 }}/>}
                 <div style={{ fontSize: 13, fontWeight: 800, marginTop: 7 }}>PASS DATA QR</div>
-                <div style={{ fontSize: 10, lineHeight: 1.3, color: "#6A776F", marginTop: 4 }}>Self-generated, not an official registration</div>
+                <div style={{ fontSize: 10, lineHeight: 1.3, color: passColors.muted, marginTop: 4 }}>Self-generated, not an official registration</div>
               </div>
             </div>
           </div>
 
           <div style={{ borderRadius: 17, border: "1px solid #CAD3CE", padding: "15px 20px" }}>
-            <div style={{ fontSize: 14, color: "#4F655C", fontWeight: 800, letterSpacing: 1.6 }}>ACTIONS TAKEN BY ATITHI · LATEST ENTRIES</div>
+            <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.6 }}>ACTIONS TAKEN BY ATITHI · LATEST ENTRIES</div>
             <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
               {latestActions.length
                 ? latestActions.map((action, index) => (
                   <div key={action.title + index} style={{ flex: 1, minWidth: 0, borderLeft: "4px solid #DAB477", paddingLeft: 12 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.3 }}>{action.title}</div>
-                    <div style={{ fontSize: 11, color: "#5D7067", marginTop: 5 }}>{action.status}{action.time ? " · " + action.time : ""}</div>
+                    <div style={{ fontSize: 11, color: passColors.muted, marginTop: 5 }}>{action.status}{action.time ? " · " + action.time : ""}</div>
                   </div>
                 ))
-                : <div style={{ fontSize: 14, color: "#5D7067" }}>No Atithi actions have been recorded yet.</div>}
+                : <div style={{ fontSize: 14, color: passColors.muted }}>No Atithi actions have been recorded yet.</div>}
             </div>
           </div>
 
           <div style={{ borderTop: "2px solid #DCE3DD", paddingTop: 13, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18 }}>
             <div>
               <div style={{ fontSize: 15, fontWeight: 800 }}>Generated by Atithi AI on {formatDateTime(generatedAt)}</div>
-              <div style={{ fontSize: 12, color: "#5D7067", marginTop: 5 }}>{DISCLAIMER}</div>
+              <div style={{ fontSize: 12, color: passColors.muted, marginTop: 5 }}>{DISCLAIMER}</div>
             </div>
-            <div style={{ textAlign: "right", fontSize: 11, color: "#5D7067", flexShrink: 0 }}>Approximate corridor data<br/>Keep official instructions handy</div>
+            <div style={{ textAlign: "right", fontSize: 11, color: passColors.muted, flexShrink: 0 }}>Approximate corridor data<br/>Keep official instructions handy</div>
           </div>
         </div>
       </div>
