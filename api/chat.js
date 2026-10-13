@@ -105,7 +105,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return send(res, 405, { error: "Use POST to send a chat message." });
   const body = req.body && typeof req.body === "object" ? req.body : {};
   const message = cleanText(body.message, 1200);
-  if (!message) return send(res, 400, { error: "Please enter a message." });
+  if (!message && body.mode !== "disruption_advisory") return send(res, 400, { error: "Please enter a message." });
 
   const destination = getDestinationById(cleanText(body.destinationId, 50));
   if (body.mode === "disruption_advisory") return handleDisruptionAdvisory(body, destination, res);
