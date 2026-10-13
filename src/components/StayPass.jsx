@@ -45,11 +45,13 @@ export default function StayPass({ guest }) {
     setBusy(true);
     setStatus("");
     try {
+      if (!passRef.current) throw new Error("Stay Pass is not ready yet.");
       if (!qrUrl) {
         const qrModule = await import("qrcode");
         const QRCode = qrModule.default || qrModule;
         const url = await QRCode.toDataURL(JSON.stringify(passData), { errorCorrectionLevel: "M", margin: 1, width: 240 });
         setQrUrl(url);
+        await new Promise((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
       }
       const imageModule = await import("html-to-image");
       const dataUrl = await imageModule.toPng(passRef.current, { cacheBust: true, pixelRatio: 2, backgroundColor: "#ffffff" });
