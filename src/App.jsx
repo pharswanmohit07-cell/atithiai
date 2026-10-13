@@ -295,6 +295,18 @@ export default function AtithiAI() {
 
   const simulateDisruption = () => simulateLandslide();
 
+  useEffect(() => {
+    if (!isDemoMode) return undefined;
+    const handleDemoHotkey = (event) => {
+      if (event.altKey && event.key.toLowerCase() === "r") {
+        event.preventDefault();
+        simulateLandslide();
+      }
+    };
+    window.addEventListener("keydown", handleDemoHotkey);
+    return () => window.removeEventListener("keydown", handleDemoHotkey);
+  }, [isDemoMode, simulateLandslide]);
+
   const addPlaceToItinerary = (place, redirectedFrom = null) => {
     setItinerary((current) => {
       if (current.some((item) => item.placeId === place.id)) return current;
@@ -412,13 +424,82 @@ export default function AtithiAI() {
   };
 
   const keepOriginal = () => { setShowAIIntervention(false); };
-  const affectedStop = itinerary.find((item) => {
-    const stopId = item.waypointId || item.placeId;
-    return stopId && disruptions.some((event) => event.affectedPlaceIds.includes(stopId));
-  });
-  const affectedStopId = affectedStop?.waypointId || affectedStop?.placeId;
-  const guardianDisruption = affectedStopId ? disruptions.find((event) => event.affectedPlaceIds.includes(affectedStopId)) : null;
-  const guardianAlternatives = rankGuardianAlternatives(affectedStop, guardianDisruption, itinerary);
+  const currentWaypointIndex = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === selectedWaypointId);
+  const routeSegment = currentWaypointIndex >= 0 && currentWaypointIndex < CORRIDOR_WAYPOINTS.length - 1
+    ? [CORRIDOR_WAYPOINTS[currentWaypointIndex].id, CORRIDOR_WAYPOINTS[currentWaypointIndex + 1].id]
+    : [CORRIDOR_WAYPOINTS[CORRIDOR_WAYPOINTS.length - 2].id, CORRIDOR_WAYPOINTS[CORRIDOR_WAYPOINTS.length - 1].id];
+  const routeGuardDisruption = disruptions.find((item) =>
+    item.segment?.[0] === routeSegment[0] && item.segment?.[1] === routeSegment[1]
+  ) || null;
+  const nearestSafeVillages = useMemo(
+    () => getNearestDemoHomestays(selectedWaypoint, persona?.id, 2),
+    [selectedWaypoint, persona?.id],
+  );
+  const affectedStop = itinerary.find((item) => item.waypointId === routeSegment[0]) || null;
+  const guardianDisruption = routeGuardDisruption;
+  const guardianAlternatives = nearestSafeVillages;
+
+  const handleRouteReroute = (village, disruption) => {
+    if (!village || !disruption) return;
+    const targetWaypointId = disruption.segment?.[0] || selectedWaypointId;
+    setDetourVillage(village);
+    setItinerary((current) => current.map((item) => item.waypointId === targetWaypointId ? {
+      ...item,
+      title: "Pause near " + village.name,
+      desc: "Route Guard selected this illustrative village area as a possible pause point. Verify access and current conditions locally; this is not a booked stay or a confirmed road route.",
+      location: village.name,
+      waypointId: undefined,
+      placeId: undefined,
+      villageId: village.id,
+      lat: village.lat,
+      lon: village.lon,
+      elevationM: village.elevationM,
+      isVulnerableToWeather: false,
+      guardianAdjusted: true,
+      routeDetour: true,
+    } : item));
+    const now = Date.now();
+    const timestamp = new Date(now).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+    const actions = [
+      {
+        id: "route-driver-" + now,
+        title: "Driver notified: pickup moved",
+        detail: "Simulated notification only; no driver was contacted. Suggested meeting point: " + village.name + " (Demo listing).",
+        status: "Sent (demo)", timestamp, source: "demo",
+      },
+      {
+        id: "route-village-" + (now + 1),
+        title: "Homestay alerted: 2 guests arriving",
+        detail: "Simulated notification only; no host or property was contacted. This is an illustrative village area, not a bookable listing.",
+        status: "Sent (demo)", timestamp, source: "demo",
+      },
+      {
+        id: "route-emergency-" + (now + 2),
+        title: "Emergency contact notified",
+        detail: "Simulated notification only; no emergency contact or service was contacted. Call 112 for immediate danger.",
+        status: "Sent (demo)", timestamp, source: "demo",
+      },
+    ];
+    setRouteActions((current) => [...actions, ...current]);
+    setReroutesAccepted((current) => current + 1);
+    setRouteSpendINR((current) => current + Number(village.localSpendINR || 0));
+    setActionsLog((current) => [{
+      id: "route-redirect-" + now,
+      title: "Route Guard detour suggested · " + village.name,
+      detail: "Demo reroute accepted. " + village.distanceKm + " km straight-line distance; travel time is estimated at 25 km/h, not a road route.",
+      time: timestamp, source: "demo", kind: "redirection", localSpendINR: Number(village.localSpendINR || 0),
+    }, ...current]);
+  };
+
+  const handleKeepWaiting = (disruption) => {
+    const timestamp = new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
+    setActionsLog((current) => [{
+      id: "route-wait-" + Date.now(),
+      title: "Waiting at " + (selectedWaypoint?.name || "current waypoint"),
+      detail: disruption.source === "demo" ? "DEMO EVENT: Waiting selected. Check current local authority guidance before proceeding." : "Waiting selected. Check current local authority guidance before proceeding.",
+      time: timestamp, source: disruption.source, kind: "safety-action",
+    }, ...current]);
+  };
   const flags = getVisitFlags();
   const lowCrowdContext = PLACES.map((place) => ({
     id: place.id, name: place.name, category: place.category, tags: place.tags,
