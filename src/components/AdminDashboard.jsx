@@ -57,7 +57,7 @@ function Metric({ title, note, icon: Icon, children }) {
 function Toggle({ checked, onChange, label, note }) {
   return <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3"><div className="min-w-0"><p className="text-sm font-semibold">{label}</p>{note&&<p className="mt-1 text-xs leading-relaxed text-muted">{note}</p>}</div><button type="button" role="switch" aria-checked={checked} onClick={()=>onChange(!checked)} className={"min-h-10 shrink-0 rounded-lg px-3 py-2 text-xs font-bold "+(checked?"bg-brand text-white":"border border-border bg-surface text-text")}>{checked?"On":"Off"}</button></div>;
 }
-function InboxCard({ request, currency, formatDate, onAction, staffName }) {
+function InboxCard({ request, currency, currencyCode, formatDate, onAction, staffName }) {
   const [time,setTime]=useState(request.requestedTime||request.counterOffer?.time||"13:00");
   const [fee,setFee]=useState(String(request.finalFee??request.offer?.fee??request.counterOffer?.fee??0));
   const [note,setNote]=useState("happy to help");
@@ -78,7 +78,7 @@ function InboxCard({ request, currency, formatDate, onAction, staffName }) {
     {request.billLine&&<p className="mt-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs font-semibold">{request.billLine}</p>}
     <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
       <label className="text-[10px] font-semibold text-muted">{flex?"Proposed local time":"Response plan"}{flex?<input type="time" step="1800" value={time} onChange={(e)=>setTime(e.target.value)} className="mt-1 min-h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"/>:<span className="mt-1 block text-xs font-normal">Use the note below for a counterproposal.</span>}</label>
-      {flex&&<label className="text-[10px] font-semibold text-muted">Proposed fee ({request.currencyCode||""})<input type="number" min="0" step="1" value={fee} onChange={(e)=>setFee(e.target.value)} className="mt-1 min-h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"/></label>}
+      {flex&&<label className="text-[10px] font-semibold text-muted">Proposed fee ({currencyCode})<input type="number" min="0" step="1" value={fee} onChange={(e)=>setFee(e.target.value)} className="mt-1 min-h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text"/></label>}
     </div>
     <label className="mt-3 block text-[10px] font-semibold text-muted">Message guest · signed as {staffName}<textarea value={note} onChange={(e)=>setNote(e.target.value)} maxLength={300} rows={2} className="mt-1 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm font-normal text-text"/></label>
     <div className="mt-3 flex flex-wrap gap-2">
@@ -187,7 +187,7 @@ export default function AdminDashboard({ onSwitch }) {
       </section>
 
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-serif text-2xl">Needs your approval</h2><p className="mt-1 text-xs leading-relaxed text-muted">Urgent items first. Approvals record a demo decision only; they do not reserve a room or book an external provider.</p></div><span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs font-extrabold">{inbox.length} waiting</span></div>
-        {inbox.length===0?<div className="mt-4 rounded-xl border border-dashed border-border bg-bg p-5"><p className="text-sm font-semibold">All caught up.</p><p className="mt-1 text-xs text-muted">New Flex Stay requests, experience enquiries and handoffs will appear here.</p></div>:<div className="mt-4 space-y-3">{inbox.map((request)=><InboxCard key={request.id} request={request} currency={money} formatDate={time} onAction={handleInboxAction} staffName={staffName.trim()||"Front Desk"}/>)}</div>}
+        {inbox.length===0?<div className="mt-4 rounded-xl border border-dashed border-border bg-bg p-5"><p className="text-sm font-semibold">All caught up.</p><p className="mt-1 text-xs text-muted">New Flex Stay requests, experience enquiries and handoffs will appear here.</p></div>:<div className="mt-4 space-y-3">{inbox.map((request)=><InboxCard key={request.id} request={request} currency={money} currencyCode={destination.currency.code} formatDate={time} onAction={handleInboxAction} staffName={staffName.trim()||"Front Desk"}/>)}</div>}
       </section>
 
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
