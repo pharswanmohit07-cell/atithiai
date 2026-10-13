@@ -32,7 +32,17 @@ function normalized(value) {
   return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 function tagsOf(item) {
-  return [item.category, ...(Array.isArray(item.tags) ? item.tags : [])].filter(Boolean).map(normalized);
+  return [
+    item.category,
+    item.diet ? "food" : null,
+    item.title ? "experience" : null,
+    ...(Array.isArray(item.tags) ? item.tags : []),
+    item.name,
+    item.description,
+    item.localStory,
+    item.whereToEat,
+    item.bestTime
+  ].filter(Boolean).map(normalized);
 }
 function matchesTime(item, time) {
   if (!time) return true;
@@ -120,7 +130,8 @@ function scoreItem(item, kind, profile = {}, filters = {}, context = {}, spendSt
   }
   if (kind === "dish" && diet !== "none" && matchesDiet(item, diet)) {
     score += 8;
-    reasons.push("Matches your " + (diet === "gluten-aware" ? "gluten-aware" : diet === "non-veg" ? "non-vegetarian" : diet) + " diet");
+    const dietLabels = { veg: "vegetarian", vegan: "vegan", "non-veg": "non-vegetarian", halal: "halal", "gluten-aware": "gluten-aware" };
+    reasons.push("Matches your " + (dietLabels[diet] || diet) + " diet");
   }
 
   if (kind === "place" && item.isHiddenGem) {
