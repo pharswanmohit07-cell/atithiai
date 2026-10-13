@@ -46,7 +46,7 @@ function OfflineBanner() {
 }
 
 function Header({ manager = false, onSwitch }) {
-  const { destination, weather, weatherLoading, weatherError, cachedDemoMode, setCachedDemoMode } = useDestination();
+  const { destination, destinations, selectDestination, weather, weatherLoading, weatherError, cachedDemoMode, setCachedDemoMode } = useDestination();
   const { user } = useAuth();
   return (
     <>
@@ -58,8 +58,12 @@ function Header({ manager = false, onSwitch }) {
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <ThemeToggle compact />
+          <label className="sr-only" htmlFor="header-destination-choice">Switch destination</label>
+          <select id="header-destination-choice" aria-label="Switch destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-40 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-semibold text-text">
+            {destinations.map((item) => <option key={item.id} value={item.id}>{item.city}</option>)}
+          </select>
           <button type="button" onClick={() => setCachedDemoMode(!cachedDemoMode)} aria-pressed={cachedDemoMode} className="min-h-10 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text">{cachedDemoMode ? "Cached demo: On" : "Cached demo: Off"}</button>
-          <button type="button" onClick={onSwitch} className="min-h-10 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text">{manager ? "Switch persona / destination" : "Switch persona / destination"}</button>
+          <button type="button" onClick={onSwitch} className="min-h-10 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text">Switch persona</button>
           <span className="hidden text-xs text-muted lg:inline">{user?.persona || "Demo guest"}</span>
         </div>
       </header>
