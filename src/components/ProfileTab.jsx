@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Globe2, Heart, Languages, SlidersHorizontal, Users } from "lucide-react";
-import { useProfile, PROFILE_DIETS, PROFILE_INTERESTS, PROFILE_LANGUAGES } from "../context/ProfileContext.jsx";\nimport ThemeToggle from "./ui/ThemeToggle.jsx";\nimport IconBadge from "./ui/IconBadge.jsx";
+import { useProfile, PROFILE_DIETS, PROFILE_INTERESTS, PROFILE_LANGUAGES } from "../context/ProfileContext.jsx";
+import ThemeToggle from "./ui/ThemeToggle.jsx";
+import IconBadge from "./ui/IconBadge.jsx";
 
 const panel = "rounded-2xl border border-border bg-surface p-4 sm:p-5";
 const INTEREST_DETAILS = {
