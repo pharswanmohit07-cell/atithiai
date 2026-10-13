@@ -10,6 +10,30 @@ const CATEGORY_RADIUS = {
   viewpoint: 8, market: 6, cafe: 5, culture: 7, nature: 8, craft: 6, wellness: 6
 };
 
+function MapResizeOnVisibility() {
+  const map = useMap();
+  useEffect(() => {
+    const invalidate = () => {
+      if (document.hidden) return;
+      window.requestAnimationFrame(() => map.invalidateSize({ pan: false }));
+    };
+    window.addEventListener("resize", invalidate, { passive: true });
+    document.addEventListener("visibilitychange", invalidate);
+    let observer;
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(invalidate);
+      observer.observe(map.getContainer());
+    }
+    invalidate();
+    return () => {
+      window.removeEventListener("resize", invalidate);
+      document.removeEventListener("visibilitychange", invalidate);
+      observer?.disconnect();
+    };
+  }, [map]);
+  return null;
+}
+
 function MapFocus({ destination, focusPlaceId }) {
   const map = useMap();
   useEffect(() => {
@@ -67,6 +91,7 @@ export default function DestinationMap({
       </div>
     </div>
     <MapContainer center={validCenter} zoom={12} scrollWheelZoom={false} style={{ height, width: "100%" }} key={destination.id}>
+      <MapResizeOnVisibility/>
       <MapFocus destination={destination} focusPlaceId={focusPlaceId}/>
       <LocateUser requestNumber={locateRequest} onLocated={setUserPosition}/>
       <TileLayer attribution={TILE_ATTRIBUTION} url={MAP_TILES} className={isDark ? "atithi-dark-tiles" : ""}/>

@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1E1038" />
+    <meta name="theme-color" content="#1A0B2E" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FFF8EC" media="(prefers-color-scheme: light)" />
     <meta name="description" content="Atithi AI is a personalized travel companion for hidden places, local stories and experiences beyond the usual." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preload" as="image" href="/images/hero-bg.webp" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700;800&family=Bebas+Neue&family=Fraunces:ital,opsz,wght@1,9..144,400;1,9..144,500;1,9..144,600&display=swap" rel="stylesheet" />
     <title>Atithi AI · Go beyond the usual</title>
     <script>
       (function () {
@@ -20,8 +23,12 @@
           var dark = theme === "dark" || (theme === "system" && prefersDark);
           document.documentElement.classList.toggle("dark", dark);
           document.documentElement.style.colorScheme = dark ? "dark" : "light";
-          var meta = document.querySelector('meta[name="theme-color"]');
-          if (meta) meta.setAttribute("content", dark ? "#1E1038" : "#FFF8EC");
+          var metas = document.querySelectorAll('meta[name="theme-color"]');
+          metas.forEach(function (meta) {
+            var isDarkTheme = meta.media.includes("dark");
+            meta.setAttribute("content", isDarkTheme ? "#1A0B2E" : "#FFF8EC");
+            meta.media = isDarkTheme === dark ? "all" : "(prefers-color-scheme: never)";
+          });
         } catch {
           document.documentElement.classList.add("dark");
           document.documentElement.style.colorScheme = "dark";

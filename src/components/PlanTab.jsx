@@ -666,7 +666,7 @@ export default function PlanTab() {
             </div>
           </article>
         </li>;
-      })}</ol> : <div className="mt-4 rounded-2xl border border-dashed border-border p-8 text-center"><CalendarDaysFallback/><h3 className="mt-3 font-serif text-2xl">Your plan starts with curiosity.</h3><p className="mt-2 text-sm text-muted">Generate a one-day route, or add a place, dish or experience from Discover.</p><button type="button" onClick={generatePlan} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white"><Sparkles size={15}/>Plan my day</button></div>}
+      })}</ol> : <div className="empty-image-fallback mt-4 rounded-2xl border border-dashed border-border p-6 text-center sm:p-8"><img src="/images/empty-plan.webp" alt="An illustrated travel map and brass compass showing a route waiting to be explored" width="540" height="304" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} className="mx-auto mb-4 max-h-52 w-full max-w-md rounded-xl object-cover shadow-glass"/><CalendarDaysFallback/><h3 className="mt-3 font-serif text-2xl">Your plan starts with curiosity.</h3><p className="mt-2 text-sm text-muted">Generate a one-day route, or add a place, dish or experience from Discover.</p><button type="button" onClick={generatePlan} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white"><Sparkles size={15}/>Plan my day</button></div>}
       <p className="mt-4 text-[10px] leading-relaxed text-muted">All place stories, prices and crowd levels are demo pack estimates. Travel times use straight-line distance at 20 km/h and are not road routes or traffic predictions.</p>
     </section>
 
