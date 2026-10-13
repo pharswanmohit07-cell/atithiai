@@ -248,7 +248,7 @@ export default function AtithiAI() {
   const [itinerary, setItinerary] = useState(SUNNY_ITINERARY);
   const [showAIIntervention, setShowAIIntervention] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
-  const [activeGuestTab, setActiveGuestTab] = useState("services");
+  const [activeGuestTab, setActiveGuestTab] = useState("home");
   const [isDemoControlsOpen, setIsDemoControlsOpen] = useState(true);
   const [requests, setRequests] = useState(() =>
     INITIAL_REQUESTS,
@@ -884,7 +884,7 @@ function HomeTab({
 
         <div>
           <div className="flex justify-between items-end mb-6">
-            <h2 className="font-serif text-2xl text-text">Today's route</h2>
+            <h2 className="font-serif text-2xl text-text">Three-day corridor plan</h2>
             <span className="text-sm font-medium text-muted">
               {itinerary.length} route stops
             </span>

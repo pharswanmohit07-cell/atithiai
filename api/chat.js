@@ -85,7 +85,7 @@ function disruptionNote(context) {
   const alerts = context.disruptions.map((item) => {
     const label = item.type === "rain" ? "rain / weather" : item.type;
     const targets = item.affectedPlaceIds
-      .map((id) => PLACE_BY_ID.get(id)?.name)
+      .map((id) => PLACE_BY_ID.get(id)?.name || CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === id)?.name)
       .filter(Boolean);
     const targetCopy = targets.length ? ` It may affect: ${targets.join(", ")}.` : "";
     const sourceCopy = item.source === "demo" ? " (demo event)" : "";
