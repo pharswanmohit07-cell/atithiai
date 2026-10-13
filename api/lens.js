@@ -24,11 +24,11 @@ function visiblePriceIsClear(prices, explicitFlag) {
 
 function noOfficialRateClaims(value) {
   const prohibitedClaims = [
-    /verified\\s+(?:official\\s+)?(?:rate|tariff)/i,
-    /official\\s+(?:rate|tariff)\\s+(?:is|was|says|confirms|sets|equals|amounts to)/i,
-    /(?:is|was|are)\\s+(?:the\\s+)?official\\s+(?:rate|tariff)/i,
-    /government[- ]approved\\s+(?:price|rate|tariff)/i,
-    /(?:fixed|required|guaranteed|confirmed)\\s+(?:official\\s+)?(?:rate|tariff)/i,
+    /verified\s+(?:official\s+)?(?:rate|tariff)/i,
+    /official\s+(?:rate|tariff)\s+(?:is|was|says|confirms|sets|equals|amounts to)/i,
+    /(?:is|was|are)\s+(?:the\s+)?official\s+(?:rate|tariff)/i,
+    /government[- ]approved\s+(?:price|rate|tariff)/i,
+    /(?:fixed|required|guaranteed|confirmed)\s+(?:official\s+)?(?:rate|tariff)/i,
   ];
   return prohibitedClaims.every((pattern) => !pattern.test(value));
 }
