@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useDestination } from "./DestinationContext.jsx";
+import { DESTINATIONS } from "../data/destinations/index.js";
 
 const HotelContext = createContext(null);
 const PROFILE_KEY = "atithi-guest-preferences";
@@ -147,10 +148,25 @@ export function HotelProvider({ children }) {
     setFlexSettings(next); safeWrite(FLEX_KEY(destination.id),next);
   }, [destination.id,flexSettings]);
   const resetDemoData = useCallback(() => {
-    const clean = defaultFlexSettings(destination);
-    const welcome = [{id:"welcome-"+destination.id,role:"assistant",text:"Welcome. I’m your hotel co-host for this demo stay. Ask about local experiences, food, weather or a request for the team.",createdAt:new Date().toISOString()}];
-    setRequests([]); setChatMessages(welcome); setItinerary(initialItinerary(destination)); setPreferences({...EMPTY_PREFERENCES}); setFlexSettings(clean);
-    safeWrite(REQUESTS_KEY(destination.id),[]); safeWrite(CHAT_KEY(destination.id),welcome); safeWrite(FLEX_KEY(destination.id),clean); safeWrite(PROFILE_KEY,EMPTY_PREFERENCES);
+    const welcomeFor = (destinationId) => [{
+      id: "welcome-" + destinationId,
+      role: "assistant",
+      text: "Welcome. I’m your hotel co-host for this demo stay. Ask about local experiences, food, weather or a request for the team.",
+      createdAt: new Date().toISOString(),
+    }];
+    for (const pack of DESTINATIONS) {
+      const cleanSettings = defaultFlexSettings(pack);
+      safeWrite(REQUESTS_KEY(pack.id), []);
+      safeWrite(CHAT_KEY(pack.id), welcomeFor(pack.id));
+      safeWrite(FLEX_KEY(pack.id), cleanSettings);
+    }
+    const currentWelcome = welcomeFor(destination.id);
+    setRequests([]);
+    setChatMessages(currentWelcome);
+    setItinerary(initialItinerary(destination));
+    setPreferences({ ...EMPTY_PREFERENCES });
+    setFlexSettings(defaultFlexSettings(destination));
+    safeWrite(PROFILE_KEY, EMPTY_PREFERENCES);
   }, [destination]);
 
   const addItineraryStop = useCallback((place) => {

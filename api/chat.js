@@ -117,7 +117,11 @@ export default async function handler(req, res) {
     const parsed = JSON.parse(modelText || "{}");
     const reply = cleanText(parsed.reply, 1600);
     if (!reply) throw new Error("Empty model answer");
-    return send(res, 200, { reply, action: normalizeAction(parsed.action, destination.hotel), source: "gemini" });
+    const action = normalizeAction(parsed.action, destination.hotel);
+    const safeReply = action
+      ? "I can check a demo Flex Stay option. Review the computed offer below; the hotel must confirm it."
+      : reply;
+    return send(res, 200, { reply: safeReply, action, source: "gemini" });
   } catch {
     return send(res, 200, { reply: fallback, action: null, source: "local-fallback" });
   } finally {
