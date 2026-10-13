@@ -27,7 +27,7 @@ export default {
     { id: "hawa-mahal", name: "Hawa Mahal", lat: 26.9239, lon: 75.8267, category: "heritage", tags: ["architecture", "history", "photo"], rainFriendly: false, lowCrowd: false },
     { id: "amber-fort", name: "Amber Fort", lat: 26.9855, lon: 75.8513, category: "heritage", tags: ["fort", "history", "views"], rainFriendly: false, lowCrowd: false },
     { id: "city-palace-jaipur", name: "City Palace", lat: 26.9258, lon: 75.8237, category: "museum", tags: ["royal-history", "architecture"], rainFriendly: true, lowCrowd: false },
-    { id: " jantar-mantar-jaipur", name: "Jantar Mantar", lat: 26.9248, lon: 75.8246, category: "museum", tags: ["science", "heritage"], rainFriendly: false, lowCrowd: false },
+    { id: "jantar-mantar-jaipur", name: "Jantar Mantar", lat: 26.9248, lon: 75.8246, category: "museum", tags: ["science", "heritage"], rainFriendly: false, lowCrowd: false },
     { id: "nahargarh-fort", name: "Nahargarh Fort", lat: 26.9373, lon: 75.8156, category: "viewpoint", tags: ["sunset", "views", "history"], rainFriendly: false, lowCrowd: true },
     { id: "jal-mahal", name: "Jal Mahal", lat: 26.9537, lon: 75.8463, category: "viewpoint", tags: ["lake", "photo"], rainFriendly: false, lowCrowd: false },
     { id: "albert-hall-museum", name: "Albert Hall Museum", lat: 26.9117, lon: 75.8197, category: "museum", tags: ["art", "culture", "indoors"], rainFriendly: true, lowCrowd: true },
