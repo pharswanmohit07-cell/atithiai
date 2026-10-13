@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AlertCircle, CheckCircle2, Languages, LoaderCircle, Mic, RefreshCw, Upload, Volume2 } from "lucide-react";
+import { AlertCircle, Languages, LoaderCircle, RefreshCw, Upload, Volume2 } from "lucide-react";
 import { getSeedLensResult } from "../../data/lensCache.js";
 
 const CACHE_PREFIX = "atithi-lens-sample:";
@@ -174,6 +174,19 @@ export default function LensTab({ selectedWaypoint, persona, onRequest }) {
     requestIdRef.current += 1;
     if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
   }, []);
+
+  useEffect(() => {
+    if (!lastSampleId && !lensImage) return;
+    if (cachedDemo && lastSampleId) {
+      const cached = readCachedResult(lastSampleId, language);
+      if (cached) {
+        const priceVisible = Boolean(cached.fairPrice?.roughRange || (cached.visiblePrices || []).some((item) => /\\d/.test(item)));
+        setLensResult(safeResult({ ...cached, priceVisible }, lastSampleId, language));
+        return;
+      }
+    }
+    if (lensImage) void analyzeImage(lensImage, lastSampleId, language);
+  }, [language]);
 
   const showSampleCache = (sampleId, lang = language) => {
     const cached = readCachedResult(sampleId, lang);
