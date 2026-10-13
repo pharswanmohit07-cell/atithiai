@@ -142,3 +142,13 @@ export function BeatCrowdsPanel({ search = "", onAddPlace, isWeekend = false, se
     </section>
   );
 }
+
+export function StaffRequestsPanel({ requests = [] }) {
+  const staffRequests = requests.filter((request) => request.category === "Trip Guardian").slice(0, 6);
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Operations follow-up</p><h2 className="mt-1 font-serif text-xl text-text">Guardian staff requests</h2></div><span className="rounded-full bg-surface-2 px-2.5 py-1 text-xs font-semibold text-text">{staffRequests.length}</span></div>
+      {staffRequests.length ? <div className="space-y-3">{staffRequests.map((request) => <article key={request.id} className="flex items-start gap-3 border-t border-border pt-3 first:border-0 first:pt-0"><span className="mt-0.5 text-accent-text"><CheckCircle2 size={16}/></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold text-text">{request.title}</p><p className="mt-1 text-xs leading-relaxed text-muted">{request.detail}</p><p className="mt-1 text-[10px] text-muted">{request.status || "Received"} · {request.time || "Just now"}</p></div></article>)}</div> : <p className="rounded-xl bg-surface-2 p-3 text-xs text-muted">Accepted reroutes will create driver and hotel timing requests here.</p>}
+    </section>
+  );
+}
