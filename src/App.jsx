@@ -270,8 +270,13 @@ function ChatResultCard({ destination, result, added, onAdd, onShowMap }) {
     <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={onAdd} disabled={added} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{added ? <Check size={13}/> : <Plus size={13}/>} {added ? "Added to plan" : "Add to plan"}</button><button type="button" onClick={onShowMap} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-bold"><MapPin size={13}/>Show on map</button></div>
   </article>;
 }
-function ChatView({ destination, weather, profile, chatMessages, addChatMessage, addRequest, addItineraryItem, onShowOnMap }) {
+function ChatView({ destination, weather, profile, chatMessages, addChatMessage, addRequest, addItineraryItem, onShowOnMap, initialPrompt, onPrefillConsumed }) {
   const [draft, setDraft] = useState("");
+  useEffect(() => {
+    if (!initialPrompt) return;
+    setDraft(initialPrompt.slice(0, 1200));
+    onPrefillConsumed?.();
+  }, [initialPrompt, onPrefillConsumed]);
   const [sending, setSending] = useState(false);
   const [replyLanguage, setReplyLanguage] = useState(() => {
     try { return localStorage.getItem("atithi-chat-language") || "auto"; } catch { return "auto"; }
@@ -398,9 +403,18 @@ export default function AtithiAI() {
   const { profile } = useProfile();
   const [started, setStarted] = useState(readStarted);
   const [activeTab, setActiveTab] = useState("home");
+  const [chatPrefill, setChatPrefill] = useState("");
   const [mapFocusId, setMapFocusId] = useState(null);
 
-  useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);\n  useEffect(() => {\n    const openChat = (event) => { setChatPrefill(String(event.detail?.prompt || "").slice(0, 1200)); setActiveTab("chat"); };\n    window.addEventListener("atithi:open-chat", openChat);\n    return () => window.removeEventListener("atithi:open-chat", openChat);\n  }, []);
+  useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);
+  useEffect(() => {
+    const openChat = (event) => {
+      setChatPrefill(String(event.detail?.prompt || "").slice(0, 1200));
+      setActiveTab("chat");
+    };
+    window.addEventListener("atithi:open-chat", openChat);
+    return () => window.removeEventListener("atithi:open-chat", openChat);
+  }, []);
   useEffect(() => { setMapFocusId(null); }, [destination.id]);
   useEffect(() => {
     if (activeTab !== "discover" || !mapFocusId) return undefined;
