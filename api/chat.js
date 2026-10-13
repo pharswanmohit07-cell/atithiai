@@ -1,6 +1,6 @@
 import { getDestinationById } from "../src/data/destinations/index.js";
 import { detectTextLanguage, languageBase, targetLanguageTag } from "../src/i18n.js";
-import { isBodyTooLarge, isPlainObject } from "./_shared.js";
+import { isBodyTooLarge, isPlainObject } from "../src/lib/apiHardening.js";
 
 const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
 const ITEM_TYPES = new Set(["place", "experience", "dish"]);
