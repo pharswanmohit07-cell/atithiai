@@ -4,7 +4,7 @@ import { DESTINATIONS } from "../data/destinations/index.js";
 
 const HotelContext = createContext(null);
 const PROFILE_KEY = "atithi-guest-preferences";
-const EMPTY_PREFERENCES = { language: "English", dietaryPreference: "No preference", travelParty: "Family" };
+const EMPTY_PREFERENCES = { language: "English", dietaryPreference: "No preference", travelParty: "Family", departureTime: "15:00" };
 const DIETARY_OPTIONS = ["No preference", "Vegetarian", "Vegan", "Pescatarian", "Halal", "Gluten-free", "Dairy-free", "Other — ask me"];
 const PARTY_OPTIONS = ["Family", "Solo", "Couple", "Friends", "Business"];
 const requestsKey = (id) => "atithi-requests:" + id;
@@ -34,6 +34,7 @@ function readPreferences() {
     language: typeof saved.language === "string" && saved.language.trim() ? (saved.language === "en" ? "English" : saved.language.trim().slice(0, 50)) : "English",
     dietaryPreference: DIETARY_OPTIONS.includes(saved.dietaryPreference) ? saved.dietaryPreference : "No preference",
     travelParty: PARTY_OPTIONS.includes(saved.travelParty) ? saved.travelParty : "Family",
+    departureTime: typeof saved.departureTime === "string" && /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(saved.departureTime) ? saved.departureTime : "15:00",
   };
 }
 function defaultFlexSettings(destination) {
