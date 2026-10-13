@@ -5,6 +5,7 @@ import {
   Sparkles, Sun, Users, X
 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { useReducedEffects } from "./lib/reducedEffects.js";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import ImageCard from "./components/ui/ImageCard.jsx";
@@ -156,7 +157,27 @@ function WeatherPanel({ destination, weather, loading, error, formatNumber }) {
 
 function WelcomeScreen({ destination, destinations, selectDestination, onStart }) {
   const heroRef = useRef(null);
-  const reduceMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion();
+  const [reduceEffects] = useReducedEffects();
+  const reduceMotion = prefersReducedMotion || reduceEffects;
+  const [heroActive, setHeroActive] = useState(true);
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero || typeof IntersectionObserver === "undefined") return undefined;
+    let intersects = false;
+    const update = () => setHeroActive(intersects && !document.hidden);
+    const observer = new IntersectionObserver((entries) => {
+      intersects = Boolean(entries[0]?.isIntersecting);
+      update();
+    }, { threshold: 0.01 });
+    observer.observe(hero);
+    const onVisibility = () => update();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 64]);
   const destinationArt = {
@@ -174,8 +195,8 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
       <div className="flex items-center gap-3"><IconBadge icon={Compass} tone="gold" size="lg" /><div><p className="font-display text-3xl leading-none">Atithi AI</p><p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-muted">Go beyond the usual</p></div></div>
       <ThemeToggle compact/>
     </header>
-    <motion.section ref={heroRef} className="welcome-hero relative mx-auto mt-4 max-w-6xl overflow-hidden rounded-[1.75rem] sm:mt-6 sm:rounded-[2rem]" style={{ "--destination-accent": destination.themeColors.accent }}>
-      <motion.div className="welcome-hero-art" style={{ y: reduceMotion ? 0 : heroY }} animate={reduceMotion ? undefined : { scale: [1, 1.08, 1] }} transition={reduceMotion ? undefined : { duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }} aria-hidden="true">
+    <motion.section ref={heroRef} className={"welcome-hero relative mx-auto mt-4 max-w-6xl overflow-hidden rounded-[1.75rem] sm:mt-6 sm:rounded-[2rem] " + (!heroActive ? "is-offscreen" : "")} style={{ "--destination-accent": destination.themeColors.accent }}>
+      <motion.div className="welcome-hero-art" style={{ y: reduceMotion || !heroActive ? 0 : heroY }} animate={reduceMotion || !heroActive ? { scale: 1 } : { scale: [1, 1.08, 1] }} transition={reduceMotion || !heroActive ? { duration: 0 } : { duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }} aria-hidden="true">
         <img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="eager" fetchPriority="high" decoding="async" onError={(event) => { event.currentTarget.style.opacity = "0"; }}/>
       </motion.div>
       <div className="welcome-hero-overlay" aria-hidden="true"/><div className="welcome-hero-glow" aria-hidden="true"/>
@@ -311,7 +332,7 @@ function chatFallbackMessage(reason) {
   const messages = {
     cached_demo_mode: "Cached demo mode is enabled, so this message did not call Gemini. Turn it off in the Demo Mode bar and retry.",
     no_ranked_items: "No matching items were selected from this destination pack. Try asking for places, food, or experiences.",
-    missing_api_key: "GEMINI_API_KEY is missing from this deployment. Add it to Vercel Preview and redeploy.",
+    missing_api_key: "Chat is temporarily unavailable. You can still explore this destination and try again later.",
     provider_http_400: "Gemini rejected the request (HTTP 400). Check the model name and API request.",
     provider_http_401: "Google rejected the key (HTTP 401). Use a valid Google AI Studio Gemini API key, then redeploy.",
     provider_http_403: "Google denied the request (HTTP 403). Check API-key restrictions and Gemini API access.",
@@ -326,6 +347,8 @@ function chatFallbackMessage(reason) {
     provider_error: "The Gemini request failed. Check the /api/chat response reason in DevTools.",
     not_gemini: "The API returned a fallback response instead of a Gemini-generated response."
   };
+  const isDemoDiagnostics = import.meta.env.DEV || new URLSearchParams(window.location.search).get("demo") === "1";
+  if (reason === "missing_api_key" && isDemoDiagnostics) return "GEMINI_API_KEY is missing from this deployment. Add it to Vercel Preview and redeploy.";
   return messages[reason] || messages.provider_error;
 }
 
@@ -539,7 +562,7 @@ export default function AtithiAI() {
     </header>
 
     <div className="app-content mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-7">
-      <AnimatePresence mode="wait" initial={false}><motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.25 }}><Suspense fallback={<Skeleton label="Loading this section…" lines={3}/>}>
+      <AnimatePresence mode="wait" initial={false}><motion.div key={activeTab} initial={disableMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={disableMotion ? undefined : { opacity: 0, y: -5 }} transition={{ duration: disableMotion ? 0 : 0.25 }}><Suspense fallback={<Skeleton label="Loading this section…" lines={3}/>}>
       {activeTab === "home" && <div className="space-y-5">
         <section className="app-home-hero pitch-hero relative overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-8" style={{ "--destination-accent": destination.themeColors.accent }}>
           <div className="app-home-art" aria-hidden="true"><img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="lazy" decoding="async"/></div><div className="relative z-10">
@@ -579,7 +602,7 @@ export default function AtithiAI() {
 
     <footer className="app-footer mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 pb-24 pt-3 text-[10px] text-muted"><span>Built by TeamBTC</span><span className="demo-badge">Demo content</span></footer>
     <nav aria-label="Main navigation" className="bottom-nav-glass fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-50 rounded-2xl px-1.5 pt-1.5 pb-1.5 sm:inset-x-1/2 sm:w-[min(46rem,calc(100%-2rem))] sm:-translate-x-1/2">
-       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><motion.button key={id} type="button" whileTap={reduceMotionSafeTap} onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<motion.span className="relative z-10" animate={activeTab===id?{y:[0,-2,0]}:{y:0}} transition={{duration:0.28}}><Icon size={18}/></motion.span><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></motion.button>)}</div>
+       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><motion.button key={id} type="button" whileTap={disableMotion ? undefined : reduceMotionSafeTap} onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<motion.span className="relative z-10" animate={activeTab===id&&!disableMotion?{y:[0,-2,0]}:{y:0}} transition={{duration:disableMotion?0:0.28}}><Icon size={18}/></motion.span><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></motion.button>)}</div>
      </nav>
   </main>;
 }
