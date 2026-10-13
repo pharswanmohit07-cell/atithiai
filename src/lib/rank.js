@@ -139,7 +139,7 @@ function scoreItem(item, kind, profile = {}, filters = {}, context = {}, spendSt
     reasons.push("Hidden-place pick");
   }
   const crowd = normalized(item.crowdLevel);
-  const avoidCrowds = filters?.avoidCrowds === true || (filters?.avoidCrowds == null && profile?.avoidCrowds === true);
+  const avoidCrowds = filters?.avoidCrowds === true || filters?.mood === "quiet" || (filters?.avoidCrowds == null && profile?.avoidCrowds === true);
   if (avoidCrowds && crowd === "low") {
     score += 5;
     reasons.push("Quiet at this time (estimated)");
