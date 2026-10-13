@@ -1,100 +1,117 @@
-# Atithi AI (अतिथि AI) 🏨✨
+# Atithi AI — AI Co-Host for Three-Star Hotels
 
-> Agentic AI staff, intelligent concierge, and real-time hyper-personalization for modern luxury hospitality.
+Atithi AI is a demo product concept for hotel owners and managers who want to help guests discover a destination, plan a stay, understand hotel policies and contact the team. The hotel team retains control over every decision involving prices, fees, refunds, bookings and availability.
 
-Atithi AI is an all-in-one hospitality management and autonomous guest companion platform. Designed for boutique properties and luxury hotels (such as The Aranya House), Atithi AI bridges the gap between seamless guest experience and intelligent operations.
+The app is destination-agnostic. Its destination registry currently includes demo packs for Jaipur, Ubud and Lisbon. The hotels, partner identities, policies, flexible check-in/out fees, itinerary suggestions and service requests shown in the demo are illustrative rather than commercial offers.
 
-It helps hotels deliver hyper-personalized stays using generative AI to craft dynamic itineraries, menus, and activity suggestions that adapt in real time to weather, guest preferences, and local conditions—boosting satisfaction and operational efficiency.
+## Product workflow
 
----
+- **Guest landing:** choose a destination and continue as Guest (Family) or Guest (Solo).
+- **Stay planning:** use the selected destination pack to browse well-known places, local dishes and curated experience ideas.
+- **Live weather:** read the latest available Open-Meteo observation for the selected pack's coordinates and timezone. Weather does not establish opening hours, venue availability, transport conditions or safety.
+- **Hotel services:** request early check-in, late check-out, local experiences, food guidance or a human follow-up.
+- **Price Lens:** optionally read visible text from a supplied image. The result is an AI estimate, never an official tariff or a finding of overcharging.
+- **Stay Pass:** create a local summary and self-generated QR. It is not an official registration or booking confirmation.
+- **Manager view:** review pending guest requests and approve or decline them manually. No payment or reservation is made automatically.
 
-## 🌟 Key Features & Interface Modules
+## Technology
 
-- The Atithi Concierge AI: A conversational companion providing immediate 24/7 assistance with room service, local exploration, spa bookings, and dynamic preferences like dietary tracking.
-- Intelligent Guest Companion (Mobile App):
-  - Smart Home & Stay Overview: Real-time visibility into room status (e.g., Suite 402 Luxury Suite), checkout countdowns, weather sync, and one-tap access to services like housekeeping, valet, and room requests.
-  - Proactive Itinerary Planning: AI-driven morning briefings and dynamic scheduling tailored to current weather conditions and guest preferences.
-  - Curated Local Experiences ("The Local Edit"): Context-aware recommendations for local activities—such as Forest Bathing at Maldevta or culinary tasting menus—with instant reservation workflows.
-- Hotel Command Center (Admin Dashboard):
-  - Live Guest Activity & Interventions: Real-time tracking of active guest states, automated request resolutions, and global satisfaction scores.
-  - Demo & Environmental Controls: Interactive simulation tools allowing operators to test contextual triggers like live weather changes (e.g., triggering rain protocols).
+- Vite, React 18, React Router and Tailwind CSS 3
+- React Leaflet and Leaflet for the destination map
+- Framer Motion and Lucide React
+- Vercel serverless functions under `api/`
+- Gemini for optional AI answers and itinerary suggestions
+- Open-Meteo for live weather observations
+- `qrcode` and `html-to-image` loaded dynamically when Stay Pass export is requested
 
----
+## Run locally
 
-## 🏗️ Tech Stack
+Requires a supported Node.js release and npm.
 
-- Frontend / Mobile UI: React / Next.js / Tailwind CSS (crafted with a premium, minimalist luxury aesthetic)
-- Backend: Node.js / Python (FastAPI)
-- AI & Orchestration: LLM-driven multi-agent workflows for contextual guest personalization, automated routing, and dynamic itinerary generation
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
 
----
+Set `GEMINI_API_KEY` in the server environment to enable Gemini. `GEMINI_MODEL` is optional; it defaults to `gemini-2.5-flash`. Keep both values server-side. Never use a `VITE_` variable for a secret.
 
-## 🚀 Getting Started
+Check source syntax and imports, then create a production bundle:
 
-### Prerequisites
+```bash
+npm run lint
+npm run build
+npx vercel dev
+```
 
-- Node.js (v18+ recommended)
-- Python 3.10+ (for backend services)
-- Git
+If no Gemini key is configured, chat, itinerary and price-image flows use friendly local fallbacks. Live weather still requires an internet connection. Cached demo mode bypasses AI requests.
 
-### Installation & Setup
+## Destination Pack format
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/viratpaudel/atithiai.git
-   cd atithiai
-   ```
+Each pack is a plain JavaScript module exported from `src/data/destinations/`. The registry at `src/data/destinations/index.js` is the single index used by the UI and serverless functions.
 
-2. Configure environment variables:
-   Create a `.env` file in the root directory and add your required keys:
-   ```env
-   PORT=3000
-   DATABASE_URL=your_database_connection_string
-   OPENAI_API_KEY=your_openai_api_key
-   ```
+```js
+{
+  id: "sample-city",
+  city: "Sample City",
+  country: "Sample Country",
+  lat: 0,
+  lon: 0,
+  timezone: "Region/City",
+  locale: "en-XX",
+  currency: { code: "XXX", symbol: "¤" },
+  primaryLanguages: ["English"],
+  hotel: {
+    name: "Sample Hotel (demo)",
+    stars: 3,
+    rooms: 40,
+    checkIn: "14:00",
+    checkOut: "11:00",
+    phone: "Not configured (demo)",
+    flexTiers: {
+      early: [{ from: "10:00", fee: 10 }],
+      late: [{ until: "13:00", fee: 10 }]
+    }
+  },
+  places: [],
+  experiences: [],
+  dishes: [],
+  disruptionLabels: [],
+  emergencyNumber: "112"
+}
+```
 
-3. Install dependencies & run:
-   ```bash
-   # Install frontend/backend packages
-   npm install
-   npm run dev
-   ```
+Coordinates are approximate. Hotel names, room counts, policies, fees and contacts are demo values. Every experience must include a clearly visible `Demo listing` tag. Do not publish a phone number or fee unless an owner has verified it. Each pack's emergency number must be checked with reliable local guidance before real use.
 
----
+## How to add a new pack
 
-## 🗺️ Roadmap
+1. Add `src/data/destinations/my-city.js` with the same schema as the existing packs.
+2. Include eight well-known places with approximate coordinates, category, tags, rain-friendly flag and estimated lower-crowd flag.
+3. Include six illustrative experiences, each tagged `Demo listing`, and eight dishes with diet flags, spice level and a cautious venue suggestion.
+4. Use the destination's correct IANA timezone, locale and ISO 4217 currency code. Keep sample fees in that currency and label them as demo estimates in the UI.
+5. Add a comment to double-check the local emergency number; verify that number before real travel.
+6. Import the pack in `src/data/destinations/index.js` and add it to `DESTINATIONS`.
+7. Run `npm run lint` and `npm run build`, then manually check the destination selector, weather state, map, currency formatting, services, cached demo mode and manager request queue.
 
-- [x] Guest mobile web-app UI & concierge chat interface
-- [x] Localized experience discovery and reservation flow (Dehradun pilot)
-- [x] Hotel Operations & Command Dashboard with live intervention metrics
-- [ ] Deep Property Management System (PMS) integrations
-- [ ] Multi-lingual voice interface support
+The application obtains destination names, coordinates, currency, languages, places, experiences, dishes, hotel name, policy tiers and emergency number from this pack. Avoid duplicating destination constants in UI components or prompts.
 
----
+## What is real vs demo
 
-## 🤝 Contributing
+**Only weather is live.** The app requests current weather from Open-Meteo using the selected pack's approximate coordinates and IANA timezone. Weather can be stale or unavailable if the device is offline or the service fails.
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/viratpaudel/atithiai/issues).
+The hotel itself, room count, guest identity, itinerary, flexible check-in/out fees, partners, experiences, dishes' venue suggestions, requests and manager decisions are demonstrations. Real place names and approximate coordinates are for destination orientation only; the app does not verify opening hours, crowd levels, tickets, transport, reservations or safety. Price Lens reads visible text but cannot verify a fair price without a trusted comparison list.
 
-1. Fork the Project (`https://github.com/viratpaudel/atithiai/fork`)
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+No money moves through the demo. A button press creates a request for human review; a manager must independently verify the policy and details before confirming an offer or booking. Request statuses are demonstration workflow states, not a connection to hotel operations systems. Emergency links call the displayed local number on the guest's device; the app does not dispatch help.
 
----
+The Stay Pass QR is built locally in the browser from the visible demo summary. It is self-generated and is not an official registration, room key, identity credential or booking confirmation.
 
-## 📄 License
+## Environment and secrets
 
-Distributed under the [MIT License](LICENSE). See `LICENSE` for more information.
+- `GEMINI_API_KEY`: server-side Gemini key
+- `GEMINI_MODEL`: optional model identifier, default `gemini-2.5-flash`
 
----
+`.env` is ignored by Git. Never commit populated environment files, expose API keys through the browser, or include secrets in client-side bundles.
 
-<p align="center">Built with ❤️ for the future of luxury hospitality.</p>
+## Accessibility and usability
 
-
-## Auth (demo only)
-
-Guest and staff sign-in use mock records and store a selected demo identity in browser `localStorage` (`atithi-auth`). This is **client-side demo authentication only**: it is not secure, does not verify a real booking, and must never be used with real guest/staff data or treated as production access control.
-
-The planned production design is a signed per-room QR token validated server-side against the PMS booking. It should be bound to the active stay and expire at checkout. Staff should use a trusted identity provider or server-managed sessions. Room/last-name checks and demo staff credentials are only for the hackathon walkthrough.
+The UI uses responsive layouts, visible focus outlines, touch-sized controls, theme switching and safe-area padding for mobile navigation. Always verify with the current browser and device before a live demo.
