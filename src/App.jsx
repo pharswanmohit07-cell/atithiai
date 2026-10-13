@@ -156,7 +156,7 @@ function RequestButton({ title, category, detail, addRequest, children, priority
   </button>;
 }
 
-function ServiceView({ destination, formatCurrency, addRequest, onTab }) {
+function ServiceView({ destination, formatCurrency, addRequest }) {
   const [showExperiences, setShowExperiences] = useState(false);
   const [showFood, setShowFood] = useState(false);
   const [checkInKind, setCheckInKind] = useState("early");
