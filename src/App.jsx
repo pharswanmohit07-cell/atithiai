@@ -197,7 +197,12 @@ export default function AtithiAI() {
   const [isResolving, setIsResolving] = useState(false);
   const [activeGuestTab, setActiveGuestTab] = useState("services");
   const [isDemoControlsOpen, setIsDemoControlsOpen] = useState(true);
-  const [requests, setRequests] = useState(INITIAL_REQUESTS);
+  const [requests, setRequests] = useState(() =>
+    INITIAL_REQUESTS.map((request) => ({
+      ...request,
+      detail: `${request.detail} · Requested for Room ${user?.room || "—"}`,
+    })),
+  );
 
   useEffect(() => {
     const applyPlan = (event) => {
@@ -243,7 +248,9 @@ export default function AtithiAI() {
         id: Date.now(),
         title: request.title,
         category: request.category,
-        detail: `${request.detail || "Guest request"} · Requested for Room ${user?.room || "—"}`,
+        detail: String(request.detail || "Guest request").includes("Requested for Room")
+          ? request.detail
+          : `${request.detail || "Guest request"} · Requested for Room ${user?.room || "—"}`,
         status: "Received",
         time: "Today, just now",
       },
@@ -1624,7 +1631,7 @@ function ProfileTab({ guest, preferences, onSavePreferences, onOpenOnboarding, o
             </p>
             <div className="mt-5 flex items-center gap-3">
               <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-surface/5 font-serif text-2xl text-[#E7C99C]">
-                V
+                {guest?.name?.trim()?.[0]?.toUpperCase() || "G"}
               </div>
               <div>
                 <h2 className="font-serif text-[25px] leading-none">
