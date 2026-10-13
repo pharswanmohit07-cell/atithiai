@@ -1958,19 +1958,19 @@ function AdminDashboard({
             <IconBadge icon={Sparkles} tone="saffron" size="sm" />
             <span className="font-serif text-xl tracking-wide">Atithi AI</span>
           </div>
-          <p className="text-white/50 text-xs">Hotel Command Center</p>
+          <p className="text-white/50 text-xs">Himalayan Trip Guardian</p>
         </div>
 
         <div className="p-4 space-y-1 flex-1">
           <SidebarItem icon={LayoutDashboard} label="Overview" active tone="saffron" />
-          <SidebarItem icon={User} label="Active Guests" count={124} tone="teal" />
+          <SidebarItem icon={User} label="Active disruptions" count={disruptions.length} tone="teal" />
           <SidebarItem
             icon={Sparkles}
             label="AI Control Center"
             alert={isConflict}
             tone="coral"
           />
-          <SidebarItem icon={Bell} label="Service Requests" count={12} tone="sky" />
+          <SidebarItem icon={Bell} label="Guardian actions" count={actionsLog.length} tone="sky" />
           <SidebarItem icon={CalendarDays} label="Bookings" tone="violet" />
         </div>
       </div>
@@ -1980,7 +1980,7 @@ function AdminDashboard({
         <header className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-serif text-text">
-              AI Operations Dashboard
+              Himalayan Trip Guardian
             </h1>
             <p className="text-muted">
               Regional trip safety · crowd-aware redirections
@@ -2007,19 +2007,19 @@ function AdminDashboard({
 
         <div className="grid grid-cols-3 gap-6 mb-8">
           <StatCard
-            title="Active AI Interventions"
-            value={isConflict ? "1" : "0"}
-            trend={isConflict ? "Requires attention" : "All clear"}
+            title="Active disruptions"
+            value={String(disruptions.length)}
+            trend={disruptions.length ? "Guardian review needed" : "No active signals"}
             alert={isConflict}
             icon={CloudRain}
             tone="coral"
           />
-          <StatCard title="Auto-Resolved by AI" value="48" trend="+12% today" icon={Check} tone="emerald" />
+          <StatCard title="Trip redirections" value={String(redirectionsCount)} trend="Accepted alternatives" icon={Compass} tone="emerald" />
           <StatCard
-            title="Guest Satisfaction (AI)"
-            value="4.9/5"
-            trend="Top 5% globally"
-            icon={Sparkles}
+            title="Estimated local spend redirected"
+            value={String(localSpendRedirected.toLocaleString("en-IN"))}
+            trend="Demo estimate · INR"
+            icon={MapPin}
             tone="saffron"
           />
         </div>
@@ -2047,13 +2047,13 @@ function AdminDashboard({
                     </div>
                     <div>
                       <h3 className="font-medium text-text">
-                        Virat Sharma{" "}
+                        {staffUser?.role === "guest" ? staffUser.name : "Traveler overview"}{" "}
                         <span className="text-xs font-normal text-muted bg-surface-2 px-2 py-0.5 rounded ml-2">
-                          Room 402
+                          {staffUser?.role === "guest" ? "Room " + staffUser.room : "Regional demo"}
                         </span>
                       </h3>
                       <p className="text-xs text-muted">
-                        VIP • Vegetarian • Wellness Focus
+                        Crowd-aware routing · Estimated destination index
                       </p>
                     </div>
                   </div>
@@ -2082,8 +2082,7 @@ function AdminDashboard({
                       </span>
                     </div>
                     <p className="text-sm text-muted">
-                      Swapped 'Botanical Walk' for 'National Art Museum' due to
-                      rain.
+                      A destination was rerouted. See the Guardian action log for the current route.
                     </p>
                   </div>
                 )}
