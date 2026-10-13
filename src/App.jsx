@@ -10,6 +10,7 @@ import {
   BeatCrowdsPanel,
   DestinationOverview,
   GuardianCard,
+  StaffRequestsPanel,
   SustainableImpactCard,
 } from "./components/DisruptionGuardian.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
@@ -259,12 +260,12 @@ export default function AtithiAI() {
     const definitions = {
       landslide: {
         title: "Demo landslide alert · hillside route at risk",
-        affectedPlaceIds: ["george-everest", "kimadi-ridge", "sainji-corn-village", "kempty-falls", "jabarkhet-nature-reserve"],
+        affectedPlaceIds: ["george-everest", "kimadi-ridge", "sainji-corn-village", "kempty-falls", "robbers-cave"],
         severity: "high",
       },
       roadblock: {
         title: "Demo roadblock · Mussoorie approach disrupted",
-        affectedPlaceIds: ["mussoorie-mall-road", "kempty-falls", "lal-tibba", "george-everest", "jabarkhet-nature-reserve"],
+        affectedPlaceIds: ["mussoorie-mall-road", "kempty-falls", "lal-tibba", "george-everest", "robbers-cave"],
         severity: "high",
       },
     };
@@ -438,6 +439,7 @@ export default function AtithiAI() {
           affectedStop={affectedStop}
           guardianAlternatives={guardianAlternatives}
           onAcceptGuardianAlternative={acceptGuardianAlternative}
+          requests={requests}
           weather={weather}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
@@ -1942,7 +1944,7 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
 // Keeping the Admin Dashboard intact for the Demo controller
 function AdminDashboard({
   weather, itinerary, showAIIntervention, staffUser, onLogout,
-  disruptions = [], actionsLog = [], redirectionsCount = 0, localSpendRedirected = 0,
+  disruptions = [], actionsLog = [], redirectionsCount = 0, localSpendRedirected = 0, requests = [],
   guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative,
 }) {
   const isConflict =
@@ -2026,7 +2028,10 @@ function AdminDashboard({
 
         <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
           <DestinationOverview redirectionsCount={redirectionsCount} localSpendRedirected={localSpendRedirected} actions={actionsLog} />
-          {guardianDisruption && affectedStop && <GuardianCard disruption={guardianDisruption} itineraryItem={affectedStop} alternatives={guardianAlternatives} onAccept={onAcceptGuardianAlternative} />}
+          <div className="space-y-6">
+            {guardianDisruption && affectedStop && <GuardianCard disruption={guardianDisruption} itineraryItem={affectedStop} alternatives={guardianAlternatives} onAccept={onAcceptGuardianAlternative} />}
+            <StaffRequestsPanel requests={requests} />
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
