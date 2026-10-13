@@ -773,7 +773,7 @@ function GuestApp(props) {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="absolute bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-xl border-t border-border px-6 py-4 flex justify-between items-center z-40 pb-safe">
+        <div className="guest-bottom-nav absolute bottom-3 left-3 right-3 flex items-center justify-between gap-1 rounded-3xl px-3 py-2.5 z-40 pb-safe">
           <NavIcon
             icon={Home}
             label="Home"
@@ -830,7 +830,7 @@ function HomeTab({
   const currentPlan = itinerary.find((item) => item.status === "current");
   return (
     <>
-      <div className="home-hero relative min-h-[330px] overflow-hidden bg-[#20362E] text-white">
+      <div className="home-hero relative min-h-[330px] overflow-hidden bg-brand text-white">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -838,7 +838,7 @@ function HomeTab({
               "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=85&w=1200&auto=format&fit=crop')",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#13231E]/55 via-[#13231E]/15 to-[#13231E]/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand/65 via-brand/25 to-brand/95" />
         <div className="relative flex min-h-[330px] flex-col justify-between px-6 pb-5 pt-11">
           <div className="flex items-center justify-between">
             <div>
@@ -861,7 +861,7 @@ function HomeTab({
             </div>
           </div>
           <div>
-            <p className="mb-1 text-sm font-medium text-[#F0D6AD]">
+            <p className="mb-1 text-sm font-medium text-accent">
               A safer way through the Himalayas
             </p>
             <h1 className="max-w-[290px] font-serif text-[42px] leading-[0.93]">
@@ -930,11 +930,11 @@ function HomeTab({
             initial={{ opacity: 0.35 }}
             animate={{ opacity: [1, 0.55, 1] }}
             transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-            className="flex items-start gap-3 rounded-2xl border border-amber-400 bg-amber-50 p-4 shadow-sm dark:border-amber-800 dark:bg-amber-950/30"
+            className="flex items-start gap-3 rounded-2xl border border-amber-400 bg-amber-50 p-4 shadow-sm hazard-alert dark:border-amber-800 dark:bg-amber-950/30"
           >
             <ShieldAlert size={20} className="mt-0.5 shrink-0 text-amber-700 dark:text-amber-300" />
             <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2"><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-900 dark:text-amber-200">Route Guard · Next segment flagged</p>{routeGuardDisruption.source === "demo" && <span className="rounded-full bg-rose-100 px-2 py-1 text-[9px] font-extrabold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200">DEMO EVENT</span>}</div>
+              <div className="flex flex-wrap items-center gap-2"><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-900 dark:text-amber-200">Route Guard · Next segment flagged</p>{routeGuardDisruption.source === "demo" && <span className="demo-badge">DEMO EVENT</span>}</div>
               <p className="mt-1 text-sm font-semibold text-text">{CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === routeSegment[0])?.name} → {CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === routeSegment[1])?.name}</p>
               <p className="mt-1 text-xs leading-relaxed text-muted">This segment is highlighted for review. Pause and confirm conditions with current local authority guidance; the demo cannot verify road status.</p>
             </div>
@@ -1031,7 +1031,7 @@ function HomeTab({
         {currentPlan && (
           <section className="overflow-hidden rounded-2xl bg-brand text-white shadow-[0_14px_28px_rgba(31,48,40,0.14)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E7C99C]">
+              <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
                 <IconBadge icon={Clock} tone="teal" size="sm" className="!h-7 !w-7" /> Next up
               </span>
               <span className="rounded-full bg-surface/10 px-2.5 py-1 text-[10px] font-semibold">
@@ -1151,7 +1151,7 @@ function HomeTab({
         >
           <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-accent/15 blur-2xl" />
           <div className="relative flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F5D5A2] to-[#D88972] text-[#273D31]">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sunrise-warm text-white shadow-glow-saffron">
               <Share2 size={19} />
             </div>
             <div className="min-w-0 flex-1">
@@ -1237,7 +1237,7 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-[1.03]"
           style={{ backgroundImage: `url(${EXPERIENCES[3].img})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#14251F]/95 via-[#14251F]/25 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand/95 via-brand/35 to-transparent" />
         <div className="relative w-full p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="rounded-full border border-white/25 bg-black/20 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] backdrop-blur">
@@ -1326,7 +1326,7 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
             <article key={village.id} className="rounded-xl border border-border bg-bg p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0"><h3 className="text-sm font-semibold text-text">{village.name}</h3><p className="mt-1 text-xs leading-relaxed text-muted">{village.shortDesc}</p></div>
-                <span className="shrink-0 rounded-full border border-amber-300 bg-amber-100 px-2 py-1 text-[8px] font-extrabold uppercase tracking-wide text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">Demo listing</span>
+                <span className="demo-badge shrink-0">Demo listing</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">{village.tags.map((tag) => <span key={tag} className="rounded-full bg-surface-2 px-2 py-1 text-[9px] font-semibold text-muted">{tag}</span>)}</div>
               <p className="mt-2 text-[10px] font-semibold text-accent-text">₹{village.localSpendINR.toLocaleString("en-IN")} · local spend demo estimate · approx. {village.elevationM} m</p>
@@ -1710,7 +1710,7 @@ function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint,
           const Icon = action.icon;
           const card = (
             <>
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-2 text-accent-text"><Icon size={20}/></span>
+              <IconBadge icon={Icon} tone={action.name === "Emergency (112)" || action.name === "Report a hazard" ? "coral" : action.name === "Export Rescue Pass" ? "saffron" : "teal"} size="md" />
               <h2 className="mt-4 text-sm font-bold text-text">{action.name}</h2>
               <p className="mt-1 text-xs leading-relaxed text-muted">{action.detail}</p>
               <span className="mt-4 inline-flex items-center gap-1 text-[10px] font-bold text-accent-text">{action.name === "Emergency (112)" ? "Call 112" : action.name === "Find homestay" ? "See demo villages" : action.name === "Export Rescue Pass" ? "Download pass" : action.name === "Preview Rescue Pass" ? "Preview pass" : "Open tool"} <ChevronRight size={13}/></span>
@@ -1783,7 +1783,7 @@ function ProfileTab({ guest, persona, onUpdateHealthTags, onSwitchPersona }) {
       <section className="profile-pass relative mb-6 overflow-hidden rounded-2xl p-5 text-white shadow-lg">
         <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/65">Atithi AI · Demo persona</p>
         <div className="mt-5 flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-surface/5 font-serif text-2xl text-[#E7C99C]">{guest?.name?.trim()?.[0]?.toUpperCase() || "P"}</div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-surface/5 font-serif text-2xl text-accent">{guest?.name?.trim()?.[0]?.toUpperCase() || "P"}</div>
           <div><h2 className="font-serif text-[25px] leading-none">{persona?.name || guest?.name || "Traveller"}</h2><p className="mt-2 text-xs text-white/75">{persona?.age ? `Age ${persona.age} · group ${persona.ageGroup}` : persona?.description || "Regional safety overview"}</p><p className="mt-1 text-[10px] text-white/65">{persona?.fitnessProfile || "Health-aware travel profile"}</p></div>
         </div>
         <p className="mt-5 border-t border-white/15 pt-3 text-[10px] leading-relaxed text-white/75">Demo profile only · health tags are not a medical record or medical advice.</p>
@@ -1813,13 +1813,14 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1 min-w-[64px]"
+      aria-current={active ? "page" : undefined} className="relative flex min-h-[58px] min-w-[52px] flex-col items-center justify-center gap-1 rounded-2xl px-1.5"
     >
-      <motion.div whileTap={{ scale: 0.9 }} animate={active ? { y: [0, -3, 0] } : { y: 0 }} transition={{ duration: 0.28 }}>
-        <IconBadge icon={Icon} tone={active ? "saffron" : "teal"} size="sm" className={active ? "" : "opacity-85"} />
+      <motion.div className="relative isolate" whileTap={{ scale: 0.92 }} animate={active ? { y: [0, -2, 0] } : { y: 0 }} transition={{ duration: 0.28 }}>
+        {active && <motion.span layoutId="guest-nav-active-pill" className="absolute -inset-1 -z-10 rounded-2xl bg-gradient-to-br from-brand/20 via-indigo/15 to-accent/25 ring-1 ring-brand/15" transition={{ type: "spring", stiffness: 420, damping: 32 }} />}
+        <IconBadge icon={Icon} tone={active ? "saffron" : "teal"} size="sm" className={active ? "" : "opacity-90"} />
       </motion.div>
       <span
-        className={`text-[10px] font-medium ${active ? "text-text" : "text-muted"}`}
+        className={`text-[10px] font-medium ${active ? "text-brand dark:text-saffron" : "text-muted"}`}
       >
         {label}
       </span>
@@ -1842,9 +1843,9 @@ function AdminDashboard({
   const weatherSourceLabel = weatherSource === "demo" ? "Manual rain override" : weatherObservation ? "Live Open-Meteo" : "No observation";
 
   return (
-    <div className="min-h-screen flex bg-surface-2">
+    <div className="min-h-screen flex bg-bg">
       {/* Sidebar */}
-      <div className="w-64 bg-brand text-white flex flex-col">
+      <div className="w-64 bg-sunrise text-white flex flex-col shadow-2xl">
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-2 mb-1">
             <IconBadge icon={Sparkles} tone="saffron" size="sm" />
@@ -2043,7 +2044,7 @@ function AdminDashboard({
 function SidebarItem({ icon: Icon, label, active, count, alert, tone = "teal" }) {
   return (
     <button
-      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${active ? "bg-surface/10 text-white" : "text-white/60 hover:bg-surface/5 hover:text-white"}`}
+      className={`relative z-10 min-h-11 w-full flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 transition-colors ${active ? "bg-white/10 text-white ring-1 ring-white/15" : "text-white/75 hover:bg-white/10 hover:text-white"}`}
     >
       <div className="flex items-center gap-3">
         <IconBadge icon={Icon} tone={alert ? "coral" : tone} size="sm" pulse={alert} />
@@ -2064,7 +2065,7 @@ function SidebarItem({ icon: Icon, label, active, count, alert, tone = "teal" })
 function StatCard({ title, value, trend, alert, icon = LayoutDashboard, tone = "teal" }) {
   return (
     <div
-      className={`bg-surface rounded-2xl p-5 shadow-sm border ${alert ? "border-red-200" : "border-border"}`}
+      className={`bg-surface rounded-2xl p-5 shadow-sm border ${alert ? "border-coral bg-coral/10" : "border-border"}`}
     >
       <div className="mb-3 flex items-center gap-3">
         <IconBadge icon={icon} tone={alert ? "coral" : tone} size="md" pulse={alert} />
