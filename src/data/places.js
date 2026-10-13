@@ -1,14 +1,134 @@
+// Regional destinations for the Atithi Himalayas Trip Guardian.
+// Crowd, travel-time, and spending figures are demo estimates, never live measurements.
+export const PLACE_TAGS = ["local-artisan", "eco-friendly", "low-crowd", "rain-friendly", "indoor"];
+
 export const PLACES = [
- {id:"in-room-breakfast",name:"In-Room Breakfast",category:"food",tags:["food","wellness","relaxed","indoor","family","couple","solo","friends"],dietary:["vegetarian","vegan","jain","gluten-free","dairy-free"],description:"Ease into the day with a made-to-order breakfast and tea in your suite.",location:"The Aranya House",indoor:true,outdoor:false},
- {id:"private-city-tour",name:"Private City Tour",category:"culture",tags:["culture","adventure","family","couple","solo","friends","balanced","packed"],description:"Explore heritage streets and local markets with a guide at a comfortable pace.",location:"Old Town · Dehradun",indoor:false,outdoor:true},
- {id:"courtyard-lunch",name:"Light Lunch at The Courtyard",category:"food",tags:["food","nature","relaxed","family","couple","friends"],dietary:["vegetarian","vegan","jain","gluten-free","dairy-free"],description:"Take a refreshing lunch break with seasonal vegetarian-friendly choices.",location:"The Courtyard",indoor:false,outdoor:true},
- {id:"botanical-garden",name:"Botanical Garden Walk",category:"nature",tags:["nature","wellness","relaxed","family","couple","solo","friends"],description:"Enjoy a gentle guided walk surrounded by greenery and quiet garden paths.",location:"Botanical Garden",indoor:false,outdoor:true},
- {id:"saffron-dining",name:"Dinner at Saffron Heritage Room",category:"food",tags:["food","culture","couple","family","friends","indoor"],dietary:["vegetarian","vegan","jain","gluten-free","dairy-free"],description:"Close the day with a thoughtfully prepared, vegetarian-forward tasting menu.",location:"Saffron Heritage Room",indoor:true,outdoor:false},
- {id:"national-art-museum",name:"National Art Museum",category:"culture",tags:["culture","indoor","relaxed","family","couple","solo","friends"],description:"Spend an easy hour with a curated indoor art and culture visit.",location:"National Art Museum",indoor:true,outdoor:false},
- {id:"ayurvedic-rejuvenation",name:"Ayurvedic Rejuvenation",category:"wellness",tags:["wellness","spiritual","relaxed","indoor","couple","solo"],description:"Make room for a restorative wellness session with a calming pace.",location:"Wellness Pavilion",indoor:true,outdoor:false},
- {id:"heritage-sunset-walk",name:"Heritage Sunset Walk",category:"culture",tags:["culture","nature","adventure","couple","friends","solo","packed"],description:"Walk through the old town as the evening light settles over the streets.",location:"Old Town · meet in lobby",indoor:false,outdoor:true},
- {id:"forest-bathing",name:"Forest Bathing at Maldevta",category:"nature",tags:["nature","wellness","spiritual","adventure","relaxed","balanced","couple","solo","friends"],description:"Slow down on a guided forest walk with time for a peaceful tea break.",location:"Maldevta · pickup included",indoor:false,outdoor:true},
- {id:"local-crafts-market",name:"Local Crafts Market",category:"shopping",tags:["shopping","culture","family","couple","solo","friends","balanced","packed"],description:"Browse locally inspired crafts and small finds at an unhurried pace.",location:"Local market area",indoor:false,outdoor:true},
- {id:"coffee-tea-ritual",name:"Coffee & Tea Ritual",category:"wellness",tags:["wellness","food","relaxed","indoor","family","couple","solo","friends"],dietary:["vegetarian","vegan","jain","gluten-free","dairy-free"],description:"Pause for a warm drink and a quiet reset between experiences.",location:"The Aranya House",indoor:true,outdoor:false},
- {id:"signature-ayurvedic-spa",name:"Signature Ayurvedic Spa",category:"wellness",tags:["wellness","relaxed","indoor","couple","solo"],description:"Unwind with a restorative spa experience inside the wellness centre.",location:"Wellness Centre",indoor:true,outdoor:false}
+  {
+    id: "robbers-cave", name: "Robber's Cave (Gucchupani)", lat: 30.3874, lon: 78.0478,
+    category: "nature", tags: [], baseCrowd: 88, travelMinutes: 25, localSpendINR: 280,
+    shortDesc: "A narrow limestone gorge where a stream disappears beneath the rock.",
+    description: "A narrow limestone gorge where a stream disappears beneath the rock.",
+    relatedInterests: ["nature", "adventure"], indoor: false, outdoor: true,
+  },
+  {
+    id: "sahastradhara", name: "Sahastradhara", lat: 30.3872, lon: 78.1313,
+    category: "nature", tags: ["eco-friendly"], baseCrowd: 84, travelMinutes: 35, localSpendINR: 320,
+    shortDesc: "A spring-fed valley known for its waterfalls and limestone formations.",
+    description: "A spring-fed valley known for its waterfalls and limestone formations.",
+    relatedInterests: ["nature", "wellness"], indoor: false, outdoor: true,
+  },
+  {
+    id: "mindrolling-monastery", name: "Mindrolling Monastery", lat: 30.2711, lon: 78.0176,
+    category: "spiritual", tags: ["indoor", "rain-friendly"], baseCrowd: 43, travelMinutes: 30, localSpendINR: 180,
+    shortDesc: "A Tibetan Buddhist monastery with a large stupa and peaceful prayer spaces.",
+    description: "A Tibetan Buddhist monastery with a large stupa and peaceful prayer spaces.",
+    relatedInterests: ["spiritual", "culture"], indoor: true, outdoor: false,
+  },
+  {
+    id: "paltan-bazaar", name: "Paltan Bazaar", lat: 30.3255, lon: 78.0416,
+    category: "market", tags: ["local-artisan", "indoor"], baseCrowd: 90, travelMinutes: 20, localSpendINR: 650,
+    shortDesc: "A lively central market for regional snacks, clothing, and everyday local finds.",
+    description: "A lively central market for regional snacks, clothing, and everyday local finds.",
+    relatedInterests: ["shopping", "food", "culture"], indoor: true, outdoor: false,
+  },
+  {
+    id: "tapkeshwar-temple", name: "Tapkeshwar Temple", lat: 30.3434, lon: 78.0138,
+    category: "spiritual", tags: ["eco-friendly"], baseCrowd: 64, travelMinutes: 25, localSpendINR: 140,
+    shortDesc: "A cave-side Shiva shrine beside a seasonal stream in the wooded foothills.",
+    description: "A cave-side Shiva shrine beside a seasonal stream in the wooded foothills.",
+    relatedInterests: ["spiritual", "culture"], indoor: false, outdoor: true,
+  },
+  {
+    id: "forest-research-institute", name: "Forest Research Institute", lat: 30.3426, lon: 77.9996,
+    category: "heritage", tags: ["indoor", "rain-friendly", "eco-friendly"], baseCrowd: 56, travelMinutes: 25, localSpendINR: 260,
+    shortDesc: "A landmark forestry campus with monumental colonial-era architecture and museums.",
+    description: "A landmark forestry campus with monumental colonial-era architecture and museums.",
+    relatedInterests: ["culture", "nature"], indoor: true, outdoor: false,
+  },
+  {
+    id: "malsi-deer-park", name: "Malsi Deer Park (Dehradun Zoo)", lat: 30.3772, lon: 78.0744,
+    category: "nature", tags: ["eco-friendly"], baseCrowd: 72, travelMinutes: 35, localSpendINR: 300,
+    shortDesc: "A small zoological park on Dehradun's northern edge in the Shivalik foothills.",
+    description: "A small zoological park on Dehradun's northern edge in the Shivalik foothills.",
+    relatedInterests: ["nature", "family"], indoor: false, outdoor: true,
+  },
+  {
+    id: "mussoorie-mall-road", name: "Mussoorie Mall Road", lat: 30.4598, lon: 78.0644,
+    category: "market", tags: ["local-artisan", "indoor"], baseCrowd: 95, travelMinutes: 75, localSpendINR: 950,
+    shortDesc: "Mussoorie's central promenade with shops, cafés, and valley viewpoints.",
+    description: "Mussoorie's central promenade with shops, cafés, and valley viewpoints.",
+    relatedInterests: ["shopping", "food", "culture"], indoor: true, outdoor: false,
+  },
+  {
+    id: "kempty-falls", name: "Kempty Falls", lat: 30.4927, lon: 78.0201,
+    category: "nature", tags: ["eco-friendly"], baseCrowd: 92, travelMinutes: 95, localSpendINR: 520,
+    shortDesc: "A well-known waterfall below Mussoorie; access and water conditions vary by season.",
+    description: "A well-known waterfall below Mussoorie; access and water conditions vary by season.",
+    relatedInterests: ["nature", "adventure"], indoor: false, outdoor: true,
+  },
+  {
+    id: "lal-tibba", name: "Lal Tibba", lat: 30.4686, lon: 78.0801,
+    category: "viewpoint", tags: ["eco-friendly"], baseCrowd: 79, travelMinutes: 90, localSpendINR: 420,
+    shortDesc: "A Landour ridge viewpoint known for wide Himalayan panoramas on clear days.",
+    description: "A Landour ridge viewpoint known for wide Himalayan panoramas on clear days.",
+    relatedInterests: ["nature", "adventure"], indoor: false, outdoor: true,
+  },
+  {
+    id: "george-everest", name: "George Everest House & Estate", lat: 30.4595, lon: 78.0336,
+    category: "heritage", tags: ["eco-friendly"], baseCrowd: 66, travelMinutes: 85, localSpendINR: 480,
+    shortDesc: "A historic estate above Mussoorie with views across the Doon and Aglar valleys.",
+    description: "A historic estate above Mussoorie with views across the Doon and Aglar valleys.",
+    relatedInterests: ["culture", "nature", "adventure"], indoor: false, outdoor: true,
+  },
+  {
+    id: "sainji-corn-village", name: "Sainji Corn Village", lat: 30.4178, lon: 78.0835,
+    category: "village", tags: ["local-artisan", "eco-friendly", "low-crowd"], baseCrowd: 22, travelMinutes: 105, localSpendINR: 420,
+    shortDesc: "A small village known for corn-hung homes and a slower, community-led visit.",
+    description: "A small village known for corn-hung homes and a slower, community-led visit.",
+    relatedInterests: ["culture", "nature", "food"], indoor: false, outdoor: true,
+  },
+  {
+    id: "kimadi-ridge", name: "Kimadi Village & Ridge", lat: 30.4306, lon: 78.0001,
+    category: "village", tags: ["local-artisan", "eco-friendly", "low-crowd"], baseCrowd: 16, travelMinutes: 65, localSpendINR: 260,
+    shortDesc: "A quieter hillside route through small settlements and forested ridge scenery.",
+    description: "A quieter hillside route through small settlements and forested ridge scenery.",
+    relatedInterests: ["nature", "adventure", "culture"], indoor: false, outdoor: true,
+  },
+  {
+    id: "jabarkhet-nature-reserve", name: "Jabarkhet Nature Reserve", lat: 30.4787, lon: 78.0746,
+    category: "nature", tags: ["eco-friendly", "low-crowd", "rain-friendly"], baseCrowd: 28, travelMinutes: 100, localSpendINR: 650,
+    shortDesc: "A privately managed forest reserve near Mussoorie with guided nature walks.",
+    description: "A privately managed forest reserve near Mussoorie with guided nature walks.",
+    relatedInterests: ["nature", "wellness", "adventure"], indoor: false, outdoor: true,
+  },
 ];
+
+export function getCrowd(place, { isWeekend = false, isHoliday = false } = {}) {
+  if (!place || !Number.isFinite(Number(place.baseCrowd))) return 50;
+  const weekendAdjustment = isWeekend ? 12 : 0;
+  const holidayAdjustment = isHoliday ? 18 : 0;
+  return Math.max(0, Math.min(100, Math.round(Number(place.baseCrowd) + weekendAdjustment + holidayAdjustment)));
+}
+
+export function getCrowdLevel(crowdScore) {
+  if (crowdScore < 35) return "Low";
+  if (crowdScore < 65) return "Medium";
+  return "High";
+}
+
+export function getNearestPlaces(place, candidates = PLACES, limit = 2) {
+  if (!place) return [];
+  const distanceKm = (a, b) => {
+    const toRadians = (value) => (value * Math.PI) / 180;
+    const dLat = toRadians(b.lat - a.lat);
+    const dLon = toRadians(b.lon - a.lon);
+    const first = Math.sin(dLat / 2) ** 2;
+    const second = Math.cos(toRadians(a.lat)) * Math.cos(toRadians(b.lat)) * Math.sin(dLon / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(first + second), Math.sqrt(1 - first - second));
+  };
+  return candidates
+    .filter((candidate) => candidate.id !== place.id)
+    .map((candidate) => ({ ...candidate, distanceKm: distanceKm(place, candidate) }))
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, limit);
+}
