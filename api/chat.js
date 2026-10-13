@@ -10,15 +10,15 @@ function send(res, status, payload) {
 function cleanText(value, max = 300) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
-function fallbackReply(message, destination) {
+function fallbackReply(message, destination, rankedExperiences = [], rankedDishes = []) {
   const text = String(message || "").toLowerCase();
   const intent = detectChatIntent(message, destination.hotel);
   if (intent.type === "flex_stay_request") return "I can calculate a demo Flex Stay offer for you. Please review the on-screen result; the hotel must confirm it.";
   if (intent.type === "human_help") return "Use Talk to a human to create an urgent handoff request. This demo cannot guarantee a live reply.";
   if (/(price|cost|fee|charge|refund|pay|payment|booking|book|available|availability)/i.test(text)) return "I can send this to the hotel team. Staff must confirm fees, bookings and availability before any commitment. Nothing is charged or booked by this assistant.";
   if (/(emergency|urgent help|ambulance|police|fire)/i.test(text)) return "If there is immediate danger, call the local emergency number " + destination.emergencyNumber + ". This demo cannot dispatch help.";
-  if (intent.type === "food_question" || /(food|dish|eat|restaurant|menu|diet|vegetarian|vegan|allerg)/i.test(text)) return "The " + destination.city + " destination pack includes illustrative local dishes. Confirm ingredients, allergens, venue details and final prices with the hotel team or restaurant.";
-  if (/(experience|activity|tour|guide|partner|things to do|visit|explore)/i.test(text)) return "The destination pack includes illustrative experiences. These are Demo listings, not confirmed partners or bookings; staff must confirm provider, schedule, availability and price.";
+  if (intent.type === "food_question" || /(food|dish|eat|restaurant|menu|diet|vegetarian|vegan|allerg)/i.test(text)) { const names = rankedDishes.slice(0, 3).map((dish) => dish.name); return (names.length ? "From the selected destination-pack list, consider: " + names.join(", ") + ". " : "No matching destination-pack dishes were supplied for this question. ") + "Confirm ingredients and allergens with the restaurant; no dish is represented as allergen-free."; }
+  if (/(experience|activity|tour|guide|partner|things to do|visit|explore)/i.test(text)) { const names = rankedExperiences.slice(0, 3).map((experience) => experience.name); return (names.length ? "From the curated destination-pack list: " + names.join(", ") + ". " : "No curated experiences were supplied for this destination. ") + "These are demo listings; staff must confirm provider, schedule, availability and price."; }
   if (/(weather|rain|wind|temperature|forecast)/i.test(text)) return "The app displays the latest available Open-Meteo observation for " + destination.city + ". Weather does not confirm venue opening, transport conditions or safety.";
   return "I can help with a stay in " + destination.city + ", destination-pack places, food discovery or a request to the hotel team. Money, booking and availability decisions stay with a person.";
 }
@@ -44,7 +44,12 @@ export default async function handler(req, res) {
   if (intent.type === "flex_stay_request") {
     return send(res, 200, { reply: "I’ll calculate a demo timing offer. Review the offer below; the hotel must confirm the final result.", action: intent, source: "local-intent" });
   }
-  const fallback = fallbackReply(message, destination);
+  const experienceIds = Array.isArray(body.rankedExperienceIds) ? body.rankedExperienceIds.filter((id) => typeof id === "string").slice(0, 5) : [];
+  const dishIds = Array.isArray(body.rankedDishIds) ? body.rankedDishIds.filter((id) => typeof id === "string").slice(0, 5) : [];
+  const hostNoteById = new Map((Array.isArray(body.rankedHostNotes) ? body.rankedHostNotes : []).filter((item) => item && typeof item.id === "string").map((item) => [item.id, cleanText(item.hostNote, 300)]));
+  const rankedExperiences = experienceIds.map((id) => destination.experiences.find((item) => item.id === id)).filter(Boolean).map((item) => ({ id: item.id, name: item.name, partner: item.partner, description: item.description, category: item.category, durationMinutes: item.durationMinutes, price: item.price, hostNote: hostNoteById.get(item.id) || item.hostNote || "" }));
+  const rankedDishes = dishIds.map((id) => destination.dishes.find((item) => item.id === id)).filter(Boolean).map((item) => ({ id: item.id, name: item.name, diet: item.diet, spiceLevel: item.spiceLevel, price: item.price, whereToEat: item.whereToEat }));
+  const fallback = fallbackReply(message, destination, rankedExperiences, rankedDishes);
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return send(res, 200, { reply: fallback, action: null, source: "local-fallback" });
 
@@ -57,6 +62,7 @@ export default async function handler(req, res) {
     const prompt = [
       "You are Atithi AI, a warm AI co-host for a three-star hotel.",
       "Answer in the guest's language, or concise English if uncertain. Never invent places, partners, policy, bookings or actions.",
+      "For experience or food recommendations, ONLY use rankedExperiences and rankedDishes from the provided context. Never add a name, partner, price, ingredient, duration, venue or availability that is not in the corresponding list. If a list is empty, say the curated list has no match and suggest asking hotel staff.",
       "Classify an early check-in or late check-out request into action {type:flex_stay_request,kind:early|late,time:HH:mm}. This action only routes the request.",
       "Never state or imply a price, fee, availability, room readiness, occupancy conclusion or quote. The frontend deterministic Flex Stay engine computes the offer from separate demo room and fee data. Do not calculate or paraphrase an offer.",
       "For a Flex Stay intent, give only a neutral acknowledgement asking the guest to review the on-screen offer. Never claim a booking or approval occurred.",
@@ -77,8 +83,8 @@ export default async function handler(req, res) {
           currency: destination.currency.code,
           primaryLanguages: destination.primaryLanguages,
           places: destination.places.map(({ id, name, category, tags }) => ({ id, name, category, tags })),
-          experiences: destination.experiences.map(({ id, name, description, tags }) => ({ id, name, description, tags })),
-          dishes: destination.dishes.map(({ id, name, diet, spiceLevel }) => ({ id, name, diet, spiceLevel })),
+          rankedExperiences,
+          rankedDishes,
         },
       }),
     ].join("\n");
