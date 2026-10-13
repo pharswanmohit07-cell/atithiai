@@ -9,6 +9,7 @@ import { CORRIDOR_ITINERARY } from "./data/guest.js";
 import DemoControls from "./components/DemoControls.jsx";
 import RouteMap from "./components/RouteMap.jsx";
 import AltitudeSentinel from "./components/AltitudeSentinel.jsx";
+import LensTab from "./components/guest/LensTab.jsx";
 import RouteGuardCard, { ActionsTakenByAtithi } from "./components/RouteGuardCard.jsx";
 import {
   ActionsTakenLog,
@@ -58,7 +59,6 @@ import {
   PhoneCall,
   House,
   ScanLine,
-  Camera,
 } from "lucide-react";
 
 const SUNNY_ITINERARY = CORRIDOR_ITINERARY.map((item, index) => ({
@@ -710,6 +710,7 @@ function GuestApp(props) {
                 className="h-full"
               >
                 <ServicesTab
+                  persona={props.persona}
                   requests={props.requests}
                   onRequest={props.addRequest}
                   setActiveTab={setActiveTab}
@@ -1626,75 +1627,6 @@ function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint 
   const [panel, setPanel] = useState("");
   const [hazardType, setHazardType] = useState("Road obstruction");
   const [hazardDetails, setHazardDetails] = useState("");
-  const [lensImage, setLensImage] = useState(null);
-  const [lensResult, setLensResult] = useState(null);
-  const [lensError, setLensError] = useState("");
-  const [lensLoading, setLensLoading] = useState(false);
-
-  const submitHazard = (event) => {
-    event.preventDefault();
-    onRequest({
-      title: `Hazard report · ${hazardType}`,
-      category: "Trip safety",
-      detail: `Corridor: ${selectedWaypoint?.name || "Selected route"}; issue: ${hazardType}; details: ${hazardDetails.trim() || "No additional description supplied."}`,
-    });
-    setHazardDetails("");
-    setPanel("");
-  };
-
-  const selectLensImage = (event) => {
-    const file = event.target.files?.[0];
-    setLensImage(null);
-    setLensResult(null);
-    setLensError("");
-    if (!file) return;
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setLensError("Choose a JPEG, PNG or WebP image.");
-      return;
-    }
-    if (file.size > 3 * 1024 * 1024) {
-      setLensError("Please choose an image under 3 MB so it can be sent securely for analysis.");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = String(reader.result || "");
-      const base64 = dataUrl.includes(",") ? dataUrl.slice(dataUrl.indexOf(",") + 1) : "";
-      if (!base64) {
-        setLensError("The image could not be read. Please try another photo.");
-        return;
-      }
-      setLensImage({ dataUrl, base64, mimeType: file.type, name: file.name });
-    };
-    reader.onerror = () => setLensError("The image could not be read. Please try another photo.");
-    reader.readAsDataURL(file);
-  };
-
-  const analyzePrice = async () => {
-    if (!lensImage) return;
-    setLensLoading(true);
-    setLensError("");
-    setLensResult(null);
-    try {
-      const response = await fetch("/api/lens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: lensImage.base64,
-          mimeType: lensImage.mimeType,
-          waypoint: selectedWaypoint?.name || "Himalayan corridor",
-        }),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Price Lens could not analyse this image.");
-      setLensResult(result);
-    } catch (error) {
-      setLensError(error instanceof Error ? error.message : "Price Lens is unavailable. Keep the displayed price and ask for an itemised quote.");
-    } finally {
-      setLensLoading(false);
-    }
-  };
-
   const actionCards = [
     { name: "Report a hazard", detail: "Flag a road issue, unsafe condition or suspected scam.", icon: ShieldAlert, tone: "coral", onClick: () => setPanel("hazard") },
     { name: "Emergency (112)", detail: "Call India’s unified emergency response number.", icon: PhoneCall, tone: "coral", href: "tel:112" },
@@ -1761,21 +1693,8 @@ function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint 
                 <button type="submit" className="w-full rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white">Submit demo safety report</button>
               </form>
             ) : (
-              <div className="mt-5 space-y-4">
-                <p className="text-xs leading-relaxed text-muted">Choose a photo of a printed menu, fare board or quotation. Lens can read visible text and suggest questions; it cannot verify a live market rate or prove fraud.</p>
-                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface p-5 text-center">
-                  {lensImage ? <img src={lensImage.dataUrl} alt="Selected price image preview" className="max-h-52 rounded-xl object-contain"/> : <><Camera size={25} className="text-accent-text"/><span className="mt-2 text-sm font-semibold">Take a photo or choose an image</span><span className="mt-1 text-[10px] text-muted">JPEG, PNG or WebP · up to 3 MB</span></>}
-                  <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={selectLensImage} className="mt-3 block w-full text-xs text-muted"/>
-                </label>
-                {lensError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{lensError}</p>}
-                <button type="button" disabled={!lensImage || lensLoading} onClick={analyzePrice} className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{lensLoading ? "Reading visible prices…" : "Analyse price image"}</button>
-                {lensResult && <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
-                  <div><p className="text-[10px] font-bold uppercase tracking-wide text-accent-text">What Lens can see</p><p className="mt-1 text-sm leading-relaxed text-text">{lensResult.summary}</p></div>
-                  {Array.isArray(lensResult.visiblePrices) && lensResult.visiblePrices.length > 0 && <div><p className="text-xs font-semibold text-text">Visible prices</p><ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-muted">{lensResult.visiblePrices.map((price,index)=><li key={index}>{price}</li>)}</ul></div>}
-                  {Array.isArray(lensResult.potentialConcerns) && lensResult.potentialConcerns.length > 0 && <div><p className="text-xs font-semibold text-text">Questions to clarify</p><ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-muted">{lensResult.potentialConcerns.map((issue,index)=><li key={index}>{issue}</li>)}</ul></div>}
-                  <p className="text-xs font-medium leading-relaxed text-text">Next step: {lensResult.nextStep}</p>
-                  <p className="border-t border-border pt-2 text-[10px] text-muted">Image interpretation only. No live price database was checked; this is not a fraud finding.</p>
-                </div>}
+              <div className="mt-5">
+                <LensTab selectedWaypoint={selectedWaypoint} persona={persona} onRequest={onRequest} />
               </div>
             )}
           </section>
