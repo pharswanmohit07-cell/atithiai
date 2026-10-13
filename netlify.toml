@@ -5,6 +5,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # GEMINI_MODEL is a public model identifier, not a credential.
+  # Keep scanning enabled for GEMINI_API_KEY and all other secrets.
+  SECRETS_SCAN_OMIT_KEYS = "GEMINI_MODEL"
 
 [[redirects]]
   from = "/api/chat"
