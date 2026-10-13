@@ -293,8 +293,6 @@ export default function AtithiAI() {
     window.dispatchEvent(new CustomEvent("atithi:weather", { detail: weather }));
   }, [weather]);
 
-  const simulateDisruption = () => simulateLandslide();
-
   useEffect(() => {
     if (!isDemoMode) return undefined;
     const handleDemoHotkey = (event) => {
@@ -525,6 +523,13 @@ export default function AtithiAI() {
           weatherLoading={weatherLoading}
           weatherError={weatherError}
           disruptions={disruptions}
+          routeGuardDisruption={routeGuardDisruption}
+          nearestSafeVillages={nearestSafeVillages}
+          routeSegment={routeSegment}
+          detourVillage={detourVillage}
+          routeActions={routeActions}
+          onRouteReroute={handleRouteReroute}
+          onKeepWaiting={handleKeepWaiting}
           lowCrowdPlaces={lowCrowdContext}
           actionsLog={actionsLog}
           crowdSelectionIds={crowdSelectionIds}
@@ -560,8 +565,17 @@ export default function AtithiAI() {
           weatherLoading={weatherLoading}
           weatherError={weatherError}
           disruptions={disruptions}
+          routeGuardDisruption={routeGuardDisruption}
+          nearestSafeVillages={nearestSafeVillages}
+          routeSegment={routeSegment}
+          detourVillage={detourVillage}
+          routeActions={routeActions}
+          affectedTravelers={routeGuardDisruption ? 1 : 0}
+          reroutesAccepted={reroutesAccepted}
+          onRouteReroute={handleRouteReroute}
+          onKeepWaiting={handleKeepWaiting}
           actionsLog={actionsLog}
-          redirectionsCount={redirectionsCount}
+          redirectionsCount={redirectionsCount + reroutesAccepted}
           localSpendRedirected={localSpendRedirected}
           guardianDisruption={guardianDisruption}
           affectedStop={affectedStop}
@@ -585,7 +599,8 @@ export default function AtithiAI() {
           setIsOpen={setIsDemoControlsOpen}
           isRainOverride={manualRainOverride}
           onToggleWeather={toggleManualRainOverride}
-          onDemoEvent={simulateDisruption}
+          onSimulateLandslide={simulateLandslide}
+          onClearDemoEvents={clearDemoEvents}
         />
       )}
     </div>
