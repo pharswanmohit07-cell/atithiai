@@ -104,6 +104,11 @@ function GuestChat({ guest, destination, preferences, addRequest, cachedDemoMode
       setMessages((current) => [...current, { role: "assistant", text: "I recorded an urgent demo request for the hotel team. This app cannot dispatch emergency services. If there is immediate danger, call " + destination.emergencyNumber + " now." }]);
       return;
     }
+    if (/(price|cost|fee|charge|refund|pay|payment|booking|book|available|availability)/i.test(message)) {
+      addRequest({ title: "Guest question about price or availability", category: "Manual approval", detail: "Guest asks: " + message + ". Staff must verify policy, availability and the final terms directly. No price or booking was confirmed by the assistant." });
+      setMessages((current) => [...current, { role: "assistant", text: "I’ve sent your question to the hotel’s demo request queue. A team member must confirm availability and any final price before you commit. Nothing has been booked or charged." }]);
+      return;
+    }
     let reply = localChatFallback(message, destination);
     if (!cachedDemoMode) {
       const controller = new AbortController();
@@ -201,7 +206,7 @@ function ServiceView({ destination, formatCurrency, addRequest }) {
   );
 }
 
-function HomeView({ user, destination, weather, weatherLoading, weatherError, itinerary, buildItinerary, addRequest, preferences, cachedDemoMode }) {
+function HomeView({ user, destination, weather, weatherLoading, weatherError, itinerary, removeItineraryStop, buildItinerary, addRequest, preferences, cachedDemoMode }) {
   return (
     <div className="space-y-4">
       <section className="overflow-hidden rounded-3xl bg-sunrise p-5 text-white shadow-lg sm:p-7">
@@ -218,7 +223,7 @@ function HomeView({ user, destination, weather, weatherLoading, weatherError, it
       </section>
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Your itinerary</h2><p className="text-xs text-muted">Illustrative suggestions · Demo itinerary</p></div><span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs font-bold">{itinerary.length} stops</span></div>
-        <ol className="mt-4 space-y-3">{itinerary.map((stop, index) => <li key={stop.id} className="flex items-start gap-3 rounded-xl border border-border bg-bg p-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white">{index + 1}</span><div className="min-w-0 flex-1"><h3 className="text-sm font-bold">{stop.title}</h3><p className="mt-1 text-xs text-muted">{stop.note || "Suggested stop · Demo itinerary"}</p></div></li>)}</ol>
+        <ol className="mt-4 space-y-3">{itinerary.map((stop, index) => <li key={stop.id} className="flex items-start gap-3 rounded-xl border border-border bg-bg p-3"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-sm font-bold text-white">{index + 1}</span><div className="min-w-0 flex-1"><h3 className="text-sm font-bold">{stop.title}</h3><p className="mt-1 text-xs text-muted">{stop.note || "Suggested stop · Demo itinerary"}</p></div><button type="button" onClick={() => removeItineraryStop(stop.id)} aria-label={"Remove " + stop.title + " from itinerary"} className="min-h-9 shrink-0 rounded-lg border border-border px-2 py-1 text-[10px] font-semibold text-muted">Remove</button></li>)}</ol>
         <p className="mt-3 text-xs text-muted">All visits and timings require confirmation with the hotel or venue. Prices and bookings are not processed here.</p>
       </section>
       <GuestChat guest={user} destination={destination} preferences={preferences} addRequest={addRequest} cachedDemoMode={cachedDemoMode} />
@@ -338,7 +343,7 @@ export default function AtithiAI({ mode = "guest" }) {
       <OfflineBanner />
       <Header onSwitch={switchPersona} />
       <div className="mx-auto max-w-3xl space-y-4 px-4 py-5 sm:px-6 sm:py-7">
-        {activeTab === "home" && <HomeView user={user} destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} itinerary={itinerary} buildItinerary={buildItinerary} addRequest={addRequest} preferences={preferences} cachedDemoMode={cachedDemoMode} />}
+        {activeTab === "home" && <HomeView user={user} destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} itinerary={itinerary} removeItineraryStop={removeItineraryStop} buildItinerary={buildItinerary} addRequest={addRequest} preferences={preferences} cachedDemoMode={cachedDemoMode} />}
         {activeTab === "map" && <Suspense fallback={<div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-border bg-surface text-sm text-muted"><LoaderCircle className="mr-2 animate-spin" size={18} />Loading destination map…</div>}><DestinationMap destination={destination} height={420} /></Suspense>}
         {activeTab === "services" && <ServiceView destination={destination} formatCurrency={formatCurrency} addRequest={addRequest} />}
         {activeTab === "discover" && <div className="space-y-4">
