@@ -87,7 +87,7 @@ const checks = [
   [registry.includes("jaipur") && registry.includes("ubud") && registry.includes("lisbon"), "The destination registry must expose all three demo packs."],
   [app.includes('/api/intent') && app.includes("rankPlaces") && app.includes("rankDishes") && app.includes("rankExperiences"), "Chat must parse intent and use deterministic ranking."],
   [intent.includes('req.method !== "POST"') && intent.includes('responseMimeType: "application/json"') && intent.includes("8000") && intent.includes("extractIntentFallback"), "Intent API must be POST-only, JSON mode, timed and have a friendly fallback."],
-  [chat.includes("rankedItems") && chat.includes("wordCount(reply) > 70") && chat.includes("GEMINI_API_KEY"), "Chat phrasing must be restricted to ranked items and under 70 words."],
+  [chat.includes("rankedItems") && chat.includes("wordCount(reply) > 70") && chat.includes("GEMINI_API_KEY") && chat.includes("const NO_RESULTS"), "Chat phrasing must be restricted to ranked items, under 70 words and safe when no items match."],
   [rankSource.includes("export function rankPlaces") && rankSource.includes("export function rankDishes") && rankSource.includes("export function rankExperiences") && rankSource.includes("reasons"), "All three pure ranking functions must return explainable reasons."],
   [lens.includes("MAX_IMAGE_BYTES") && lens.includes("safeJsonParse") && lens.includes("safe-fallback"), "Lens must preserve its image bound, safe parsing and fallback."]
 ];

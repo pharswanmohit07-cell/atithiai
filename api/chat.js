@@ -53,7 +53,21 @@ const FALLBACKS = {
   de: "Ich habe deine Anfrage anhand deiner Reisevorlieben interpretiert. Dies sind passende Optionen aus der ausgewählten Destination; Geschichten und Kosten sind Demo-Inhalte und sollten vor Ort geprüft werden.",
   ja: "旅行の好みに基づいてリクエストを解釈しました。選択した目的地パックから近い候補を示します。物語や費用はデモ情報のため、現地で確認してください。",
   ar: "فسّرت طلبك وفق تفضيلات سفرك. هذه أقرب الخيارات من حزمة الوجهة المحددة؛ القصص والتكاليف أمثلة تجريبية، لذا تحقق من التفاصيل محليًا.",
-  zh: "我已根据你的旅行偏好理解了请求。以下是所选目的地包中较匹配的选项；故事和花费为演示内容，请在当地确认详情。"
+  zh: "我已根据你的旅行偏好理解了请求。以下是所选目的地包中较匹配的选项；故事和花费为演示内容，请在当地确认详情。",
+  pt: "Interpretei seu pedido com base nas preferências de viagem. Estas são as opções mais próximas do destino selecionado; histórias e gastos são conteúdo de demonstração, então confirme os detalhes localmente.",
+  id: "Saya menafsirkan permintaan berdasarkan preferensi perjalanan Anda. Berikut pilihan yang paling sesuai dari paket destinasi ini; cerita dan biaya adalah konten demo, jadi verifikasi detail secara lokal."
+};
+const NO_RESULTS = {
+  en: "I couldn't find a suitable option in this destination pack with those constraints. Try relaxing one filter and verify details locally.",
+  hi: "इन शर्तों के अनुसार इस डेस्टिनेशन पैक में उपयुक्त विकल्प नहीं मिला। कोई फ़िल्टर बदलकर स्थानीय रूप से पुष्टि करें।",
+  es: "No encontré una opción adecuada con esos criterios. Prueba a flexibilizar un filtro y verifica los detalles localmente.",
+  fr: "Aucune option adaptée n’a été trouvée avec ces critères. Essayez d’assouplir un filtre et vérifiez sur place.",
+  de: "Mit diesen Bedingungen wurde keine passende Option gefunden. Lockere einen Filter und prüfe die Details vor Ort.",
+  ja: "指定した条件に合う候補がありません。条件を一つ緩めて、詳細を現地で確認してください。",
+  ar: "لم أجد خيارًا مناسبًا بهذه الشروط. خفف أحد المرشحات وتحقق من التفاصيل محليًا.",
+  zh: "没有找到符合这些条件的选项。请放宽一个筛选条件，并在当地确认详情。",
+  pt: "Não encontrei uma opção adequada com esses critérios. Tente flexibilizar um filtro e confirme os detalhes localmente.",
+  id: "Tidak ada pilihan yang sesuai dengan kriteria tersebut. Coba longgarkan satu filter dan verifikasi detail secara lokal."
 };
 function mentionsUnrankedKnownItem(reply, rankedItems, destination) {
   const allowed = new Set(rankedItems.map((item) => cleanText(item.title, 160).toLowerCase()));

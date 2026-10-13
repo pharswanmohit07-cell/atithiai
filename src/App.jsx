@@ -319,7 +319,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     setDraft("");
     addChatMessage({ role: "guest", text: message });
     setSending(true);
-    const requestLanguage = replyLanguage === "auto" ? detectTextLanguage(message) : replyLanguage;
+    let requestLanguage = replyLanguage === "auto" ? detectTextLanguage(message) : replyLanguage;
     let parsedIntent = fallbackIntent(message);
     const intentController = new AbortController();
     const intentTimeout = window.setTimeout(() => intentController.abort(), 3000);
@@ -345,6 +345,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     }
 
     if (replyLanguage !== "auto") parsedIntent.language = targetLanguageTag(replyLanguage);
+    else requestLanguage = parsedIntent.language || requestLanguage;
     const filters = {
       ...(parsedIntent.filters || {}),
       diet: parsedIntent.filters?.diet && parsedIntent.filters.diet !== "none" ? parsedIntent.filters.diet : (profile.diet === "none" ? null : profile.diet),
@@ -380,7 +381,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
         body: JSON.stringify({
           message,
           destinationId: destination.id,
-          replyLanguage: replyLanguage === "auto" ? "auto" : targetLanguageTag(replyLanguage),
+          replyLanguage: replyLanguage === "auto" ? (parsedIntent.language || "auto") : targetLanguageTag(replyLanguage),
           profile,
           weather: weather?.source === "live" ? weather : null,
           rankedItems: ranked.map((item) => ({ id: item.id, itemType: item.itemType, score: item.score, reasons: item.reasons })),

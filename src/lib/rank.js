@@ -193,7 +193,7 @@ function scoreItem(item, kind, profile = {}, filters = {}, context = {}, spendSt
   const rainy = /rain|storm|drizzle|shower/i.test(normalized(context?.weather?.kind || context?.weather?.condition || ""));
   if (rainy && (item.rainFriendly === true || item.indoor === true)) {
     score += 4;
-    reasons.push("Indoor, good for rain");
+    reasons.push(item.indoor === true ? "Indoor, good for rain" : "Rain-friendly option (estimated)");
   }
   if (time && item.bestTime && matchesTime(item, time)) {
     score += 2;
