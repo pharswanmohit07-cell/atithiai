@@ -171,3 +171,29 @@ button.bg-brand.text-white:hover:not(:disabled) { box-shadow: 0 10px 30px rgb(25
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+.pitch-hero {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 88% 0%, rgb(var(--destination-accent-rgb) / 0.28), transparent 35%),
+    radial-gradient(ellipse at 8% 100%, rgb(var(--coral-rgb) / 0.2), transparent 36%),
+    linear-gradient(125deg, #2e1065 0%, #1e1038 62%, #35205b 100%);
+}
+.pitch-hero::before, .pitch-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border: 1px solid rgb(255 255 255 / 0.13);
+  border-radius: 999px;
+}
+.pitch-hero::before { width: 18rem; height: 18rem; right: -5rem; top: -9rem; box-shadow: 0 0 0 24px rgb(255 255 255 / 0.025), 0 0 0 52px rgb(255 255 255 / 0.02); }
+.pitch-hero::after { width: 10rem; height: 10rem; right: 14%; bottom: -7rem; border-color: rgb(var(--destination-accent-rgb) / 0.26); }
+.btn-primary {
+  color: #211039;
+  background: linear-gradient(115deg, #fcd34d 0%, #fbbf24 48%, #fb923c 100%);
+  box-shadow: 0 8px 24px rgb(251 191 36 / 0.22);
+  transition: transform 160ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+.btn-primary:hover { box-shadow: 0 12px 30px rgb(251 191 36 / 0.3); filter: saturate(1.06); }
