@@ -1,5 +1,5 @@
 import { detectTextLanguage, languageBase, targetLanguageTag } from "../src/i18n.js";
-import { isBodyTooLarge, isPlainObject } from "./_shared.js";
+import { isBodyTooLarge, isPlainObject } from "../src/lib/apiHardening.js";
 
 const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
 const INTENTS = new Set(["find_place", "find_food", "find_experience", "plan_day", "help", "other"]);
