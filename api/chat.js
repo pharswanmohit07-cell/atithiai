@@ -1,5 +1,6 @@
 import { getDestinationById } from "../src/data/destinations/index.js";
 import { detectChatIntent } from "../src/lib/chatIntents.js";
+import { localDisruptionAdvisory } from "../src/lib/disruptions.js";
 
 const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
 
@@ -33,6 +34,73 @@ function safePreferences(value) {
   const input = value && typeof value === "object" ? value : {};
   return { language: cleanText(input.language, 40) || "English", dietaryPreference: cleanText(input.dietaryPreference, 80) || "No preference", travelParty: cleanText(input.travelParty, 40) || "unspecified" };
 }
+
+async function handleDisruptionAdvisory(body, destination, res) {
+  const weatherTypes = new Set(["rain", "storm", "heat"]);
+  const demoTypes = new Set(["strike", "closure", "flight_delay"]);
+  const incoming = body.disruption && typeof body.disruption === "object" ? body.disruption : {};
+  const type = [...weatherTypes, ...demoTypes].includes(incoming.type) ? incoming.type : null;
+  if (!type) return send(res, 200, { reply: localDisruptionAdvisory({ city: destination.city, language: cleanText(body.language, 50) || "English", alternatives: [] }), source: "local-fallback" });
+  const source = incoming.source === "live" && weatherTypes.has(type) ? "live" : "demo";
+  const validPlaces = new Set((destination.places || []).map((place) => place.id));
+  const affectedPlaceIds = Array.isArray(incoming.affectedPlaceIds) ? Array.from(new Set(incoming.affectedPlaceIds.filter((id) => typeof id === "string" && validPlaces.has(id)))).slice(0, 30) : [];
+  const alternatives = (Array.isArray(body.alternativePlaceIds) ? body.alternativePlaceIds : [])
+    .filter((id) => typeof id === "string" && validPlaces.has(id))
+    .slice(0, 2)
+    .map((id) => destination.places.find((place) => place.id === id))
+    .filter(Boolean)
+    .map(({ id, name, category, rainFriendly, lowCrowd }) => ({ id, name, category, rainFriendly, lowCrowd }));
+  const titleByType = {
+    rain: "Rain may affect outdoor plans",
+    storm: "Weather may affect outdoor plans",
+    heat: "Heat may affect outdoor plans",
+    strike: "Transport interruption (demo)",
+    closure: "Attraction closure (demo)",
+    flight_delay: "Flight delay (demo)",
+  };
+  const disruption = {
+    type,
+    title: titleByType[type],
+    severity: ["low", "medium", "high", "critical"].includes(incoming.severity) ? incoming.severity : "medium",
+    source,
+    affectedPlaceIds,
+    detectedAt: typeof incoming.detectedAt === "string" ? incoming.detectedAt.slice(0, 40) : "",
+  };
+  const language = cleanText(body.language, 50) || "English";
+  const fallback = localDisruptionAdvisory({ disruption, alternatives, city: destination.city, language });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return send(res, 200, { reply: fallback, source: "local-fallback" });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2600);
+  try {
+    const prompt = [
+      "Write one calm, practical guest advisory in at most 50 words and in the requested language.",
+      "Use only the structured disruption and destination-pack alternatives in the JSON. Mention only alternative names present in that list; do not invent venues, prices, partners, routes, schedules or booking status.",
+      "Never claim access to live road, transport, flight, or venue-opening data. The only live feed in this application is the destination's Open-Meteo weather observation; strike, closure and flight-delay events are explicitly demo events.",
+      "Do not suggest that a driver, airline, venue or hotel has been contacted. Do not promise safety or availability.",
+      JSON.stringify({ language, city: destination.city, disruption, alternatives }),
+    ].join("\n");
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(apiKey),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 120 } }),
+      },
+    );
+    if (!response.ok) throw new Error("Advisory service unavailable");
+    const payload = await response.json();
+    const text = payload?.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text;
+    const reply = cleanText(text, 1600).split(/\s+/).slice(0, 50).join(" ");
+    return send(res, 200, { reply: reply || fallback, source: reply ? "gemini" : "local-fallback" });
+  } catch {
+    return send(res, 200, { reply: fallback, source: "local-fallback" });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return send(res, 405, { error: "Use POST to send a chat message." });
   const body = req.body && typeof req.body === "object" ? req.body : {};
@@ -40,6 +108,7 @@ export default async function handler(req, res) {
   if (!message) return send(res, 400, { error: "Please enter a message." });
 
   const destination = getDestinationById(cleanText(body.destinationId, 50));
+  if (body.mode === "disruption_advisory") return handleDisruptionAdvisory(body, destination, res);
   const intent = detectChatIntent(message, destination.hotel);
   if (intent.type === "flex_stay_request") {
     return send(res, 200, { reply: "I’ll calculate a demo timing offer. Review the offer below; the hotel must confirm the final result.", action: intent, source: "local-intent" });
