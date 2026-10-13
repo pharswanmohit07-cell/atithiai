@@ -1007,7 +1007,16 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [selected, setSelected] = useState(null);
+  const [destinationView, setDestinationView] = useState("list");
+  const [destinationCategory, setDestinationCategory] = useState("All");
   const categories = ["All", "Wellness", "Dining", "Culture"];
+  const destinationCategories = ["All", "nature", "spiritual", "heritage", "market", "viewpoint", "village"];
+  const filteredDestinations = PLACES.filter((place) =>
+    (destinationCategory === "All" || place.category === destinationCategory) &&
+    `${place.name} ${place.category} ${place.shortDesc} ${(place.tags || []).join(" ")}`
+      .toLowerCase().includes(search.toLowerCase())
+  );
+  const isSelectedWeekend = isWeekend;
   const categoryIcons = { All: Compass, Wellness: Sparkles, Dining: Utensils, Culture: MapPin };
   const categoryTones = { All: "teal", Wellness: "violet", Dining: "saffron", Culture: "sky" };
   const filtered = EXPERIENCES.filter(
@@ -1073,10 +1082,56 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search experiences"
+          placeholder="Search destinations and experiences"
           className="w-full bg-surface border border-border rounded-xl py-2.5 pl-10 pr-3 text-sm outline-none focus:border-accent"
         />
       </label>
+
+      <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Dehradun + Mussoorie</p>
+            <h2 className="mt-1 font-serif text-2xl text-text">Regional destinations</h2>
+            <p className="mt-1 text-xs text-muted">Explore places before you go.</p>
+          </div>
+          <div role="group" aria-label="Destination view" className="flex rounded-xl border border-border bg-surface-2 p-1">
+            {["list", "map"].map((mode) => (
+              <button key={mode} type="button" aria-pressed={destinationView === mode} onClick={() => setDestinationView(mode)} className={`rounded-lg px-3 py-2 text-xs font-semibold capitalize transition ${destinationView === mode ? "bg-brand text-white shadow-sm" : "text-muted hover:text-text"}`}>{mode === "list" ? "List" : "Map"}</button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-2" aria-label="Destination category filters">
+          {destinationCategories.map((item) => (
+            <button key={item} type="button" aria-pressed={destinationCategory === item} onClick={() => setDestinationCategory(item)} className={`whitespace-nowrap rounded-full px-3 py-2 text-[10px] font-semibold capitalize transition ${destinationCategory === item ? "bg-brand text-white" : "border border-border bg-surface text-muted hover:bg-surface-2"}`}>{item === "All" ? "All places" : item}</button>
+          ))}
+        </div>
+        <p className="mb-2 text-[10px] text-muted">{filteredDestinations.length} destinations · crowd, travel and spend figures estimated</p>
+        {destinationView === "map" ? (
+          <PlacesMap places={filteredDestinations} onAddToItinerary={onAddPlace} selectedPlaceIds={crowdSelectionIds} height={350} />
+        ) : (
+          <div className="space-y-2">
+            {filteredDestinations.map((place) => {
+              const crowdScore = getCrowd(place, { isWeekend: isSelectedWeekend, isHoliday: false });
+              const crowdLevel = getCrowdLevel(crowdScore);
+              const crowdStyle = crowdLevel === "Low" ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200" : crowdLevel === "Medium" ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-200" : "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-200";
+              const added = crowdSelectionIds.includes(place.id);
+              return (
+                <article key={place.id} className="rounded-xl border border-border bg-bg p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0"><h3 className="text-sm font-semibold text-text">{place.name}</h3><p className="mt-1 text-xs leading-relaxed text-muted">{place.shortDesc}</p></div>
+                    <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-bold ${crowdStyle}`}>{crowdLevel} · est.</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted"><span>~{place.travelMinutes} min · estimated</span><span>₹{place.localSpendINR} local spend · estimated</span></div>
+                  <button type="button" disabled={added} onClick={() => onAddPlace(place)} className="mt-3 w-full rounded-lg bg-brand px-3 py-2.5 text-xs font-semibold text-white disabled:opacity-50">{added ? "Added to itinerary" : "Add to itinerary"}</button>
+                </article>
+              );
+            })}
+            {!filteredDestinations.length && <p className="rounded-xl bg-surface-2 p-4 text-center text-xs text-muted">No regional places match this filter.</p>}
+          </div>
+        )}
+        <p className="mt-3 text-[9px] leading-relaxed text-muted">Crowd index, travel time and local-spend amounts are demo estimates, not live data. Check local conditions before travelling.</p>
+      </section>
+
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
         {categories.map((item) => {
           const CategoryIcon = categoryIcons[item];
