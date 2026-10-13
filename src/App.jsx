@@ -202,7 +202,7 @@ function ServiceView({ destination, formatCurrency, addRequest }) {
   );
 }
 
-function HomeView({ user, destination, weather, weatherLoading, weatherError, formatCurrency, itinerary, addItineraryStop, buildItinerary, addRequest, preferences, cachedDemoMode }) {
+function HomeView({ user, destination, weather, weatherLoading, weatherError, itinerary, buildItinerary, addRequest, preferences, cachedDemoMode }) {
   return (
     <div className="space-y-4">
       <section className="overflow-hidden rounded-3xl bg-sunrise p-5 text-white shadow-lg sm:p-7">
