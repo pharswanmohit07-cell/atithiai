@@ -264,10 +264,15 @@ export default function AtithiAI() {
     INITIAL_REQUESTS,
   );
   const rescuePassRef = useRef(null);
-  const rescuePassActions = useMemo(
-    () => [...routeActions, ...actionsLog].slice(0, 4),
-    [routeActions, actionsLog],
-  );
+  const rescuePassActions = useMemo(() => {
+    const timestampFromId = (action) => {
+      const match = String(action?.id || "").match(/(\\d{10,})/);
+      return match ? Number(match[1]) : 0;
+    };
+    return [...routeActions, ...actionsLog]
+      .sort((first, second) => timestampFromId(second) - timestampFromId(first))
+      .slice(0, 4);
+  }, [routeActions, actionsLog]);
 
   useEffect(() => {
     if (!isDemoMode) return undefined;
