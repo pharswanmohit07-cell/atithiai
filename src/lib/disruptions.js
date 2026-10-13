@@ -177,7 +177,7 @@ export function replaceAffectedItineraryStop(itinerary = [], disruption, replace
     if (affectedIds.has(id) && !replaced) {
       next.push({ id: replacement.id, placeId: replacement.id, title: replacement.name, note: "Disruption Care alternative · destination-pack suggestion", order: next.length + 1 });
       replaced = true;
-    } else if (!affectedIds.has(id)) {
+    } else {
       next.push({ ...stop, order: next.length + 1 });
     }
   }

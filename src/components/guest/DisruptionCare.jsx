@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, BadgeCheck, BedDouble, CloudRain, ShieldAlert, Sparkles, Utensils } from "lucide-react";
+import { AlertTriangle, ArrowRight, BedDouble, CloudRain, ShieldAlert, Sparkles, Utensils } from "lucide-react";
 import { useHotelContext } from "../../context/HotelContext.jsx";
 import { useDestination } from "../../context/DestinationContext.jsx";
 import { disruptionAffectsPlan, disruptionSeverityRank, localDisruptionAdvisory, rankDisruptionAlternatives, replaceAffectedItineraryStop } from "../../lib/disruptions.js";
@@ -15,7 +15,7 @@ function Severity({ value }) {
   return <span className={"rounded-full px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide " + (urgent ? "bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-100" : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100")}>{value} severity</span>;
 }
 
-export default function DisruptionCare({ destination, weather, itinerary, setItinerary, preferences, disruptions, demoMode }) {
+export default function DisruptionCare({ destination, weather, itinerary, setItinerary, preferences, disruptions }) {
   const { formatCurrency } = useDestination();
   const { flexSettings, addRequest, recordAction } = useHotelContext();
   const [handled, setHandled] = useState(() => readHandled(destination.id));
@@ -37,11 +37,11 @@ export default function DisruptionCare({ destination, weather, itinerary, setIti
     ? destination.experiences.filter((experience) => flexSettings.hostExperiencePicks?.[experience.id]?.enabled !== false)
       .map((experience) => ({ ...experience, hostNote: flexSettings.hostExperiencePicks?.[experience.id]?.note || experience.hostNote }))
     : [];
-  const rainyForSuggestions = disruption && ["rain", "storm", "heat"].includes(disruption.type);
+  const rainyForSuggestions = Boolean(disruption);
   const hostPicks = useMemo(() => rankExperiences(activeExperiencePool, {
     partyType: preferences?.travelParty || "Family",
     freeTimeMinutes: 240,
-    weatherKind: rainyForSuggestions ? (disruption.type === "heat" ? "clear" : disruption.type) : (weather?.kind || "unknown"),
+    weatherKind: rainyForSuggestions ? "rain" : (weather?.kind || "unknown"),
     lowCrowdPreference: true,
   }).slice(0, 2), [activeExperiencePool, preferences?.travelParty, rainyForSuggestions, disruption?.type, weather?.kind]);
   const warmDishes = useMemo(() => flexSettings.hostPicks.localFood
