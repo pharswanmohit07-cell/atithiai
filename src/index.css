@@ -359,3 +359,5 @@ html.tab-hidden *, html.tab-hidden *::before, html.tab-hidden *::after { animati
   .welcome-fireflies { display: none !important; }
   *, *::before, *::after { transition-duration: .12s !important; scroll-behavior: auto !important; }
 }
+
+.reduced-effects .hero-shimmer::after { display: none !important; }
