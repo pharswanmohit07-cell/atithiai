@@ -379,7 +379,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
   };
 
   return <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white"><MessageCircle size={19}/></span><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Tell Atithi what kind of place, food or experience you have in mind.</p></div></div>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><IconBadge icon={MessageCircle} tone="teal" /><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Tell Atithi what kind of place, food or experience you have in mind.</p></div></div>
       <label className="flex items-center gap-2 text-xs font-bold text-text">{t("replyLanguage", getDefaultLanguage())}<select value={replyLanguage} onChange={(event) => writeLanguage(event.target.value)} className="min-h-10 max-w-40 rounded-xl border border-border bg-bg px-2 py-2 text-xs"><option value="auto">{t("detectLanguage", getDefaultLanguage())}</option>{LANGUAGE_OPTIONS.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
     </div>
     <div className="mt-4 max-h-[min(62vh,640px)] space-y-3 overflow-y-auto rounded-2xl bg-bg p-3" aria-live="polite">
