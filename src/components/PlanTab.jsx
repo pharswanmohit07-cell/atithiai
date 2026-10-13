@@ -9,6 +9,7 @@ import { useDestination } from "../context/DestinationContext.jsx";
 import { useProfile } from "../context/ProfileContext.jsx";
 import { useTravelContext } from "../context/TravelContext.jsx";
 import DemoControls from "./DemoControls.jsx";
+import { demoFetch } from "../lib/demoCache.js";
 import IconBadge from "./ui/IconBadge.jsx";
 
 const FLOW = [
@@ -457,7 +458,7 @@ export default function PlanTab() {
     setAdvisoryLoading(true);
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 3000);
-    fetch("/api/plan", {
+    demoFetch("/api/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
