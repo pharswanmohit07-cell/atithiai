@@ -177,7 +177,7 @@ export default function TripStoryModal({
     const blob = await toBlob(storyRef.current, {
       pixelRatio: 3,
       cacheBust: true,
-      backgroundColor: "#fff4e7",
+      backgroundColor: "var(--surface-2)",
       width: STORY_WIDTH,
       height: STORY_HEIGHT,
       style: {
