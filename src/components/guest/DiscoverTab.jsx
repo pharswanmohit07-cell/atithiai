@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { BadgeCheck, CalendarClock, ChefHat, Compass, ExternalLink, MapPin, ShoppingBag, Sparkles, Utensils } from "lucide-react";
 import { useHotelContext } from "../../context/HotelContext.jsx";
-import { rankDishes, rankExperiences } from "../../lib/rank.js";
+import { getFreeTimeMinutes, rankDishes, rankExperiences } from "../../lib/rank.js";
 
 const panel = "rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5";
 const field = "min-h-10 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-semibold text-text";
@@ -69,10 +69,10 @@ export default function DiscoverTab({ destination, weather, preferences, itinera
       .map((experience) => ({ ...experience, hostNote: hostDetails(experience, flexSettings).note }));
   }, [destination.experiences, flexSettings, experienceCategory, rainOnly, partyFit]);
   const rankedExperiences = useMemo(() => rankExperiences(activeExperiences, {
-    partyType: preferences?.travelParty || "Family", freeTimeMinutes: 240,
+    partyType: preferences?.travelParty || "Family", freeTimeMinutes: getFreeTimeMinutes(destination.hotel.checkOut, preferences?.departureTime),
     weatherKind: weather?.kind || weather?.condition || "unknown",
     lowCrowdPreference: flexSettings.hostPicks.quieterPlaces,
-  }), [activeExperiences, preferences?.travelParty, weather?.kind, weather?.condition, flexSettings.hostPicks.quieterPlaces]);
+  }), [activeExperiences, destination.hotel.checkOut, preferences?.travelParty, preferences?.departureTime, weather?.kind, weather?.condition, flexSettings.hostPicks.quieterPlaces]);
   const filteredDishes = useMemo(() => (flexSettings.hostPicks.localFood ? destination.dishes : []).filter((dish) => {
     const price = Number(dish.price);
     if (budgetCap !== "" && Number.isFinite(price) && price > Math.max(0, Number(budgetCap))) return false;
