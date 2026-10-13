@@ -223,7 +223,7 @@ export default function AdminDashboard({ onSwitch }) {
               <label className="mt-2 block text-xs font-semibold text-muted">Personal host note<textarea value={flexSettings.hostExperiencePicks?.[experience.id]?.note ?? experience.hostNote ?? ""} onChange={(e)=>updateExperiencePick(experience,{note:e.target.value})} maxLength={300} rows={2} className="mt-1 w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm font-normal text-text"/></label>
             </div>)}</div>
           </div>
-          </div></div>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><p className="max-w-2xl text-xs leading-relaxed text-muted">Reset clears demo requests, shared conversation, activity history and saved settings for all destination packs in this browser.</p><button type="button" onClick={resetDemoData} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-rose-300 px-4 py-3 text-sm font-bold text-rose-800 dark:border-rose-900 dark:text-rose-200"><RotateCcw size={15}/>Reset demo data</button></div>
         </div>}
       </section>
