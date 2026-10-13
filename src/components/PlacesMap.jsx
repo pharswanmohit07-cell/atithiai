@@ -104,7 +104,7 @@ export default function PlacesMap({
         doubleClickZoom={!mini}
         zoomControl={!mini}
         className={`h-full w-full ${isDark ? "atithi-map-dark" : ""}`}
-        style={{ height: "100%", width: "100%", background: isDark ? "#111827" : "#e6eee8" }}
+        style={{ height: "100%", width: "100%", background: "var(--bg)" }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
