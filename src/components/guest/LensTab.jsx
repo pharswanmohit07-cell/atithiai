@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AlertCircle, Camera, Check, Languages, LoaderCircle, MessageCircle, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { getSeedLensResult } from "../../data/lensCache.js";
+import { demoFetch, isCachedDemoMode } from "../../lib/demoCache.js";
 import IconBadge from "../ui/IconBadge.jsx";
 import { useDestination } from "../../context/DestinationContext.jsx";
 import { useProfile } from "../../context/ProfileContext.jsx";
@@ -141,7 +142,7 @@ export default function LensTab({ onRequest }) {
     const timeout = window.setTimeout(() => controller.abort(),6000);
     setLoading(true);setError("");setCachedDemo(false);setSpeechMessage("");
     try {
-      const response = await fetch("/api/lens",{
+      const response = await demoFetch("/api/lens",{
         method:"POST",headers:{"Content-Type":"application/json"},signal:controller.signal,
         body:JSON.stringify({
           imageBase64:prepared.base64,targetLanguage:selectedLanguage,mode:selectedMode,
@@ -182,14 +183,22 @@ export default function LensTab({ onRequest }) {
   };
   const chooseSample = async (sample) => {
     setMode(sample.mode);setSampleId(sample.id);setError("");setResult(null);setImage(null);setCachedDemo(false);
+    if (isCachedDemoMode()) {
+      setResult(cachedSample(sample.id,language));setCachedDemo(true);
+      return;
+    }
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(),5000);
     try {
-      const response = await fetch(sample.src,{cache:"no-store"});
+      const response = await demoFetch(sample.src,{cache:"no-store",signal:controller.signal});
       if (!response.ok) throw new Error("Sample image has not been added yet.");
       const blob = await response.blob();
       if (!blob.size) throw new Error("Sample image is empty.");
       await useFile(new File([blob],sample.id+".jpg",{type:blob.type || "image/jpeg"}),sample.id,sample.mode);
     } catch {
       setResult(cachedSample(sample.id,language));setCachedDemo(true);setError("");
+    } finally {
+      window.clearTimeout(timeout);
     }
   };
   const changeLanguage = (next) => {
