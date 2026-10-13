@@ -6,6 +6,63 @@ function send(res, status, payload) {
   res.end(JSON.stringify(payload));
 }
 
+async function handleAltitudeRephrase(req, res) {
+  const advisory = typeof req.body?.advisory === "string" ? req.body.advisory.trim().slice(0, 2200) : "";
+  const rawPersona = req.body?.persona && typeof req.body.persona === "object" ? req.body.persona : {};
+  const persona = {
+    id: ["pilgrim", "trekker", "tourism-officer"].includes(rawPersona.id) ? rawPersona.id : "unknown",
+    name: typeof rawPersona.name === "string" ? rawPersona.name.slice(0, 60) : "Traveller",
+    language: typeof rawPersona.language === "string" ? rawPersona.language.slice(0, 35) : "en",
+  };
+  if (!advisory) return send(res, 400, { error: "A rule-based altitude advisory is required." });
+
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) return send(res, 200, { reply: advisory, source: "rule-based-fallback" });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2200);
+  try {
+    const prompt = [
+      "Rephrase the supplied altitude advisory in a calm, clear, reassuring tone in the language identified by persona.language. Return JSON with one property: reply.",
+      "Maximum 45 words. This is wording-only: do not make or change risk decisions, add medical advice, add facts, alter numbers, remove safety cautions, infer symptoms, or invent places or conditions. Preserve the original meaning. If language is en, use clear English.",
+      JSON.stringify({ advisory, persona }),
+    ].join("\\n");
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + encodeURIComponent(apiKey),
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: { reply: { type: "STRING" } },
+              required: ["reply"],
+            },
+          },
+        }),
+      },
+    );
+    if (!response.ok) throw new Error("Altitude rephrase unavailable");
+    const data = await response.json();
+    const responseText = data?.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text;
+    const parsed = JSON.parse(responseText || "{}");
+    const reply = typeof parsed.reply === "string" ? parsed.reply.trim() : "";
+    if (!reply || reply.split(/\\s+/).filter(Boolean).length > 45) throw new Error("Invalid altitude wording");
+    const sourceNumbers = new Set((advisory.match(/\\d+(?:,\\d{3})*(?:\\.\\d+)?/g) || []).map((number) => number.replace(/,/g, "")));
+    const responseNumbers = (reply.match(/\\d+(?:,\\d{3})*(?:\\.\\d+)?/g) || []).map((number) => number.replace(/,/g, ""));
+    if (responseNumbers.some((number) => !sourceNumbers.has(number))) throw new Error("Altitude wording added a numeric claim");
+    return send(res, 200, { reply, source: "altitude-rephrase" });
+  } catch {
+    return send(res, 200, { reply: advisory, source: "rule-based-fallback" });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 const PLACE_BY_ID = new Map(PLACES.map((place) => [place.id, place]));
 const VALID_DISRUPTION_TYPES = new Set(["rain", "landslide", "roadblock"]);
 
@@ -242,6 +299,9 @@ function friendlyFallback(message, context = {}) {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return send(res, 405, { error: "Use POST to chat with Atithi." });
+  if (typeof req.body?.advisory === "string" && req.body?.persona && typeof req.body.persona === "object") {
+    return handleAltitudeRephrase(req, res);
+  }
   const message = typeof req.body?.message === "string" ? req.body.message.trim().slice(0, 1200) : "";
   if (!message) return send(res, 400, { error: "A message is required." });
 
