@@ -443,7 +443,6 @@ export default function AtithiAI() {
           weather={weather}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
-          requests={requests}
           staffUser={user}
           onLogout={handleLogout}
         />
@@ -1947,9 +1946,8 @@ function AdminDashboard({
   disruptions = [], actionsLog = [], redirectionsCount = 0, localSpendRedirected = 0, requests = [],
   guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative,
 }) {
-  const isConflict =
-    weather === "rainy" && itinerary.some((i) => i.isVulnerableToWeather);
-  const isResolved = weather === "rainy" && itinerary.some((i) => i.aiAdjusted);
+  const isConflict = disruptions.some((event) => itinerary.some((item) => item.placeId && event.affectedPlaceIds.includes(item.placeId)));
+  const isResolved = itinerary.some((item) => item.guardianAdjusted || item.aiAdjusted);
 
   return (
     <div className="min-h-screen flex bg-surface-2">
@@ -1994,7 +1992,7 @@ function AdminDashboard({
               <IconBadge icon={Thermometer} tone="coral" size="sm" pulse={isConflict} />
               <div className="flex flex-col">
                 <span className="text-xs text-muted uppercase font-semibold">
-                  Live Weather
+                  Weather signal
                 </span>
                 <span className="text-sm font-medium capitalize text-text">
                   {weather} (Detecting Context)
@@ -2066,11 +2064,11 @@ function AdminDashboard({
                     <div className="flex items-center gap-2 text-red-600 mb-1">
                       <IconBadge icon={CloudRain} tone="coral" size="sm" pulse />{" "}
                       <span className="text-sm font-semibold">
-                        Weather Conflict Detected (4:00 PM)
+                        Trip disruption detected · {disruptions[0]?.type || "route change"}
                       </span>
                     </div>
                     <p className="text-sm text-text mb-2">
-                      Outdoor Botanical Garden Walk compromised.
+                      {affectedStop?.title || "An itinerary stop"} may be affected. Check the Guardian alternatives before travelling.
                     </p>
                   </div>
                 )}
@@ -2080,7 +2078,7 @@ function AdminDashboard({
                     <div className="flex items-center gap-2 text-text mb-1">
                       <IconBadge icon={Check} tone="emerald" size="sm" />{" "}
                       <span className="text-sm font-semibold">
-                        Guest accepted AI Alternative
+                        Guardian alternative accepted
                       </span>
                     </div>
                     <p className="text-sm text-muted">
@@ -2093,7 +2091,7 @@ function AdminDashboard({
                 {!isConflict && !isResolved && (
                   <div className="bg-surface-2 p-3 rounded-lg mt-2">
                     <p className="text-sm text-muted">
-                      Enjoying Private City Tour. Next: Lunch at The Courtyard.
+                      Your route is currently clear. Guardian will keep watching for disruption signals.
                     </p>
                   </div>
                 )}
