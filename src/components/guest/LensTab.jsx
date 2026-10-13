@@ -4,7 +4,7 @@ import { getSeedLensResult } from "../../data/lensCache.js";
 import { useDestination } from "../../context/DestinationContext.jsx";
 import { LANGUAGE_OPTIONS, readLanguagePreference, storeLanguagePreference, t, targetLanguageTag } from "../../i18n.js";
 
-const MAX_BASE64_LENGTH = Math.ceil(3 * 1024 * 1024 * 4 / 3) + 8;
+const MAX_BASE64_LENGTH = Math.ceil(2.85 * 1024 * 1024 * 4 / 3) + 8;
 const LANGUAGE_KEY = "atithi-lens-language";
 const SAMPLE_IMAGES = [
   { id:"sample-menu", src:"/samples/generic-menu.jpg", mode:"menu", key:"sampleMenu" },

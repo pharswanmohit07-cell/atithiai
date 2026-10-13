@@ -54,10 +54,14 @@ export function TravelProvider({ children }) {
     previousDestinationId.current = destination.id;
     // Destination changes deliberately start a fresh plan and conversation to avoid cross-city state.
     setItinerary([]);
-    setRequests([]);
-    setChatMessages([makeWelcome(destination)]);
-    writeStored(REQUESTS_PREFIX + destination.id, []);
-    writeStored(MESSAGES_PREFIX + destination.id, [makeWelcome(destination)]);
+    const destinationRequests = readStored(REQUESTS_PREFIX + destination.id, [])
+      .filter((item) => item && item.destinationId === destination.id)
+      .slice(0, MAX_REQUESTS);
+    setRequests(destinationRequests);
+    const savedMessages = readStored(MESSAGES_PREFIX + destination.id, [])
+      .filter((item) => item && typeof item.text === "string")
+      .slice(-MAX_MESSAGES);
+    setChatMessages(savedMessages.length ? savedMessages : [makeWelcome(destination)]);
   }, [destination]);
 
   const updatePreferences = useCallback((patch) => {
