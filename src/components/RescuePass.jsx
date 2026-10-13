@@ -246,10 +246,12 @@ const RescuePass = forwardRef(function RescuePass({
         background: "#F6F7F3",
         color: "#192B24",
         fontFamily: "Arial, Helvetica, sans-serif",
-        position: "fixed",
-        top: 0,
-        left: -16000,
-        zIndex: -1,
+        position: previewOpen ? "relative" : "fixed",
+        top: previewOpen ? "auto" : 0,
+        left: previewOpen ? "auto" : -16000,
+        zIndex: previewOpen ? "auto" : -1,
+        transform: previewOpen ? "scale(" + scale + ")" : "none",
+        transformOrigin: "top left",
         overflow: "hidden",
         WebkitPrintColorAdjust: "exact",
         printColorAdjust: "exact",
@@ -387,11 +389,11 @@ const RescuePass = forwardRef(function RescuePass({
             transform: none !important;
             box-shadow: none !important;
           }
-          .rescue-pass-preview-layer, .rescue-pass-toast { display: none !important; }
+          .rescue-pass-preview-layer { display: block !important; position: absolute !important; inset: 0 !important; padding: 0 !important; overflow: visible !important; background: #FFFFFF !important; backdrop-filter: none !important; }
           * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
       `}</style>
-      {card}
+      {!previewOpen && card}
 
       {previewOpen && (
         <div className="rescue-pass-preview-layer fixed inset-0 z-[180] flex flex-col items-center overflow-y-auto bg-black/65 p-4 text-text backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Offline Rescue Pass preview">
@@ -406,9 +408,7 @@ const RescuePass = forwardRef(function RescuePass({
             <label className="text-xs font-semibold text-muted">Your emergency contact<input type="tel" maxLength={40} value={emergencyContact} onChange={(event) => setEmergencyContact(event.target.value)} placeholder="Add a number" style={fieldStyle} className="mt-1.5 block"/></label>
           </div>
 
-          <div style={{ width: PASS_WIDTH * scale, height: PASS_HEIGHT * scale, flexShrink: 0, overflow: "hidden", borderRadius: 8, boxShadow: "0 18px 70px rgba(0,0,0,.4)" }}>
-            <div style={{ width: PASS_WIDTH, height: PASS_HEIGHT, transform: "scale(" + scale + ")", transformOrigin: "top left" }}>{card}</div>
-          </div>
+          <div style={{ width: PASS_WIDTH * scale, height: PASS_HEIGHT * scale, flexShrink: 0, overflow: "hidden", borderRadius: 8, boxShadow: "0 18px 70px rgba(0,0,0,.4)" }}>{card}</div>
 
           <div className="my-4 flex w-full max-w-3xl flex-wrap items-center justify-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-xl">
             <button type="button" onClick={exportPass} disabled={exporting || !qrCodeUrl} className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-bold text-white disabled:opacity-50"><Download size={16}/>{exportLabel}</button>
