@@ -211,6 +211,7 @@ export default function PlanTab() {
   const [shareMessage, setShareMessage] = useState("");
   const lastLiveKey = useRef("");
   const lastAdvisoryId = useRef("");
+  const lastPhaseDisruptionId = useRef(null);
   const previousPlanStructure = useRef("");
   const isDemo = useMemo(() => {
     try { return new URLSearchParams(window.location.search).get("demo") === "1"; } catch { return false; }
@@ -303,6 +304,7 @@ export default function PlanTab() {
     setPhase("planned");
     setAdvisory("");
     lastLiveKey.current = "";
+    lastAdvisoryId.current = "";
     addPlanLog({
       type: "plan-generated",
       message: "Generated a " + pace + " day with " + scheduled.length + " stops.",
@@ -399,9 +401,16 @@ export default function PlanTab() {
   }, [weather, itinerary, destination, activeDisruption, setActiveDisruption, addPlanLog]);
 
   useEffect(() => {
-    if (activeDisruption) setPhase((current) => current === "alternative" || current === "local" ? current : "weather");
-    else if (phase === "weather" || phase === "alternative") setPhase("planned");
-  }, [activeDisruption, phase]);
+    if (activeDisruption) {
+      if (lastPhaseDisruptionId.current !== activeDisruption.id) {
+        lastPhaseDisruptionId.current = activeDisruption.id;
+        setPhase("weather");
+      }
+    } else {
+      lastPhaseDisruptionId.current = null;
+      if (phase === "weather" || phase === "alternative") setPhase("planned");
+    }
+  }, [activeDisruption?.id, phase]);
 
   useEffect(() => {
     if (activeDisruption && currentAffectedStop && alternatives.length > 0) setPhase("alternative");
@@ -523,6 +532,7 @@ export default function PlanTab() {
     setAdvisory("");
     setShareMessage("");
     lastLiveKey.current = "";
+    lastAdvisoryId.current = "";
   };
   const makeShareText = () => [
     "My day in " + destination.city + ", " + destination.country,
