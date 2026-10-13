@@ -63,7 +63,7 @@ function readPlan(key) {
         ? item.reasons.filter((reason) => typeof reason === "string").slice(0, 6).map((reason) => reason.slice(0, 120))
         : [],
       travelMinutes: Math.max(0, safeFinite(item.travelMinutes, 0)),
-      travelDistanceKm: Math.max(0, safeFinite(item.travelDistanceKm, 0)) || (item.travelDistanceKm == null || item.travelDistanceKm === "" ? null : 0),
+      travelDistanceKm: item.travelDistanceKm == null || item.travelDistanceKm === "" ? null : Math.max(0, safeFinite(item.travelDistanceKm, 0)),
       whereToEat: safeText(item.whereToEat, 240)
     }));
 }
