@@ -24,11 +24,13 @@
   --teal-rgb: 28 115 119;
   --accent: #edaa45;
   --accent-rgb: 237 170 69;
-  --saffron-rgb: 237 170 69;
+  --amber-rgb: 237 170 69;
   --coral: #c65e4b;
   --coral-rgb: 198 94 75;
   --accent-text-rgb: 124 70 18;
   --focus-ring: #a66318;
+  --destination-accent: #10434f;
+  --destination-accent-soft: #dfe9e5;
 }
 
 .dark {
@@ -53,7 +55,7 @@
   --teal-rgb: 39 155 154;
   --accent: #f4bb59;
   --accent-rgb: 244 187 89;
-  --saffron-rgb: 244 187 89;
+  --amber-rgb: 244 187 89;
   --coral: #f08169;
   --coral-rgb: 240 129 105;
   --accent-text-rgb: 255 208 126;
@@ -67,7 +69,7 @@ body {
   overflow-x: hidden;
   color: var(--text);
   background:
-    radial-gradient(ellipse at 0% 0%, rgb(var(--saffron-rgb) / 0.095), transparent 34%),
+    radial-gradient(ellipse at 0% 0%, rgb(var(--amber-rgb) / 0.095), transparent 34%),
     radial-gradient(ellipse at 100% 18%, rgb(var(--teal-rgb) / 0.09), transparent 38%),
     var(--bg);
   font-family: "Manrope", sans-serif;
@@ -101,13 +103,6 @@ h1, h2, h3, h4, .font-serif { font-family: "Cormorant Garamond", serif; font-wei
 .leaflet-container { z-index: 0; color: #142c39; font-family: "Manrope", sans-serif; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .map-empty { display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; background: var(--surface); color: var(--text-muted); text-align: center; }
-.stay-pass-card { width: 100%; max-width: 720px; margin-inline: auto; }
-@media print {
-  body { background: #fff !important; color: #111827 !important; }
-  body * { visibility: hidden; }
-  .stay-pass-card, .stay-pass-card * { visibility: visible; }
-  .stay-pass-card { position: absolute; inset: 0 auto auto 0; border: 0; box-shadow: none; }
-}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }

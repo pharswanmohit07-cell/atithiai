@@ -1,3 +1,4 @@
+// DEMO / AI-assisted destination packs. All coordinates are approximate and all curated descriptions/spend estimates require local verification.
 import jaipur from "./jaipur.js";
 import ubud from "./ubud.js";
 import lisbon from "./lisbon.js";

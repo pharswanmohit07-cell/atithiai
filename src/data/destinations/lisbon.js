@@ -1,233 +1,45 @@
-// Approximate destination and place coordinates; all hotel policies and fees are illustrative DEMO values.
-const demoListing = ["Demo listing"];
-
+// DEMO / AI-assisted curated content. Stories are brief context, not verified live guidance.
+// Coordinates are approximate. All spend ranges are illustrative estimates, never quotes.
 const destination = {
-  id: "lisbon",
-  city: "Lisbon",
-  country: "Portugal",
-  lat: 38.7223,
-  lon: -9.1393,
-  timezone: "Europe/Lisbon",
-  locale: "pt-PT",
-  currency: { code: "EUR", symbol: "€" },
-  // Illustrative only: these demo assumptions estimate commissions on approved experience inquiries.
-  demoCommercials: {"averageExperienceBookingValue":40,"estimatedCommissionRate":0.12},
-  primaryLanguages: ["Portuguese", "English"],
-  hotel: {
-    name: "Tile & Tram Hotel (demo)",
-    stars: 3,
-    rooms: 40,
-    checkIn: "14:00",
-    checkOut: "11:00",
-    phone: "Not configured (demo)",
-    flexTiers: {
-      early: [{ from: "10:00", fee: 25 }, { from: "12:00", fee: 12 }],
-      late: [{ until: "13:00", fee: 10 }, { until: "15:00", fee: 25 }],
-    },
-    flexCutoffs: { earlyEarliest: "10:00", lateLatest: "15:00" },
-  },
-  places: [
-    { id: "belem-tower", name: "Belém Tower", lat: 38.6916, lon: -9.2160, category: "heritage", tags: ["history", "architecture", "river"], rainFriendly: false, lowCrowd: false },
-    { id: "jeronimos-monastery", name: "Jerónimos Monastery", lat: 38.6979, lon: -9.2067, category: "heritage", tags: ["history", "architecture"], rainFriendly: true, lowCrowd: false },
-    { id: "praca-do-comercio", name: "Praça do Comércio", lat: 38.7076, lon: -9.1365, category: "public-square", tags: ["river", "architecture", "walking"], rainFriendly: false, lowCrowd: false },
-    { id: "sao-jorge-castle", name: "São Jorge Castle", lat: 38.7139, lon: -9.1335, category: "heritage", tags: ["history", "views"], rainFriendly: false, lowCrowd: false },
-    { id: "lisbon-oceanarium", name: "Lisbon Oceanarium", lat: 38.7636, lon: -9.0939, category: "museum", tags: ["marine-life", "family", "indoors"], rainFriendly: true, lowCrowd: true },
-    { id: "lx-factory", name: "LX Factory", lat: 38.7038, lon: -9.1781, category: "market", tags: ["design", "shops", "food"], rainFriendly: true, lowCrowd: false },
-    { id: "time-out-market", name: "Time Out Market Lisboa", lat: 38.7063, lon: -9.1450, category: "food", tags: ["food", "indoors"], rainFriendly: true, lowCrowd: false },
-    { id: "senhora-do-monte", name: "Miradouro da Senhora do Monte", lat: 38.7192, lon: -9.1326, category: "viewpoint", tags: ["views", "sunset"], rainFriendly: false, lowCrowd: true },
+  id:"lisbon",city:"Lisbon",country:"Portugal",lat:38.7223,lon:-9.1393,timezone:"Europe/Lisbon",locale:"pt-PT",
+  currency:{code:"EUR",symbol:"€"},primaryLanguages:["Portuguese","English"],
+  greeting:"Follow the neighbourhoods, tiled details and everyday rhythms that make Lisbon personal.",
+  // Double-check this number before travel or real deployment.
+  emergencyNumber:"112",
+  themeColors:{accent:"#2D5E8B",accentSoft:"#E1EAF4"},
+  places:[
+    {id:"santa-luzia",name:"Miradouro de Santa Luzia",lat:38.7118,lon:-9.1303,category:"viewpoint",isHiddenGem:false,crowdLevel:"high",localStory:"The terrace is known for views over Alfama and the Tagus, as well as decorative tile panels and a garden. Its paths and outlook connect the viewpoint to the older streets nearby.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:35,tags:["view","azulejo","alfama"]},
+    {id:"portas-sol",name:"Miradouro das Portas do Sol",lat:38.7121,lon:-9.1308,category:"viewpoint",isHiddenGem:false,crowdLevel:"high",localStory:"This overlook frames Alfama rooftops and the river. It is part of a network of public viewpoints where visitors and residents stop to orient themselves among the city's hills.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:30,tags:["view","river","alfama"]},
+    {id:"santa-catarina",name:"Miradouro de Santa Catarina",lat:38.7105,lon:-9.1470,category:"viewpoint",isHiddenGem:true,crowdLevel:"medium",localStory:"Often associated with views across the Tagus, the viewpoint is also known by the Adamastor statue nearby. The atmosphere changes with the day and nearby neighbourhood activity.",rainFriendly:false,indoor:false,bestTime:"evening",avgSpendLocal:0,durationMin:40,tags:["view","river","local-life"]},
+    {id:"largo-intendente",name:"Largo do Intendente",lat:38.7203,lon:-9.1354,category:"market",isHiddenGem:true,crowdLevel:"medium",localStory:"The square is surrounded by tiled façades and sits within a diverse, changing central neighbourhood. The area has become associated with independent businesses and public-space renewal, though individual venues change.",rainFriendly:false,indoor:false,bestTime:"afternoon",avgSpendLocal:1000,durationMin:45,tags:["tiles","neighbourhood","cafes"]},
+    {id:"mercado-ribeira",name:"Mercado da Ribeira",lat:38.7068,lon:-9.1457,category:"market",isHiddenGem:false,crowdLevel:"high",localStory:"The riverside market has a long history as a food market and now includes contemporary food and cultural spaces. The traditional market and the newer food hall are distinct parts of the broader site.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:18,durationMin:70,tags:["food","market","river"]},
+    {id:"campo-ourique",name:"Mercado de Campo de Ourique",lat:38.7188,lon:-9.1661,category:"market",isHiddenGem:true,crowdLevel:"medium",localStory:"This neighbourhood market combines market stalls with places to eat, giving visitors a glimpse of everyday shopping and contemporary food culture. Offerings vary by stall and season.",rainFriendly:true,indoor:true,bestTime:"lunch",avgSpendLocal:15,durationMin:60,tags:["market","food","neighbourhood"]},
+    {id:"feira-ladra",name:"Feira da Ladra area",lat:38.7151,lon:-9.1249,category:"market",isHiddenGem:true,crowdLevel:"high",localStory:"The flea-market tradition around Campo de Santa Clara is associated with second-hand goods, antiques and curios. The market operates on specific days, so verify its schedule locally before planning a visit.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:10,durationMin:60,tags:["market","antiques","local-life"]},
+    {id:"tile-museum",name:"National Tile Museum",lat:38.7248,lon:-9.1138,category:"craft",isHiddenGem:true,crowdLevel:"medium",localStory:"The museum explores Portugal's azulejo tile tradition through historic and decorative examples. Displays help place tilework in architectural and artistic context rather than treating it only as decoration.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:10,durationMin:100,tags:["azulejo","design","history"]},
+    {id:"fado-museum",name:"Museu do Fado",lat:38.7111,lon:-9.1288,category:"culture",isHiddenGem:true,crowdLevel:"low",localStory:"The museum focuses on fado, a musical tradition closely associated with Lisbon. Exhibitions interpret singers, instruments and recordings; performances and events should be checked separately.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:10,durationMin:75,tags:["music","fado","culture"]},
+    {id:"alfama-lanes",name:"Alfama lanes",lat:38.7110,lon:-9.1280,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"Alfama's narrow streets, slopes and older buildings are part of Lisbon's historic urban fabric. It remains a lived-in neighbourhood, so keep noise low and avoid blocking entrances or photographing residents without permission.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:75,tags:["walk","architecture","fado"]},
+    {id:"gulbenkian-garden",name:"Calouste Gulbenkian gardens",lat:38.7374,lon:-9.1545,category:"nature",isHiddenGem:true,crowdLevel:"medium",localStory:"The landscaped gardens offer paths and water features around the cultural foundation. They provide a quieter green-space contrast to the dense historic centre, but outdoor comfort depends on weather.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:60,tags:["garden","quiet","walking"]},
+    {id:"lx-factory",name:"LX Factory",lat:38.7038,lon:-9.1788,category:"craft",isHiddenGem:false,crowdLevel:"high",localStory:"The former industrial complex is now associated with creative businesses, shops, food and cultural events. Individual tenants and programmes change, so check the specific business or event before visiting.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:15,durationMin:90,tags:["creative","design","food"]}
   ],
-  experiences: [
-    { id: "lisbon-neighborhood-walk", name: "Neighborhood orientation walk", partner: "Seven Hills Walks (demo)", description: "A hosted introduction to local streets, viewpoints and customs.", tags: demoListing },
-    { id: "azulejo-workshop", name: "Tile-painting workshop", partner: "Blue Tile Studio (demo)", description: "A craft session inspired by traditional ceramic tile patterns.", tags: demoListing },
-    { id: "pastel-workshop", name: "Baking demonstration", partner: "Lisbon Oven Hosts (demo)", description: "An introductory baking session; recipes and allergens require confirmation.", tags: demoListing },
-    { id: "fado-introduction", name: "Fado music introduction", partner: "Evening Notes Lisboa (demo)", description: "A proposed music experience; venue, schedule and fees require confirmation.", tags: demoListing },
-    { id: "market-food-tour", name: "Market food discovery", partner: "Table & Tide Guides (demo)", description: "A food-focused walk with diet and allergy questions checked beforehand.", tags: demoListing },
-    { id: "river-photo-walk", name: "Riverside photo walk", partner: "Atlantic Frame Walks (demo)", description: "A photography walk proposal, subject to weather and access.", tags: demoListing },
+  experiences:[
+    {id:"azulejo-workshop",title:"Azulejo patterns and painting introduction",hostName:"Blue Tile Studio (demo)",category:"craft",durationMin:120,priceLocal:35,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:true,localStory:"Explore tile patterns and the role of azulejos in Portuguese architecture. This is an illustrative workshop idea; the studio, instructor and schedule are not verified."},
+    {id:"fado-context",title:"Fado listening and local context",hostName:"Lisboa Sound Notes (demo)",category:"culture",durationMin:90,priceLocal:28,communityLed:true,suitsWho:["solo","couples","friends"],rainFriendly:true,localStory:"A proposed listening session introduces fado and its connection to Lisbon neighbourhoods. This is not a confirmed performance or ticket, and any venue must be checked independently."},
+    {id:"market-flavours",title:"Market flavours and seasonal produce walk",hostName:"Mesa Local (demo)",category:"market",durationMin:100,priceLocal:22,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:true,localStory:"Discover ingredient names and food traditions by looking at market produce and prepared dishes. Tastings, allergens and seller permission need to be confirmed with the actual vendors."},
+    {id:"street-sketch",title:"Light and tiled façades sketch walk",hostName:"Lisboa Sketch Club (demo)",category:"craft",durationMin:90,priceLocal:18,communityLed:false,suitsWho:["solo","couples","friends"],rainFriendly:false,localStory:"Use tiled façades, balconies and street geometry as drawing subjects on a gentle walk. Be mindful of traffic, private doorways and residents' privacy."},
+    {id:"river-story",title:"Riverside neighbourhood stories",hostName:"Tagus Story Collective (demo)",category:"culture",durationMin:90,priceLocal:20,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:false,localStory:"A proposed walk connects the riverfront to the city's maritime and trading past without treating one story as the whole of Lisbon. Exact route and guide availability are unverified."},
+    {id:"garden-pause",title:"Slow garden walk and observation",hostName:"Green Lisboa Hosts (demo)",category:"nature",durationMin:60,priceLocal:15,communityLed:true,suitsWho:["solo","couples","families"],rainFriendly:false,localStory:"Take time to notice plantings, water and quieter paths in a public garden. This is a suggested activity concept rather than a confirmed guided tour."}
   ],
-  dishes: [
-    { id: "bacalhau-a-bras", name: "Bacalhau à Brás", diet: ["fish"], spiceLevel: "mild", whereToEat: "Portuguese restaurants; ask about fish and egg." },
-    { id: "caldo-verde", name: "Caldo verde", diet: ["varies"], spiceLevel: "mild", whereToEat: "Cafés and traditional restaurants; confirm sausage and stock." },
-    { id: "sardinhas-assadas", name: "Sardinhas assadas", diet: ["fish"], spiceLevel: "mild", whereToEat: "Seafood restaurants; seasonal availability varies." },
-    { id: "bifana", name: "Bifana", diet: ["meat"], spiceLevel: "mild", whereToEat: "Sandwich cafés; ask about sauces and bread allergens." },
-    { id: "pastel-de-nata", name: "Pastel de nata", diet: ["vegetarian"], spiceLevel: "mild", whereToEat: "Bakeries; commonly contains dairy, egg and gluten." },
-    { id: "arroz-de-marisco", name: "Arroz de marisco", diet: ["seafood"], spiceLevel: "medium", whereToEat: "Seafood restaurants; confirm shellfish ingredients." },
-    { id: "acorda", name: "Açorda", diet: ["varies"], spiceLevel: "mild", whereToEat: "Portuguese restaurants; recipes may contain egg, fish or seafood." },
-    { id: "feijoada", name: "Feijoada", diet: ["varies"], spiceLevel: "medium", whereToEat: "Traditional restaurants; ask which meats are included." },
-  ],
-  disruptionLabels: ["Transport delay (demo)", "Heavy rain (demo)", "Venue schedule change (demo)"],
-  // DOUBLE-CHECK this local emergency number before travel.
-  emergencyNumber: "112",
+  dishes:[
+    {id:"bacalhau-a-bras",name:"Bacalhau à Brás",description:"Shredded salted cod with thin fried potatoes, onion and egg in a familiar version of the dish.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:null},spiceLevel:1,whereToEat:"Portuguese cafés and restaurants",priceRangeLocal:[12,22],bestTime:"lunch",warm:true},
+    {id:"caldo-verde",name:"Caldo verde",description:"A soup made with potatoes and thinly sliced greens, often served with sausage; ask about the recipe.",diet:{veg:null,vegan:null,nonVeg:null,halal:null,glutenFree:true},spiceLevel:1,whereToEat:"tascas and local restaurants",priceRangeLocal:[4,9],bestTime:"dinner",warm:true},
+    {id:"pastel-nata",name:"Pastel de nata",description:"Small custard tart with a layered pastry shell.",diet:{veg:true,vegan:false,nonVeg:false,halal:null,glutenFree:false},spiceLevel:1,whereToEat:"bakeries and cafés",priceRangeLocal:[1,3],bestTime:"any",warm:false},
+    {id:"sardinhas-assadas",name:"Sardinhas assadas",description:"Grilled sardines, particularly associated with Lisbon's summer food culture; availability is seasonal.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:true},spiceLevel:1,whereToEat:"Portuguese restaurants and seasonal food stalls",priceRangeLocal:[12,24],bestTime:"dinner",warm:true},
+    {id:"bifana",name:"Bifana",description:"A pork sandwich usually seasoned with garlic and spices; preparation varies by shop.",diet:{veg:false,vegan:false,nonVeg:true,halal:false,glutenFree:false},spiceLevel:2,whereToEat:"snack bars and traditional cafés",priceRangeLocal:[4,9],bestTime:"lunch",warm:true},
+    {id:"prego",name:"Prego",description:"A beef sandwich, often served in a roll and sometimes with mustard or other accompaniments.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:false},spiceLevel:1,whereToEat:"cafés and snack bars",priceRangeLocal:[5,12],bestTime:"lunch",warm:true},
+    {id:"pastel-bacalhau",name:"Pastel de bacalhau",description:"A fried cod-and-potato fritter made with egg and herbs in many recipes.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:null},spiceLevel:1,whereToEat:"bakeries and snack bars",priceRangeLocal:[2,5],bestTime:"snack",warm:true},
+    {id:"arroz-marisco",name:"Arroz de marisco",description:"A moist rice dish cooked with seafood; shellfish and fish ingredients vary.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:true},spiceLevel:2,whereToEat:"seafood restaurants",priceRangeLocal:[18,35],bestTime:"lunch",warm:true},
+    {id:"açorda",name:"Açorda",description:"A bread-based dish usually softened with broth and olive oil; recipes may include egg, fish or seafood.",diet:{veg:null,vegan:null,nonVeg:null,halal:null,glutenFree:false},spiceLevel:1,whereToEat:"Portuguese restaurants",priceRangeLocal:[9,18],bestTime:"lunch",warm:true},
+    {id:"feijoada",name:"Feijoada",description:"A bean stew with regional variations; meat, vegetables and seasonings depend on the recipe.",diet:{veg:null,vegan:null,nonVeg:null,halal:null,glutenFree:true},spiceLevel:2,whereToEat:"Portuguese restaurants",priceRangeLocal:[10,20],bestTime:"lunch",warm:true}
+  ]
 };
-
-// Staff-curated demo metadata; prices and durations are illustrative estimates, not provider quotes.
-const experienceDetails = {
-  "lisbon-neighborhood-walk": {
-    "durationMinutes": 100,
-    "price": 22,
-    "category": "walking tour",
-    "rainFriendly": false,
-    "lowCrowd": false,
-    "suits": [
-      "family",
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Maria from our front desk recommends this for getting oriented to the hills and neighbourhoods."
-  },
-  "azulejo-workshop": {
-    "durationMinutes": 120,
-    "price": 35,
-    "category": "craft workshop",
-    "rainFriendly": true,
-    "lowCrowd": true,
-    "suits": [
-      "family",
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Our team likes this indoor craft idea for guests who want a slower, creative afternoon."
-  },
-  "pastel-workshop": {
-    "durationMinutes": 90,
-    "price": 28,
-    "category": "food workshop",
-    "rainFriendly": true,
-    "lowCrowd": true,
-    "suits": [
-      "family",
-      "couple",
-      "solo"
-    ],
-    "hostNote": "Maria suggests confirming ingredients and allergens with the provider before considering this baking demo."
-  },
-  "fado-introduction": {
-    "durationMinutes": 100,
-    "price": 30,
-    "category": "music",
-    "rainFriendly": true,
-    "lowCrowd": false,
-    "suits": [
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Our front desk team recommends checking the event date, venue and final price first."
-  },
-  "market-food-tour": {
-    "durationMinutes": 120,
-    "price": 32,
-    "category": "food tour",
-    "rainFriendly": true,
-    "lowCrowd": false,
-    "suits": [
-      "couple",
-      "solo",
-      "friends"
-    ],
-    "hostNote": "Maria recommends sharing dietary requirements before anyone makes a plan for this food-focused walk."
-  },
-  "river-photo-walk": {
-    "durationMinutes": 90,
-    "price": 24,
-    "category": "photography",
-    "rainFriendly": false,
-    "lowCrowd": true,
-    "suits": [
-      "couple",
-      "solo",
-      "friends"
-    ],
-    "hostNote": "Our team likes this photo-walk idea in fair weather; confirm the route and schedule first."
-  }
-};
-const dishDetails = {
-  "bacalhau-a-bras": {
-    "price": 15,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "caldo-verde": {
-    "price": 7,
-    "dietaryTags": [],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "sardinhas-assadas": {
-    "price": 16,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "bifana": {
-    "price": 8,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "breakfast",
-      "lunch",
-      "snack"
-    ],
-    "warmInRain": true
-  },
-  "pastel-de-nata": {
-    "price": 2,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "breakfast",
-      "snack",
-      "anytime"
-    ],
-    "warmInRain": false
-  },
-  "arroz-de-marisco": {
-    "price": 20,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "acorda": {
-    "price": 13,
-    "dietaryTags": [],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "feijoada": {
-    "price": 14,
-    "dietaryTags": [],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  }
-};
-destination.experiences = destination.experiences.map((experience) => ({ ...experience, ...(experienceDetails[experience.id] || {}) }));
-destination.dishes = destination.dishes.map((dish) => ({ ...dish, ...(dishDetails[dish.id] || {}), dietaryTags: dishDetails[dish.id]?.dietaryTags || [], halal: false, glutenAware: false }));
 export default destination;

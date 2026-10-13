@@ -51,7 +51,7 @@ function fallbackResult(context) {
     source: "safe-fallback", city: context.city, country: context.country, currency: context.currency
   };
   if (context.mode === "menu") {
-    return { ...common, summary: fallback[0], dishes: [], estimateNotice: "AI estimate, confirm with staff" };
+    return { ...common, summary: fallback[0], dishes: [], estimateNotice: "AI estimate — confirm locally" };
   }
   if (context.mode === "price") {
     return { ...common, summary: fallback[0], visiblePrices: [], roughRange: "", rangeLow: null, rangeHigh: null, verdict: "Can't tell", explanation: "The image does not provide a clear, verifiable comparison. No official rate is claimed." };
@@ -112,8 +112,8 @@ function currencyMismatch(lines, localCurrency) {
     ["AED", /\bAED\b|د\.إ/], ["SAR", /\bSAR\b/], ["MYR", /\bMYR\b|RM\s*\d/i], ["USD", /\bUSD\b/]
   ];
   for (const [code, pattern] of known) if (pattern.test(text)) return code !== localCurrency;
-  if (text.includes("$")) return !["USD", "CAD", "AUD", "NZD", "SGD", "HKD", "MXN"].includes(localCurrency);
-  if (text.includes("¥") || text.includes("￥")) return !["JPY", "CNY"].includes(localCurrency);
+  if (text.includes("$")) return true;
+  if (text.includes("¥") || text.includes("￥")) return true;
   return false;
 }
 function formatCurrencyRange(low, high, currency, locale) {
@@ -144,10 +144,10 @@ function safeResult(parsed, context) {
     const dishes = Array.isArray(parsed.dishes) ? parsed.dishes.filter((dish) => dish && typeof dish === "object").slice(0, 16).map((dish) => ({
       name: cleanText(dish.name, 120),
       explanation: cleanText(dish.explanation, 420),
-      dietGuess: cleanText(dish.dietGuess, 120) || "Unknown — confirm with staff",
+      dietGuess: cleanText(dish.dietGuess, 120) || "Unknown — verify locally",
       spiceGuess: cleanText(dish.spiceGuess, 80) || "Unknown — confirm with staff"
     })).filter((dish) => dish.name) : [];
-    return { ...common, summary: common.summary || "Menu text was read. Confirm ingredients and allergens with staff.", dishes, estimateNotice: "AI estimate, confirm with staff" };
+    return { ...common, summary: common.summary || "Menu text was read. Verify ingredients and allergens locally.", dishes, estimateNotice: "AI estimate, confirm with staff" };
   }
   if (context.mode === "price") {
     const visiblePrices = cleanArray(parsed.visiblePrices, 20, 200);
@@ -159,7 +159,7 @@ function safeResult(parsed, context) {
     const verdict = !foreignCurrency && parsed.comparisonVisible === true && amounts.length >= 2 ? validVerdict : "Can't tell";
     return {
       ...common,
-      summary: common.summary || "Only clearly visible price text is considered. Confirm the final total with the provider.",
+      summary: common.summary || "Only clearly visible price text is considered. Verify the final total locally.",
       visiblePrices, roughRange: low == null ? "" : formatCurrencyRange(low, high, context.currency, context.locale),
       rangeLow: low, rangeHigh: high, verdict,
       explanation: foreignCurrency
@@ -211,7 +211,6 @@ export default async function handler(req, res) {
   };
   if (!VALID_MIME_TYPES.has(mimeType)) return send(res, 400, { error: "Choose a JPEG, PNG or WebP image." });
   if (!context.currency) return send(res, 400, { error: "Enter a valid three-letter local currency code, such as INR, EUR or JPY." });
-  if (!context.currency) return send(res, 400, { error: "Enter a valid three-letter local currency code, such as INR, EUR or JPY." });
   if (!imageBase64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(imageBase64)) return send(res, 400, { error: "The selected image could not be read. Please choose it again." });
   if (imageBase64.length > Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 8) return send(res, 200, fallbackResult(context));
   if (!process.env.GEMINI_API_KEY) return send(res, 200, fallbackResult(context));
@@ -228,7 +227,7 @@ export default async function handler(req, res) {
         ? "For general mode, provide detectedText exactly as legible, translation, a concise neutral summary and confidence."
         : mode === "menu"
           ? "For menu mode, return dishes only when a dish name is legible. Translate visible descriptions but do not invent ingredients. dietGuess and spiceGuess must be hedged and may say unknown. Every dish assessment is an AI estimate and must be confirmed with staff."
-          : "For price mode, visiblePrices must contain only clearly legible price labels copied from the image. Never add a price that is not visibly shown. The server computes a range from these visible amounts in the supplied local currency. Choose Looks fair or Possibly overpriced only if the image itself shows a clear comparable reference price for the same thing; otherwise choose Can't tell. Never claim an official rate or verified market comparison.",
+          : "For price mode, visiblePrices must contain only clearly legible price labels copied from the image. Never add a price that is not visibly shown. The server formats visible amounts in the supplied local currency only when currency interpretation is clear. Choose Looks fair or Possibly overpriced only if the image itself shows a clear comparable reference price for the same thing; otherwise choose Can't tell. Never claim an official rate or verified market comparison.",
       "Return only JSON matching the provided schema. Prefer empty text and low confidence to guessing."
     ].join("\n");
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(process.env.GEMINI_API_KEY), {

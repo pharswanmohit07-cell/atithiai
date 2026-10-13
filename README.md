@@ -1,117 +1,119 @@
-# Atithi AI — AI Co-Host for Three-Star Hotels
+# Atithi AI — Go beyond the usual
 
-Atithi AI is a demo product concept for hotel owners and managers who want to help guests discover a destination, plan a stay, understand hotel policies and contact the team. The hotel team retains control over every decision involving prices, fees, refunds, bookings and availability.
+Atithi AI is a personalized travel companion for the hidden places, local stories and experiences that make a destination feel personal. It helps travelers explore beyond the usual, save ideas, assemble a flexible day plan, ask questions in their language, and translate signs or menus with Atithi Lens.
 
-The app is destination-agnostic. Its destination registry currently includes demo packs for Jaipur, Ubud and Lisbon. The hotels, partner identities, policies, flexible check-in/out fees, itinerary suggestions and service requests shown in the demo are illustrative rather than commercial offers.
+The current demonstration packs are Jaipur (India), Ubud (Bali, Indonesia) and Lisbon (Portugal). The interface is designed around travelers rather than a service-provider workflow.
 
-## Product workflow
+## What you can do
 
-- **Guest landing:** choose a destination and continue as Guest (Family) or Guest (Solo).
-- **Stay planning:** use the selected destination pack to browse well-known places, local dishes and curated experience ideas.
-- **Live weather:** read the latest available Open-Meteo observation for the selected pack's coordinates and timezone. Weather does not establish opening hours, venue availability, transport conditions or safety.
-- **Hotel services:** request early check-in, late check-out, local experiences, food guidance or a human follow-up.
-- **Price Lens:** optionally read visible text from a supplied image. The result is an AI estimate, never an official tariff or a finding of overcharging.
-- **Stay Pass:** create a local summary and self-generated QR. It is not an official registration or booking confirmation.
-- **Manager view:** review pending guest requests and approve or decline them manually. No payment or reservation is made automatically.
+- **Choose a destination:** select one of the three demonstration destinations from the welcome screen, header or Profile.
+- **Discover:** browse 12 places, six experience ideas and ten local dishes for the selected pack. Place and experience listings carry a small Demo content note.
+- **Plan:** save places from Discover or make a pack-based suggested day. The plan and conversation reset when the destination changes.
+- **Atithi Lens:** scan a menu, fare board or notice, detect the text language, translate it, and optionally use speech playback. Menu notes are AI estimates. Price mode only works from amounts visibly readable in the image; it does not claim official rates or verified market prices.
+- **Chat:** ask questions in the language you write in, or choose a reply language in the chat header.
+- **Save notes:** save Lens results, food ideas and experience ideas into local travel notes.
+- **Live weather:** see the latest available Open-Meteo observation for the selected pack's approximate coordinates and timezone.
 
 ## Technology
 
 - Vite, React 18, React Router and Tailwind CSS 3
-- React Leaflet and Leaflet for the destination map
+- React Leaflet and Leaflet for destination maps
 - Framer Motion and Lucide React
-- Vercel serverless functions under `api/`
-- Gemini for optional AI answers and itinerary suggestions
-- Open-Meteo for live weather observations
-- `qrcode` and `html-to-image` loaded dynamically when Stay Pass export is requested
+- Vercel serverless functions under \`api/\`
+- Gemini for optional chat and image interpretation
+- Open-Meteo for live current-weather observations
 
 ## Run locally
 
 Requires a supported Node.js release and npm.
 
-```bash
+\`\`\`bash
 npm install
 cp .env.example .env
 npm run dev
-```
+\`\`\`
 
-Set `GEMINI_API_KEY` in the server environment to enable Gemini. `GEMINI_MODEL` is optional; it defaults to `gemini-2.5-flash`. Keep both values server-side. Never use a `VITE_` variable for a secret.
+Set \`GEMINI_API_KEY\` in the server environment to enable Gemini. \`GEMINI_MODEL\` is optional and defaults to \`gemini-2.5-flash\`. Keep both values server-side. Never use a \`VITE_\` variable for a secret.
 
-Check source syntax and imports, then create a production bundle:
+Validate source syntax and imports, then create a production bundle:
 
-```bash
+\`\`\`bash
 npm run lint
 npm run build
 npx vercel dev
-```
+\`\`\`
 
-If no Gemini key is configured, chat, itinerary and price-image flows use friendly local fallbacks. Live weather still requires an internet connection. Cached demo mode bypasses AI requests.
+Chat and Lens continue to show friendly local fallbacks if the Gemini key is absent or a request fails. Live weather requires an internet connection.
 
 ## Destination Pack format
 
-Each pack is a plain JavaScript module exported from `src/data/destinations/`. The registry at `src/data/destinations/index.js` is the single index used by the UI and serverless functions.
+Each pack is an ES module under \`src/data/destinations/\`; \`src/data/destinations/index.js\` is the shared registry for both the UI and API functions. All curated descriptions, stories, crowd estimates, host identities and spend values are demo/AI-assisted. Coordinates are approximate. Recheck story wording and local emergency guidance before any real-world release.
 
-```js
+A pack uses this shape:
+
+\`\`\`js
 {
-  id: "sample-city",
-  city: "Sample City",
-  country: "Sample Country",
-  lat: 0,
-  lon: 0,
-  timezone: "Region/City",
-  locale: "en-XX",
-  currency: { code: "XXX", symbol: "¤" },
-  primaryLanguages: ["English"],
-  hotel: {
-    name: "Sample Hotel (demo)",
-    stars: 3,
-    rooms: 40,
-    checkIn: "14:00",
-    checkOut: "11:00",
-    phone: "Not configured (demo)",
-    flexTiers: {
-      early: [{ from: "10:00", fee: 10 }],
-      late: [{ until: "13:00", fee: 10 }]
-    }
-  },
-  places: [],
-  experiences: [],
-  dishes: [],
-  disruptionLabels: [],
-  emergencyNumber: "112"
+  id, city, country, lat, lon, timezone, locale,
+  currency: { code, symbol },
+  primaryLanguages,
+  greeting,
+  emergencyNumber,
+  themeColors: { accent, accentSoft },
+  places: [{
+    id, name, lat, lon,
+    category: "viewpoint" | "market" | "cafe" | "culture" | "nature" | "craft" | "wellness",
+    isHiddenGem,
+    crowdLevel: "low" | "medium" | "high",
+    localStory,
+    rainFriendly,
+    indoor,
+    bestTime: "morning" | "afternoon" | "evening" | "any",
+    avgSpendLocal,
+    durationMin,
+    tags
+  }],
+  experiences: [{
+    id, title, hostName, category, durationMin, priceLocal,
+    communityLed, suitsWho, rainFriendly, localStory
+  }],
+  dishes: [{
+    id, name, description,
+    diet: { veg, vegan, nonVeg, halal, glutenFree },
+    spiceLevel, whereToEat,
+    priceRangeLocal: [low, high],
+    bestTime, warm
+  }]
 }
-```
+\`\`\`
 
-Coordinates are approximate. Hotel names, room counts, policies, fees and contacts are demo values. Every experience must include a clearly visible `Demo listing` tag. Do not publish a phone number or fee unless an owner has verified it. Each pack's emergency number must be checked with reliable local guidance before real use.
+Each supplied demonstration pack currently has 12 places, six experience ideas and ten dishes. \`priceRangeLocal\` is a two-number illustrative range in the pack's currency. Dietary flags may be \`null\` when the information is uncertain; do not convert uncertainty into a dietary guarantee.
 
-## How to add a new pack
+## How to add a pack
 
-1. Add `src/data/destinations/my-city.js` with the same schema as the existing packs.
-2. Include eight well-known places with approximate coordinates, category, tags, rain-friendly flag and estimated lower-crowd flag.
-3. Include six illustrative experiences, each tagged `Demo listing`, and eight dishes with diet flags, spice level and a cautious venue suggestion.
-4. Use the destination's correct IANA timezone, locale and ISO 4217 currency code. Keep sample fees in that currency and label them as demo estimates in the UI.
-5. Add a comment to double-check the local emergency number; verify that number before real travel.
-6. Import the pack in `src/data/destinations/index.js` and add it to `DESTINATIONS`.
-7. Run `npm run lint` and `npm run build`, then manually check the destination selector, weather state, map, currency formatting, services, cached demo mode and manager request queue.
+1. Create \`src/data/destinations/my-city.js\` with the same structure as the existing packs. Begin the file with a comment that the content is demo/AI-assisted and its coordinates are approximate.
+2. Supply 12 place entries, six experience ideas and ten real local dishes. Write local stories in two cautious sentences, avoid invented dates and keep access or opening claims out unless verified.
+3. Use the correct IANA timezone, locale and ISO 4217 currency code. Keep spend amounts as illustrative ranges in that local currency.
+4. Add a comment beside the emergency number telling contributors to double-check it before travel or release; independently verify the number from a reliable local source.
+5. Import the pack in \`src/data/destinations/index.js\` and add it to \`DESTINATIONS\`.
+6. Run \`npm run lint\` and \`npm run build\`; then manually test the welcome destination cards, header/Profile switcher, weather, map, currency display, plan reset and Lens/chat flows.
 
-The application obtains destination names, coordinates, currency, languages, places, experiences, dishes, hotel name, policy tiers and emergency number from this pack. Avoid duplicating destination constants in UI components or prompts.
+Do not duplicate specific place names, coordinates, currencies or destination descriptions inside components. Read them from \`useDestination()\` and the selected pack.
 
 ## What is real vs demo
 
-**Only weather is live.** The app requests current weather from Open-Meteo using the selected pack's approximate coordinates and IANA timezone. Weather can be stale or unavailable if the device is offline or the service fails.
+**Only weather is live.** The app requests current conditions from Open-Meteo using the selected pack's approximate coordinates and IANA timezone. Weather can be unavailable, and an observation does not verify venue access, opening hours, crowds, transport, ticketing or safety.
 
-The hotel itself, room count, guest identity, itinerary, flexible check-in/out fees, partners, experiences, dishes' venue suggestions, requests and manager decisions are demonstrations. Real place names and approximate coordinates are for destination orientation only; the app does not verify opening hours, crowd levels, tickets, transport, reservations or safety. Price Lens reads visible text but cannot verify a fair price without a trusted comparison list.
+The destination stories, selected places, estimated crowd levels, experience hosts, experience durations, spend ranges and dish ranges are curated demonstration content. No reservation, payment, guide contact or venue check is performed. Atithi Lens interprets visible text and can be wrong; confirm translations, ingredients, local instructions and prices directly. Currency ranges in Lens are based only on readable amounts from the submitted image, and are not official rates or independently verified comparisons.
 
-No money moves through the demo. A button press creates a request for human review; a manager must independently verify the policy and details before confirming an offer or booking. Request statuses are demonstration workflow states, not a connection to hotel operations systems. Emergency links call the displayed local number on the guest's device; the app does not dispatch help.
-
-The Stay Pass QR is built locally in the browser from the visible demo summary. It is self-generated and is not an official registration, room key, identity credential or booking confirmation.
+Travel plans, chat history and saved notes are stored in the current browser. Switching destinations clears the active plan and conversation so entries from one city do not appear in another city. The emergency button starts a phone call to the number listed in the selected pack; the app does not dispatch assistance.
 
 ## Environment and secrets
 
-- `GEMINI_API_KEY`: server-side Gemini key
-- `GEMINI_MODEL`: optional model identifier, default `gemini-2.5-flash`
+- \`GEMINI_API_KEY\`: server-side Gemini key
+- \`GEMINI_MODEL\`: optional model identifier, default \`gemini-2.5-flash\`
 
-`.env` is ignored by Git. Never commit populated environment files, expose API keys through the browser, or include secrets in client-side bundles.
+\`.env\` is ignored by Git. Never commit populated environment files, expose API keys through the browser, or include secrets in client-side bundles.
 
 ## Accessibility and usability
 
-The UI uses responsive layouts, visible focus outlines, touch-sized controls, theme switching and safe-area padding for mobile navigation. Always verify with the current browser and device before a live demo.
+The UI uses responsive layouts, focus outlines, touch-sized controls, theme switching and safe-area padding for mobile navigation. Verify layouts in a current browser and on the devices you plan to support.

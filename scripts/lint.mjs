@@ -1,41 +1,32 @@
 import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { transform } from "esbuild";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sourceExtensions = new Set([".js", ".jsx", ".mjs"]);
-const checkedRoots = ["src", "api", "scripts"];
-const rootFiles = ["vite.config.js", "tailwind.config.js"];
+const extensions = new Set([".js", ".jsx", ".mjs"]);
+const scanRoots = ["src", "api", "scripts"];
 const candidates = [];
+const failures = [];
 
 async function walk(directory) {
   let entries;
-  try {
-    entries = await readdir(directory, { withFileTypes: true });
-  } catch (error) {
-    if (error.code === "ENOENT") return;
-    throw error;
-  }
+  try { entries = await readdir(directory, { withFileTypes: true }); }
+  catch (error) { if (error.code === "ENOENT") return; throw error; }
   for (const entry of entries) {
-    if (entry.name === "node_modules" || entry.name === "dist" || entry.name === ".git") continue;
-    const absolute = path.join(directory, entry.name);
-    if (entry.isDirectory()) await walk(absolute);
-    else if (sourceExtensions.has(path.extname(entry.name))) candidates.push(absolute);
+    if (["node_modules", "dist", ".git"].includes(entry.name)) continue;
+    const filename = path.join(directory, entry.name);
+    if (entry.isDirectory()) await walk(filename);
+    else if (extensions.has(path.extname(entry.name))) candidates.push(filename);
   }
 }
 
-for (const name of checkedRoots) await walk(path.join(root, name));
-for (const name of rootFiles) {
-  try {
-    await access(path.join(root, name));
-    candidates.push(path.join(root, name));
-  } catch {
-    // Optional root config; the main source tree is still validated.
-  }
+for (const folder of scanRoots) await walk(path.join(root, folder));
+for (const filename of ["vite.config.js", "tailwind.config.js"]) {
+  try { await access(path.join(root, filename)); candidates.push(path.join(root, filename)); }
+  catch { /* Optional build configuration. */ }
 }
 
-const failures = [];
 for (const filename of candidates) {
   const source = await readFile(filename, "utf8");
   const relative = path.relative(root, filename);
@@ -45,68 +36,61 @@ for (const filename of candidates) {
       format: "esm",
       target: "es2022",
       sourcemap: false,
-      sourcefile: relative,
+      sourcefile: relative
     });
   } catch (error) {
-    failures.push(`${relative}: ${error.message}`);
+    failures.push(relative + ": " + error.message);
     continue;
   }
-
   const importPattern = /(?:\bfrom\s*|\bimport\s*)["']([^"']+)["']/g;
   for (const match of source.matchAll(importPattern)) {
     const specifier = match[1];
     if (!specifier.startsWith(".")) continue;
     const base = path.resolve(path.dirname(filename), specifier);
-    const possibilities = [
-      base,
-      ...[".js", ".jsx", ".mjs", ".json", ".css"].map((extension) => base + extension),
-      ...["index.js", "index.jsx", "index.mjs"].map((name) => path.join(base, name)),
-    ];
+    const possibilities = [base, ...[".js", ".jsx", ".mjs", ".json", ".css"].map((ext) => base + ext), ...["index.js", "index.jsx", "index.mjs"].map((item) => path.join(base, item))];
     let found = false;
-    for (const possibility of possibilities) {
-      try {
-        await access(possibility);
-        found = true;
-        break;
-      } catch {
-        // Try the next conventional file extension.
-      }
+    for (const candidate of possibilities) {
+      try { await access(candidate); found = true; break; }
+      catch { /* Try the next extension. */ }
     }
-    if (!found) failures.push(`${relative}: unresolved local import "${specifier}"`);
+    if (!found) failures.push(relative + ': unresolved import "' + specifier + '"');
   }
 }
 
-const appPath = path.join(root, "src", "App.jsx");
-const routerPath = path.join(root, "src", "AppRouter.jsx");
-const planPath = path.join(root, "api", "plan.js");
-const appSource = await readFile(appPath, "utf8");
-const routerSource = await readFile(routerPath, "utf8");
-const planSource = await readFile(planPath, "utf8");
-const destinationContextPath = path.join(root, "src", "context", "DestinationContext.jsx");
-const registryPath = path.join(root, "src", "data", "destinations", "index.js");
-const chatPath = path.join(root, "api", "chat.js");
-const lensPath = path.join(root, "api", "lens.js");
-const destinationContextSource = await readFile(destinationContextPath, "utf8");
-const registrySource = await readFile(registryPath, "utf8");
-const chatSource = await readFile(chatPath, "utf8");
-const lensSource = await readFile(lensPath, "utf8");
-const requiredChecks = [
-  [appSource.includes("useAuth()"), "Guest/manager app must use AuthContext."],
-  [appSource.includes('fetch("/api/chat"'), "Co-host chat must call /api/chat."],
-  [routerSource.includes('path="/guest"') && routerSource.includes('path="/admin"'), "Guest and manager routes must be registered."],
-  [routerSource.includes("ProtectedRoute") && routerSource.includes("RoleRoute"), "Role guards must be present."],
-  [destinationContextSource.includes("useDestination") && destinationContextSource.includes("api.open-meteo.com"), "Destination context must provide pack selection and live weather."],
-  [registrySource.includes("jaipur") && registrySource.includes("ubud") && registrySource.includes("lisbon"), "Destination registry must include all three demo packs."],
-  [planSource.includes("getDestinationById") && planSource.includes("verifyPlan"), "Itinerary generation must use and validate the selected pack."],
-  [chatSource.includes("process.env." + "GEMINI_API_KEY") && chatSource.includes("local-fallback"), "Chat must keep the server-side key and a local fallback."],
-  [lensSource.includes("MAX_IMAGE_BYTES") && lensSource.includes("safe-fallback"), "Price Lens must enforce a payload limit and a safe fallback."],
+const app = await readFile(path.join(root, "src", "App.jsx"), "utf8");
+const router = await readFile(path.join(root, "src", "AppRouter.jsx"), "utf8");
+const context = await readFile(path.join(root, "src", "context", "DestinationContext.jsx"), "utf8");
+const travel = await readFile(path.join(root, "src", "context", "TravelContext.jsx"), "utf8");
+const registry = await readFile(path.join(root, "src", "data", "destinations", "index.js"), "utf8");
+const chat = await readFile(path.join(root, "api", "chat.js"), "utf8");
+const lens = await readFile(path.join(root, "api", "lens.js"), "utf8");
+const expectedTabs = ["home", "discover", "plan", "lens", "chat", "profile"];
+const checks = [
+  [expectedTabs.every((tab) => app.includes('id: "' + tab + '"')), "The six traveler tabs must be present."],
+  [router.includes('path="/"') && router.includes("AtithiAI"), "The traveler app must be the root route."],
+  [context.includes("useDestination") && context.includes("api.open-meteo.com"), "Destination state must use pack coordinates for live weather."],
+  [context.includes("Intl.NumberFormat") && context.includes("destination.currency.code"), "Currency formatting must use the selected pack."],
+  [travel.includes("setItinerary([])") && travel.includes("makeWelcome(destination)"), "Destination changes must reset travel state."],
+  [registry.includes("jaipur") && registry.includes("ubud") && registry.includes("lisbon"), "The destination registry must expose all three packs."],
+  [chat.includes("GEMINI_API_KEY") && chat.includes("destination.places") && chat.includes("local-fallback"), "Chat must use the server key, selected pack and fallback."],
+  [lens.includes("MAX_IMAGE_BYTES") && lens.includes("safeJsonParse") && lens.includes("safe-fallback"), "Lens must preserve the image bound, safe parsing and fallback."]
 ];
-for (const [passed, message] of requiredChecks) if (!passed) failures.push(message);
+for (const [passed, message] of checks) if (!passed) failures.push(message);
 
+const modulePath = pathToFileURL(path.join(root, "src", "data", "destinations", "index.js"));
+const packModule = await import(modulePath);
+for (const pack of packModule.DESTINATIONS) {
+  const prefix = "destination pack " + pack.id;
+  if (pack.places?.length !== 12) failures.push(prefix + " must include twelve places.");
+  if (pack.experiences?.length !== 6) failures.push(prefix + " must include six experiences.");
+  if (pack.dishes?.length !== 10) failures.push(prefix + " must include ten dishes.");
+  if (!pack.currency?.code || !pack.locale || !pack.timezone || !pack.emergencyNumber) failures.push(prefix + " is missing locale data.");
+  if ((pack.places || []).some((place) => !place.id || !place.name || !place.localStory || !place.category || !place.bestTime || !Array.isArray(place.tags))) failures.push(prefix + " contains an incomplete place.");
+}
 if (failures.length) {
-  console.error("Atithi AI source checks failed:");
+  console.error("Source checks failed:");
   for (const failure of failures) console.error(" - " + failure);
   process.exitCode = 1;
 } else {
-  console.log(`Atithi AI source checks passed for ${candidates.length} JavaScript/JSX files.`);
+  console.log("Source checks passed for " + candidates.length + " JavaScript/JSX files and all three destination packs.");
 }

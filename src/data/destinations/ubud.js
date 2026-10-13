@@ -1,235 +1,45 @@
-// Approximate destination and place coordinates; all hotel policies and fees are illustrative DEMO values.
-const demoListing = ["Demo listing"];
-
+// DEMO / AI-assisted curated content. Stories are brief context, not verified live guidance.
+// Coordinates are approximate. All spend ranges are illustrative estimates, never quotes.
 const destination = {
-  id: "ubud",
-  city: "Ubud",
-  country: "Indonesia",
-  lat: -8.5069,
-  lon: 115.2625,
-  timezone: "Asia/Makassar",
-  locale: "id-ID",
-  currency: { code: "IDR", symbol: "Rp" },
-  // Illustrative only: these demo assumptions estimate commissions on approved experience inquiries.
-  demoCommercials: {"averageExperienceBookingValue":350000,"estimatedCommissionRate":0.12},
-  primaryLanguages: ["Indonesian", "Balinese", "English"],
-  hotel: {
-    name: "Riverside Palm Hotel (demo)",
-    stars: 3,
-    rooms: 40,
-    checkIn: "14:00",
-    checkOut: "11:00",
-    phone: "Not configured (demo)",
-    flexTiers: {
-      early: [{ from: "10:00", fee: 150000 }, { from: "12:00", fee: 75000 }],
-      late: [{ until: "13:00", fee: 60000 }, { until: "15:00", fee: 150000 }],
-    },
-    flexCutoffs: { earlyEarliest: "10:00", lateLatest: "15:00" },
-  },
-  places: [
-    { id: "ubud-monkey-forest", name: "Sacred Monkey Forest Sanctuary", lat: -8.5188, lon: 115.2580, category: "nature", tags: ["forest", "wildlife", "walk"], rainFriendly: false, lowCrowd: false },
-    { id: "ubud-palace", name: "Ubud Palace", lat: -8.5069, lon: 115.2625, category: "heritage", tags: ["architecture", "culture"], rainFriendly: false, lowCrowd: false },
-    { id: "tegalalang-terraces", name: "Tegallalang Rice Terraces", lat: -8.4312, lon: 115.2792, category: "nature", tags: ["landscape", "photography"], rainFriendly: false, lowCrowd: false },
-    { id: "goa-gajah", name: "Goa Gajah", lat: -8.5235, lon: 115.2867, category: "heritage", tags: ["archaeology", "culture"], rainFriendly: true, lowCrowd: true },
-    { id: "campuhan-ridge", name: "Campuhan Ridge Walk", lat: -8.4994, lon: 115.2542, category: "nature", tags: ["walking", "views"], rainFriendly: false, lowCrowd: true },
-    { id: "saraswati-temple", name: "Saraswati Temple", lat: -8.5070, lon: 115.2620, category: "heritage", tags: ["temple", "architecture"], rainFriendly: false, lowCrowd: false },
-    { id: "tirta-empul", name: "Tirta Empul Temple", lat: -8.4150, lon: 115.3150, category: "heritage", tags: ["temple", "culture"], rainFriendly: false, lowCrowd: false },
-    { id: "bali-bird-park", name: "Bali Bird Park", lat: -8.6001, lon: 115.2512, category: "nature", tags: ["wildlife", "family"], rainFriendly: true, lowCrowd: true },
+  id:"ubud",city:"Ubud",country:"Indonesia (Bali)",lat:-8.5069,lon:115.2625,timezone:"Asia/Makassar",locale:"id-ID",
+  currency:{code:"IDR",symbol:"Rp"},primaryLanguages:["Indonesian","Balinese","English"],
+  greeting:"Follow the art, food and small rituals that give Ubud its character.",
+  // Double-check this number before travel or real deployment.
+  emergencyNumber:"112",
+  themeColors:{accent:"#2F8178",accentSoft:"#E1F1EB"},
+  places:[
+    {id:"ubud-palace",name:"Puri Saren Agung (Ubud Palace)",lat:-8.5069,lon:115.2625,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"The palace complex sits in central Ubud and is associated with the local royal family. Access and cultural performances can depend on the area and current programme.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:0,durationMin:45,tags:["architecture","culture","dance"]},
+    {id:"saraswati",name:"Pura Taman Saraswati",lat:-8.5068,lon:115.2620,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"The water garden and temple are known for lotus ponds and Balinese temple design. Visitors should respect ceremonies, dress expectations and areas reserved for worship.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:50000,durationMin:40,tags:["temple","garden","architecture"]},
+    {id:"ubud-art-market",name:"Ubud Art Market",lat:-8.5066,lon:115.2621,category:"market",isHiddenGem:false,crowdLevel:"high",localStory:"The central market sells a range of crafts, textiles and souvenirs. Items and maker origins vary between sellers, so ask who made an object if provenance matters to you.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:150000,durationMin:60,tags:["market","craft","textiles"]},
+    {id:"campuhan-ridge",name:"Campuhan Ridge Walk",lat:-8.4994,lon:115.2542,category:"viewpoint",isHiddenGem:true,crowdLevel:"medium",localStory:"This walking path follows a ridge with green valley views close to central Ubud. Conditions can be hot or slippery after rain; check local conditions before setting out.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:75,tags:["walk","landscape","nature"]},
+    {id:"goa-gajah",name:"Goa Gajah (Elephant Cave)",lat:-8.5235,lon:115.2867,category:"culture",isHiddenGem:false,crowdLevel:"medium",localStory:"Goa Gajah is an archaeological sanctuary known for its carved cave entrance and water features. The site's religious and historical interpretation is complex, so local guides may offer helpful context.",rainFriendly:true,indoor:true,bestTime:"morning",avgSpendLocal:50000,durationMin:75,tags:["archaeology","heritage","temple"]},
+    {id:"tegalalang",name:"Tegallalang Rice Terraces",lat:-8.4312,lon:115.2792,category:"nature",isHiddenGem:false,crowdLevel:"high",localStory:"The terraces show rice cultivation on sloping land, shaped by water management traditions used in Bali. Visitor facilities and access fees vary across sections and private land.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:50000,durationMin:90,tags:["rice","landscape","agriculture"]},
+    {id:"blanco-museum",name:"The Blanco Renaissance Museum",lat:-8.4991,lon:115.2568,category:"culture",isHiddenGem:true,crowdLevel:"low",localStory:"The museum is linked to artist Antonio Blanco and displays art in a hilltop setting. Exhibitions, access and photography rules should be confirmed directly before visiting.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:100000,durationMin:75,tags:["art","museum","painting"]},
+    {id:"neka-museum",name:"Neka Art Museum",lat:-8.4891,lon:115.2598,category:"culture",isHiddenGem:true,crowdLevel:"low",localStory:"The collection presents Balinese and Indonesian art in multiple galleries. It can help visitors explore how artists have interpreted local subjects and outside influences over time.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:100000,durationMin:90,tags:["art","painting","museum"]},
+    {id:"setia-darma",name:"Setia Darma House of Masks and Puppets",lat:-8.5480,lon:115.2755,category:"culture",isHiddenGem:true,crowdLevel:"low",localStory:"The museum holds masks and puppets from Indonesia and elsewhere, objects tied to performance traditions. Collections are best treated as cultural artefacts, with meanings that depend on their community and use.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:80000,durationMin:90,tags:["masks","puppets","performance"]},
+    {id:"nyuh-kuning",name:"Nyuh Kuning village lanes",lat:-8.5232,lon:115.2580,category:"culture",isHiddenGem:true,crowdLevel:"medium",localStory:"The village area south of central Ubud mixes homes, small businesses and visitor services. Walk respectfully, avoid photographing private spaces without permission and support businesses directly.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:60,tags:["village","local-life","walk"]},
+    {id:"sangeh",name:"Sangeh Monkey Forest",lat:-8.4834,lon:115.2083,category:"nature",isHiddenGem:true,crowdLevel:"medium",localStory:"The forest is known for nutmeg trees and a macaque population, and is associated with a local temple landscape. Keep distance from wildlife and follow guidance from onsite staff.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:50000,durationMin:75,tags:["forest","wildlife","temple"]},
+    {id:"mas-village",name:"Mas woodcarving village",lat:-8.5540,lon:115.2730,category:"craft",isHiddenGem:true,crowdLevel:"low",localStory:"Mas is widely associated with woodcarving workshops and carved objects. Studios differ in how work is made and sold, so ask artisans about materials, methods and fair attribution.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:100000,durationMin:75,tags:["woodcarving","craft","artisans"]}
   ],
-  experiences: [
-    { id: "ubud-culture-walk", name: "Ubud culture walk", partner: "Rice Path Hosts (demo)", description: "A hosted walk introducing local art and customs.", tags: demoListing },
-    { id: "batik-workshop", name: "Textile craft workshop", partner: "Island Loom Studio (demo)", description: "An introductory session about regional textile techniques.", tags: demoListing },
-    { id: "cooking-bali", name: "Balinese cooking class", partner: "Coconut Table (demo)", description: "A hands-on introduction to selected local recipes.", tags: demoListing },
-    { id: "rice-terrace-walk", name: "Rice terrace nature walk", partner: "Green Steps Ubud (demo)", description: "A guided outdoor route proposal; weather and access must be checked.", tags: demoListing },
-    { id: "wood-carving", name: "Wood-carving introduction", partner: "Ubud Craft Circle (demo)", description: "Learn about carving styles and materials from a proposed host.", tags: demoListing },
-    { id: "dance-evening", name: "Traditional dance evening", partner: "Island Stage Hosts (demo)", description: "A cultural event proposal; date, venue and fees require confirmation.", tags: demoListing },
+  experiences:[
+    {id:"balinese-cooking",title:"Balinese home-style cooking introduction",hostName:"Coconut Table Collective (demo)",category:"craft",durationMin:150,priceLocal:350000,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:true,localStory:"Explore selected Balinese ingredients and cooking techniques in a proposed small-group session. This is a demo idea; provider, venue, ingredients and availability are not verified."},
+    {id:"woodcarving",title:"Woodcarving techniques with an artisan",hostName:"Mas Makers Circle (demo)",category:"craft",durationMin:120,priceLocal:300000,communityLed:true,suitsWho:["solo","couples","friends"],rainFriendly:true,localStory:"A proposed introduction to carving patterns and tools associated with Mas. Ask the artisan about materials and cultural context; this demo listing is not a confirmed booking."},
+    {id:"subak-conversation",title:"Rice-field and water-sharing conversation",hostName:"Green Path Hosts (demo)",category:"nature",durationMin:120,priceLocal:250000,communityLed:true,suitsWho:["solo","couples","families"],rainFriendly:false,localStory:"Learn the basics of Balinese rice cultivation and the subak water-management tradition from a local perspective. This session is illustrative and needs an independently confirmed guide and route."},
+    {id:"mask-craft",title:"Mask and performance traditions",hostName:"Island Story Studio (demo)",category:"culture",durationMin:90,priceLocal:220000,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:true,localStory:"A possible conversation about masks, puppetry and performance across Indonesian traditions. A real host would need to explain the context of each object rather than treating traditions as interchangeable."},
+    {id:"market-taste",title:"Market ingredients and snack walk",hostName:"Ubud Food Notes (demo)",category:"market",durationMin:100,priceLocal:180000,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:false,localStory:"Explore ingredient names and everyday snacks in a market setting. Tasting, allergens, dietary needs and any local permissions must be checked before participating."},
+    {id:"gentle-yoga",title:"Gentle movement and breathing session",hostName:"Sukha Practice Ubud (demo)",category:"wellness",durationMin:60,priceLocal:180000,communityLed:true,suitsWho:["solo","couples","families"],rainFriendly:true,localStory:"A gentle session can provide an unhurried pause in the day. Instructor credentials, venue suitability and schedule are not verified in this demo listing."}
   ],
-  dishes: [
-    { id: "nasi-campur", name: "Nasi campur", diet: ["varies"], spiceLevel: "medium", whereToEat: "Indonesian restaurants; ask which sides are included." },
-    { id: "gado-gado", name: "Gado-gado", diet: ["vegetarian"], spiceLevel: "mild", whereToEat: "Warungs serving Indonesian salads; confirm shrimp paste in sauce." },
-    { id: "nasi-goreng", name: "Nasi goreng", diet: ["varies"], spiceLevel: "medium", whereToEat: "Local cafés and warungs; ask about egg, seafood and sauces." },
-    { id: "sate-lilit", name: "Sate lilit", diet: ["fish", "meat"], spiceLevel: "medium", whereToEat: "Balinese restaurants; ask the host which protein is used." },
-    { id: "bebek-betutu", name: "Bebek betutu", diet: ["meat"], spiceLevel: "hot", whereToEat: "Restaurants serving Balinese cooking; preparation can take time." },
-    { id: "lawar", name: "Lawar", diet: ["varies"], spiceLevel: "hot", whereToEat: "Traditional food stalls; ingredients can include meat and coconut." },
-    { id: "jaja-bali", name: "Jaja Bali", diet: ["vegetarian"], spiceLevel: "mild", whereToEat: "Market snack stalls; check ingredients and food handling." },
-    { id: "tipat-cantok", name: "Tipat cantok", diet: ["vegetarian"], spiceLevel: "medium", whereToEat: "Local food stalls; confirm whether the sauce contains peanuts." },
-  ],
-  disruptionLabels: ["Transport delay (demo)", "Heavy rain (demo)", "Venue schedule change (demo)"],
-  // DOUBLE-CHECK this local emergency number before travel.
-  emergencyNumber: "112",
+  dishes:[
+    {id:"nasi-campur",name:"Nasi campur",description:"Rice served with a selection of sides; the mix varies by stall and region.",diet:{veg:null,vegan:null,nonVeg:null,halal:null,glutenFree:null},spiceLevel:2,whereToEat:"warungs and local eateries",priceRangeLocal:[25000,65000],bestTime:"lunch",warm:true},
+    {id:"gado-gado",name:"Gado-gado",description:"Vegetables and other ingredients with peanut sauce; sauces can include animal-derived ingredients.",diet:{veg:true,vegan:null,nonVeg:false,halal:null,glutenFree:null},spiceLevel:2,whereToEat:"warungs and market stalls",priceRangeLocal:[20000,45000],bestTime:"lunch",warm:false},
+    {id:"nasi-goreng",name:"Nasi goreng",description:"Indonesian fried rice, often with kecap manis and optional egg, meat or seafood.",diet:{veg:null,vegan:null,nonVeg:null,halal:null,glutenFree:null},spiceLevel:2,whereToEat:"warungs and cafés",priceRangeLocal:[25000,60000],bestTime:"dinner",warm:true},
+    {id:"sate-lilit",name:"Sate lilit",description:"Balinese minced mixture wrapped around skewers; fish, meat and seasonings vary.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:null},spiceLevel:2,whereToEat:"Balinese eateries",priceRangeLocal:[30000,70000],bestTime:"dinner",warm:true},
+    {id:"bebek-betutu",name:"Bebek betutu",description:"Duck cooked with a spiced paste; preparation and heat vary by cook.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:null},spiceLevel:3,whereToEat:"Balinese restaurants",priceRangeLocal:[60000,150000],bestTime:"dinner",warm:true},
+    {id:"lawar",name:"Lawar",description:"A mixed preparation whose ingredients can include vegetables, coconut and meat; recipes vary.",diet:{veg:null,vegan:null,nonVeg:null,halal:null,glutenFree:null},spiceLevel:3,whereToEat:"traditional Balinese eateries",priceRangeLocal:[25000,65000],bestTime:"lunch",warm:true},
+    {id:"tipat-cantok",name:"Tipat cantok",description:"Rice cakes and vegetables served with peanut sauce in a Balinese-style dish.",diet:{veg:true,vegan:null,nonVeg:false,halal:null,glutenFree:null},spiceLevel:2,whereToEat:"street stalls and local eateries",priceRangeLocal:[15000,35000],bestTime:"lunch",warm:false},
+    {id:"jaja-bali",name:"Jaja Bali",description:"A broad family of Balinese sweets and snacks, often made with rice flour, coconut or palm sugar.",diet:{veg:true,vegan:null,nonVeg:false,halal:null,glutenFree:null},spiceLevel:1,whereToEat:"markets and snack stalls",priceRangeLocal:[10000,35000],bestTime:"snack",warm:false},
+    {id:"bubur-injin",name:"Bubur injin",description:"Black-rice pudding commonly served with coconut milk; recipes vary.",diet:{veg:true,vegan:null,nonVeg:false,halal:null,glutenFree:null},spiceLevel:1,whereToEat:"cafés and local eateries",priceRangeLocal:[20000,45000],bestTime:"breakfast",warm:true},
+    {id:"urap",name:"Urap",description:"Vegetables mixed with seasoned grated coconut, with local variations.",diet:{veg:true,vegan:true,nonVeg:false,halal:null,glutenFree:null},spiceLevel:2,whereToEat:"warungs and traditional eateries",priceRangeLocal:[15000,40000],bestTime:"lunch",warm:false}
+  ]
 };
-
-// Staff-curated demo metadata; prices and durations are illustrative estimates, not provider quotes.
-const experienceDetails = {
-  "ubud-culture-walk": {
-    "durationMinutes": 90,
-    "price": 180000,
-    "category": "walking tour",
-    "rainFriendly": false,
-    "lowCrowd": true,
-    "suits": [
-      "family",
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Ayu at our front desk recommends this gentle introduction to Ubud's art and local customs."
-  },
-  "batik-workshop": {
-    "durationMinutes": 120,
-    "price": 250000,
-    "category": "craft workshop",
-    "rainFriendly": true,
-    "lowCrowd": true,
-    "suits": [
-      "family",
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Ayu likes this indoor, hands-on option for a relaxed rainy afternoon."
-  },
-  "cooking-bali": {
-    "durationMinutes": 150,
-    "price": 320000,
-    "category": "food workshop",
-    "rainFriendly": true,
-    "lowCrowd": true,
-    "suits": [
-      "family",
-      "couple",
-      "solo"
-    ],
-    "hostNote": "Our team recommends asking about ingredients before joining this local-cooking introduction."
-  },
-  "rice-terrace-walk": {
-    "durationMinutes": 180,
-    "price": 220000,
-    "category": "nature walk",
-    "rainFriendly": false,
-    "lowCrowd": false,
-    "suits": [
-      "couple",
-      "solo",
-      "friends"
-    ],
-    "hostNote": "Ayu recommends checking rain and trail conditions with the hotel before considering this walk."
-  },
-  "wood-carving": {
-    "durationMinutes": 120,
-    "price": 280000,
-    "category": "craft workshop",
-    "rainFriendly": true,
-    "lowCrowd": true,
-    "suits": [
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Our front desk team likes this quieter craft-focused idea; details and provider still need checking."
-  },
-  "dance-evening": {
-    "durationMinutes": 100,
-    "price": 200000,
-    "category": "performance",
-    "rainFriendly": true,
-    "lowCrowd": false,
-    "suits": [
-      "family",
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Ayu suggests checking the date and venue with us before planning an evening around it."
-  }
-};
-const dishDetails = {
-  "nasi-campur": {
-    "price": 45000,
-    "dietaryTags": [],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "gado-gado": {
-    "price": 35000,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": false
-  },
-  "nasi-goreng": {
-    "price": 40000,
-    "dietaryTags": [],
-    "timeOfDay": [
-      "breakfast",
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "sate-lilit": {
-    "price": 55000,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "bebek-betutu": {
-    "price": 75000,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "lawar": {
-    "price": 50000,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "jaja-bali": {
-    "price": 18000,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "snack",
-      "anytime"
-    ],
-    "warmInRain": false
-  },
-  "tipat-cantok": {
-    "price": 30000,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "snack"
-    ],
-    "warmInRain": false
-  }
-};
-destination.experiences = destination.experiences.map((experience) => ({ ...experience, ...(experienceDetails[experience.id] || {}) }));
-destination.dishes = destination.dishes.map((dish) => ({ ...dish, ...(dishDetails[dish.id] || {}), dietaryTags: dishDetails[dish.id]?.dietaryTags || [], halal: false, glutenAware: false }));
 export default destination;

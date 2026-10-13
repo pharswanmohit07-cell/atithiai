@@ -1,7 +1,7 @@
 {
-  "name": "Atithi AI Hotel Co-Host",
+  "name": "Atithi AI Travel Companion",
   "short_name": "Atithi AI",
-  "description": "A demo AI co-host for three-star hotels.",
+  "description": "A personalized travel companion for hidden places, local stories and experiences beyond the usual.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

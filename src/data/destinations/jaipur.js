@@ -1,6 +1,5 @@
-// Approximate destination and place coordinates; all hotel policies and fees are illustrative DEMO values.
-const demoListing = ["Demo listing"];
-
+// DEMO / AI-assisted curated content. Stories are brief context, not verified live guidance.
+// Coordinates are approximate. All spend ranges are illustrative estimates, never quotes.
 const destination = {
   id: "jaipur",
   city: "Jaipur",
@@ -10,231 +9,44 @@ const destination = {
   timezone: "Asia/Kolkata",
   locale: "en-IN",
   currency: { code: "INR", symbol: "₹" },
-  // Illustrative only: these demo assumptions estimate commissions on approved experience inquiries.
-  demoCommercials: {"averageExperienceBookingValue":1800,"estimatedCommissionRate":0.12},
-  primaryLanguages: ["Hindi", "English"],
-  hotel: {
-    name: "Pink Courtyard Hotel (demo)",
-    stars: 3,
-    rooms: 40,
-    checkIn: "14:00",
-    checkOut: "11:00",
-    phone: "Not configured (demo)",
-    flexTiers: {
-      early: [{ from: "10:00", fee: 1200 }, { from: "12:00", fee: 600 }],
-      late: [{ until: "13:00", fee: 500 }, { until: "15:00", fee: 1200 }],
-    },
-    flexCutoffs: { earlyEarliest: "10:00", lateLatest: "15:00" },
-  },
+  primaryLanguages: ["Hindi", "Rajasthani", "English"],
+  greeting: "Find the small details that make Jaipur yours.",
+  // Double-check this number before travel or real deployment.
+  emergencyNumber: "112",
+  themeColors: { accent: "#C65E4B", accentSoft: "#F8E7E0" },
   places: [
-    { id: "hawa-mahal", name: "Hawa Mahal", lat: 26.9239, lon: 75.8267, category: "heritage", tags: ["architecture", "history", "photo"], rainFriendly: false, lowCrowd: false },
-    { id: "amber-fort", name: "Amber Fort", lat: 26.9855, lon: 75.8513, category: "heritage", tags: ["fort", "history", "views"], rainFriendly: false, lowCrowd: false },
-    { id: "city-palace-jaipur", name: "City Palace", lat: 26.9258, lon: 75.8237, category: "museum", tags: ["royal-history", "architecture"], rainFriendly: true, lowCrowd: false },
-    { id: "jantar-mantar-jaipur", name: "Jantar Mantar", lat: 26.9248, lon: 75.8246, category: "museum", tags: ["science", "heritage"], rainFriendly: false, lowCrowd: false },
-    { id: "nahargarh-fort", name: "Nahargarh Fort", lat: 26.9373, lon: 75.8156, category: "viewpoint", tags: ["sunset", "views", "history"], rainFriendly: false, lowCrowd: true },
-    { id: "jal-mahal", name: "Jal Mahal", lat: 26.9537, lon: 75.8463, category: "viewpoint", tags: ["lake", "photo"], rainFriendly: false, lowCrowd: false },
-    { id: "albert-hall-museum", name: "Albert Hall Museum", lat: 26.9117, lon: 75.8197, category: "museum", tags: ["art", "culture", "indoors"], rainFriendly: true, lowCrowd: true },
-    { id: "patrika-gate", name: "Patrika Gate", lat: 26.8258, lon: 75.8056, category: "architecture", tags: ["photo", "architecture"], rainFriendly: false, lowCrowd: true },
+    { id:"hawamahal",name:"Hawa Mahal",lat:26.9239,lon:75.8267,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"Its many small windows are commonly associated with allowing royal women to observe street life from within the palace. The façade is one of Jaipur’s best-known examples of Rajput and Mughal-influenced design.",rainFriendly:true,indoor:true,bestTime:"morning",avgSpendLocal:250,durationMin:60,tags:["architecture","heritage","photography"] },
+    { id:"city-palace",name:"City Palace",lat:26.9258,lon:75.8237,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"The palace complex combines Rajput and Mughal-influenced design and includes courtyards and collections. Parts remain associated with the former royal household, so visitor access can vary.",rainFriendly:true,indoor:true,bestTime:"morning",avgSpendLocal:700,durationMin:120,tags:["architecture","craft","history"] },
+    { id:"jantar-mantar",name:"Jantar Mantar",lat:26.9248,lon:75.8246,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"This observatory is known for large masonry instruments developed for astronomical observations. The site is part of the UNESCO-listed Jantar Mantar group in Jaipur.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:250,durationMin:75,tags:["science","heritage","architecture"] },
+    { id:"albert-hall",name:"Albert Hall Museum",lat:26.9117,lon:75.8190,category:"culture",isHiddenGem:false,crowdLevel:"medium",localStory:"The museum sits within Ram Niwas Garden and displays collections including crafts, paintings and objects from different periods. Its Indo-Saracenic-inspired architecture is also a major part of the visit.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:300,durationMin:100,tags:["museum","craft","history"] },
+    { id:"gaitor",name:"Gaitor Ki Chhatriyan",lat:26.9434,lon:75.8513,category:"culture",isHiddenGem:true,crowdLevel:"low",localStory:"This group of cenotaphs is noted for carved stone details and quiet courtyards. It offers a different perspective on the region’s royal memorial architecture than the busier palace circuit.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:100,durationMin:50,tags:["architecture","heritage","quiet"] },
+    { id:"panna-meena-kund",name:"Panna Meena ka Kund",lat:26.9855,lon:75.8513,category:"culture",isHiddenGem:true,crowdLevel:"medium",localStory:"The stepwell near Amer is known for its repeated stair patterns and geometric layout. Stepwells across Rajasthan helped manage water in a dry climate; access rules can change, so respect local signs.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:100,durationMin:35,tags:["water","architecture","photography"] },
+    { id:"jawahar-kala-kendra",name:"Jawahar Kala Kendra",lat:26.8737,lon:75.8055,category:"craft",isHiddenGem:true,crowdLevel:"low",localStory:"This arts centre hosts cultural programming and exhibitions, with architecture informed by mandala planning. What is on display depends on the current programme, which should be checked locally.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:200,durationMin:90,tags:["art","design","craft"] },
+    { id:"bapu-bazaar",name:"Bapu Bazaar",lat:26.9168,lon:75.8236,category:"market",isHiddenGem:false,crowdLevel:"high",localStory:"The market is associated with textiles, footwear and souvenirs, including items in locally familiar prints. Bargaining practices and product origins vary by seller; ask questions and compare quality before buying.",rainFriendly:false,indoor:false,bestTime:"afternoon",avgSpendLocal:600,durationMin:75,tags:["shopping","textiles","bazaar"] },
+    { id:"tripolia-bazaar",name:"Tripolia Bazaar",lat:26.9223,lon:75.8238,category:"market",isHiddenGem:true,crowdLevel:"high",localStory:"This old-city market is known for lac bangles and traditional goods in the surrounding bazaar lanes. The area works as a living commercial district as well as a visitor stop, so keep walkways clear.",rainFriendly:false,indoor:false,bestTime:"afternoon",avgSpendLocal:500,durationMin:60,tags:["bangles","craft","shopping"] },
+    { id:"central-park",name:"Central Park",lat:26.9048,lon:75.8070,category:"nature",isHiddenGem:true,crowdLevel:"medium",localStory:"Central Park offers open green space within the city and is used by residents for walks and outdoor time. Shade and comfort vary by season, so check current heat and weather conditions.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:45,tags:["green-space","walking","local-life"] },
+    { id:"patrika-gate",name:"Patrika Gate",lat:26.8467,lon:75.8050,category:"craft",isHiddenGem:false,crowdLevel:"high",localStory:"The gate is decorated with colourful painted panels and motifs intended to reference Rajasthan’s places and arts. It is a relatively recent landmark rather than an ancient gate, and photo access can be busy.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:30,tags:["colour","painting","photography"] },
+    { id:"anokhi-museum",name:"Anokhi Museum of Hand Printing",lat:26.9858,lon:75.8517,category:"craft",isHiddenGem:true,crowdLevel:"low",localStory:"The museum focuses on hand-block printing and the skills behind printed textiles. Demonstrations and displays may vary, so treat the visit as an introduction rather than a guarantee of a live workshop.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:250,durationMin:75,tags:["textiles","block-printing","craft"] }
   ],
   experiences: [
-    { id: "jaipur-walk", name: "Old City orientation walk", partner: "Pink City Walks (demo)", description: "A guided introduction to streets, architecture and local customs.", tags: demoListing },
-    { id: "block-print", name: "Block-printing introduction", partner: "Rang Workshop Hosts (demo)", description: "Learn how hand-block printing works in a small-group session.", tags: demoListing },
-    { id: "market-craft", name: "Craft market visit", partner: "Jaipur Craft Circle (demo)", description: "Explore craft traditions and questions to ask before purchasing.", tags: demoListing },
-    { id: "cooking-jaipur", name: "Rajasthani cooking class", partner: "Home Table Jaipur (demo)", description: "A hosted introduction to regional home cooking.", tags: demoListing },
-    { id: "heritage-photo", name: "Architecture photo walk", partner: "Amber Lens Guides (demo)", description: "A photography-focused walk around public heritage areas.", tags: demoListing },
-    { id: "folk-music", name: "Folk music evening", partner: "Desert Notes Studio (demo)", description: "A small cultural performance proposal; schedule must be confirmed by staff.", tags: demoListing },
+    { id:"block-print",title:"Hand-block printing introduction",hostName:"Pink Thread Studio (demo)",category:"craft",durationMin:120,priceLocal:1200,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:true,localStory:"Meet the ideas behind carved wooden blocks and repeated textile patterns. This demo listing represents a possible local-artist session; provider and schedule are not verified." },
+    { id:"old-city-walk",title:"Old-city lanes and everyday trades walk",hostName:"Walled City Walks (demo)",category:"culture",durationMin:100,priceLocal:800,communityLed:true,suitsWho:["solo","couples","friends"],rainFriendly:false,localStory:"Explore the old city's commercial lanes and notice how crafts and daily shopping share the same streets. A real guide and route would need to be arranged independently." },
+    { id:"blue-pottery",title:"Blue pottery techniques session",hostName:"Clay & Colour Collective (demo)",category:"craft",durationMin:90,priceLocal:1000,communityLed:true,suitsWho:["families","couples","friends"],rainFriendly:true,localStory:"Learn about the coloured glaze and painted motifs associated with Jaipur blue pottery. This is an illustrative workshop idea, not a confirmed class or partner." },
+    { id:"stepwell-sketch",title:"Stepwell sketch and geometry",hostName:"Open Sketch Jaipur (demo)",category:"craft",durationMin:90,priceLocal:500,communityLed:false,suitsWho:["solo","couples","friends"],rainFriendly:false,localStory:"Use the repeating stair lines of a stepwell as a subject for a relaxed sketch. Bring supplies if needed and respect any photography or access restrictions." },
+    { id:"market-food-stroll",title:"Market flavours and ingredient stories",hostName:"Rasa Local Guides (demo)",category:"market",durationMin:100,priceLocal:900,communityLed:true,suitsWho:["solo","couples","families","friends"],rainFriendly:false,localStory:"A possible walk through market food traditions, with ingredients and regional names explained along the way. Allergen needs and any tasting must be confirmed directly." },
+    { id:"courtyard-yoga",title:"Gentle courtyard movement session",hostName:"Sukoon Practice (demo)",category:"wellness",durationMin:60,priceLocal:700,communityLed:true,suitsWho:["solo","couples","families"],rainFriendly:true,localStory:"A gentle movement session can offer a slower pause between city explorations. The venue, instructor credentials and schedule are not verified in this demo." }
   ],
   dishes: [
-    { id: "dal-baati-churma", name: "Dal baati churma", diet: ["vegetarian"], spiceLevel: "medium", whereToEat: "Ask the front desk for a currently open local restaurant; venue is not booked." },
-    { id: "pyaaz-kachori", name: "Pyaaz kachori", diet: ["vegetarian"], spiceLevel: "medium", whereToEat: "Breakfast or snack counters; confirm oil and ingredients." },
-    { id: "ghewar", name: "Ghewar", diet: ["vegetarian"], spiceLevel: "mild", whereToEat: "Sweet shops; ask about dairy and allergens." },
-    { id: "laal-maas", name: "Laal maas", diet: ["meat"], spiceLevel: "hot", whereToEat: "Restaurants serving regional cuisine; ask about spice level." },
-    { id: "ker-sangri", name: "Ker sangri", diet: ["vegetarian", "vegan"], spiceLevel: "medium", whereToEat: "Traditional Rajasthani menus; recipes vary by kitchen." },
-    { id: "gatte-ki-sabzi", name: "Gatte ki sabzi", diet: ["vegetarian"], spiceLevel: "medium", whereToEat: "Thali restaurants; confirm dairy and gluten ingredients." },
-    { id: "mirchi-vada", name: "Mirchi vada", diet: ["vegetarian", "vegan"], spiceLevel: "hot", whereToEat: "Snack stalls; ask how hot the filling is." },
-    { id: "mawa-kachori", name: "Mawa kachori", diet: ["vegetarian"], spiceLevel: "mild", whereToEat: "Sweet shops; contains dairy in common recipes." },
-  ],
-  disruptionLabels: ["Transport delay (demo)", "Heavy rain (demo)", "Venue schedule change (demo)"],
-  // DOUBLE-CHECK this local emergency number before travel.
-  emergencyNumber: "112",
+    { id:"dal-baati",name:"Dal baati churma",description:"Lentils with baked wheat rolls, often served with sweet crumbled churma.",diet:{veg:true,vegan:false,nonVeg:false,halal:null,glutenFree:false},spiceLevel:2,whereToEat:"traditional Rajasthani eateries",priceRangeLocal:[180,400],bestTime:"lunch",warm:true },
+    { id:"gatte-ki-sabzi",name:"Gatte ki sabzi",description:"Gram-flour dumplings simmered in a spiced yogurt-based gravy in many recipes.",diet:{veg:true,vegan:false,nonVeg:false,halal:null,glutenFree:false},spiceLevel:2,whereToEat:"local thali restaurants",priceRangeLocal:[120,280],bestTime:"lunch",warm:true },
+    { id:"ker-sangri",name:"Ker sangri",description:"A regional preparation of desert berries and beans, commonly cooked with spices.",diet:{veg:true,vegan:true,nonVeg:false,halal:null,glutenFree:true},spiceLevel:2,whereToEat:"Rajasthani restaurants",priceRangeLocal:[150,350],bestTime:"lunch",warm:true },
+    { id:"laal-maas",name:"Laal maas",description:"A rich mutton curry traditionally associated with chillies; recipes vary in heat.",diet:{veg:false,vegan:false,nonVeg:true,halal:null,glutenFree:true},spiceLevel:3,whereToEat:"restaurants serving Rajasthani cuisine",priceRangeLocal:[300,700],bestTime:"dinner",warm:true },
+    { id:"pyaaz-kachori",name:"Pyaaz kachori",description:"A flaky fried pastry filled with spiced onion.",diet:{veg:true,vegan:true,nonVeg:false,halal:null,glutenFree:false},spiceLevel:2,whereToEat:"bakeries and street stalls",priceRangeLocal:[25,80],bestTime:"morning",warm:true },
+    { id:"mirchi-vada",name:"Mirchi vada",description:"A chilli pepper filled with a savoury mixture and coated in batter before frying.",diet:{veg:true,vegan:true,nonVeg:false,halal:null,glutenFree:false},spiceLevel:3,whereToEat:"snack shops and street stalls",priceRangeLocal:[25,80],bestTime:"afternoon",warm:true },
+    { id:"ghewar",name:"Ghewar",description:"A honeycomb-like disc sweet often associated with festive occasions in Rajasthan.",diet:{veg:true,vegan:false,nonVeg:false,halal:null,glutenFree:false},spiceLevel:1,whereToEat:"sweet shops",priceRangeLocal:[100,450],bestTime:"any",warm:false },
+    { id:"mawa-kachori",name:"Mawa kachori",description:"A sweet pastry filled with milk solids and usually finished with syrup.",diet:{veg:true,vegan:false,nonVeg:false,halal:null,glutenFree:false},spiceLevel:1,whereToEat:"sweet shops",priceRangeLocal:[50,150],bestTime:"snack",warm:false },
+    { id:"bajra-roti",name:"Bajra roti",description:"Flatbread made with pearl millet flour, commonly served with vegetables or chutney.",diet:{veg:true,vegan:true,nonVeg:false,halal:null,glutenFree:true},spiceLevel:1,whereToEat:"local thali restaurants",priceRangeLocal:[40,120],bestTime:"lunch",warm:true },
+    { id:"lassi-jaipur",name:"Lassi",description:"A yogurt-based drink that may be sweetened or salted depending on the shop.",diet:{veg:true,vegan:false,nonVeg:false,halal:null,glutenFree:true},spiceLevel:1,whereToEat:"lassi shops and street stalls",priceRangeLocal:[40,120],bestTime:"afternoon",warm:false }
+  ]
 };
-
-// Staff-curated demo metadata; prices and durations are illustrative estimates, not provider quotes.
-const experienceDetails = {
-  "jaipur-walk": {
-    "durationMinutes": 90,
-    "price": 900,
-    "category": "walking tour",
-    "rainFriendly": false,
-    "lowCrowd": false,
-    "suits": [
-      "family",
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Maria from our front desk recommends this as an easy first introduction to the Pink City."
-  },
-  "block-print": {
-    "durationMinutes": 120,
-    "price": 1400,
-    "category": "craft workshop",
-    "rainFriendly": true,
-    "lowCrowd": true,
-    "suits": [
-      "family",
-      "couple",
-      "solo",
-      "seniors"
-    ],
-    "hostNote": "Ravi at the front desk likes this hands-on option when guests want a slower indoor afternoon."
-  },
-  "market-craft": {
-    "durationMinutes": 120,
-    "price": 1100,
-    "category": "market visit",
-    "rainFriendly": false,
-    "lowCrowd": false,
-    "suits": [
-      "couple",
-      "solo",
-      "friends"
-    ],
-    "hostNote": "Maria recommends asking the guide about craft techniques before deciding what to buy."
-  },
-  "cooking-jaipur": {
-    "durationMinutes": 150,
-    "price": 1800,
-    "category": "food workshop",
-    "rainFriendly": true,
-    "lowCrowd": true,
-    "suits": [
-      "family",
-      "couple",
-      "solo"
-    ],
-    "hostNote": "Our front desk team likes this for guests curious about regional home cooking; confirm dietary needs first."
-  },
-  "heritage-photo": {
-    "durationMinutes": 100,
-    "price": 1000,
-    "category": "photography",
-    "rainFriendly": false,
-    "lowCrowd": true,
-    "suits": [
-      "couple",
-      "solo",
-      "friends"
-    ],
-    "hostNote": "Ravi recommends this for travellers who enjoy architecture and taking their time with photos."
-  },
-  "folk-music": {
-    "durationMinutes": 90,
-    "price": 1600,
-    "category": "music",
-    "rainFriendly": true,
-    "lowCrowd": false,
-    "suits": [
-      "couple",
-      "solo",
-      "friends",
-      "seniors"
-    ],
-    "hostNote": "Maria suggests this as an evening cultural idea, pending venue and schedule confirmation."
-  }
-};
-const dishDetails = {
-  "dal-baati-churma": {
-    "price": 320,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "pyaaz-kachori": {
-    "price": 60,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "breakfast",
-      "snack"
-    ],
-    "warmInRain": true
-  },
-  "ghewar": {
-    "price": 180,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "snack",
-      "anytime"
-    ],
-    "warmInRain": false
-  },
-  "laal-maas": {
-    "price": 550,
-    "dietaryTags": [
-      "non-veg"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "ker-sangri": {
-    "price": 300,
-    "dietaryTags": [
-      "vegetarian",
-      "vegan"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "gatte-ki-sabzi": {
-    "price": 260,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "lunch",
-      "dinner"
-    ],
-    "warmInRain": true
-  },
-  "mirchi-vada": {
-    "price": 50,
-    "dietaryTags": [
-      "vegetarian",
-      "vegan"
-    ],
-    "timeOfDay": [
-      "breakfast",
-      "snack"
-    ],
-    "warmInRain": true
-  },
-  "mawa-kachori": {
-    "price": 90,
-    "dietaryTags": [
-      "vegetarian"
-    ],
-    "timeOfDay": [
-      "snack",
-      "anytime"
-    ],
-    "warmInRain": false
-  }
-};
-destination.experiences = destination.experiences.map((experience) => ({ ...experience, ...(experienceDetails[experience.id] || {}) }));
-destination.dishes = destination.dishes.map((dish) => ({ ...dish, ...(dishDetails[dish.id] || {}), dietaryTags: dishDetails[dish.id]?.dietaryTags || [], halal: false, glutenAware: false }));
 export default destination;

@@ -1,9 +1,9 @@
-# Atithi Lens sample images
+# Optional sample images
 
-Place the three optional sample photographs at these exact paths:
+Atithi Lens can use three optional sample photographs:
 
-- `public/samples/generic-menu.jpg` — generic menu for Menu mode
-- `public/samples/fare-board.jpg` — fare board for Price mode
-- `public/samples/notice-sign.jpg` — public notice/sign for Scan mode
+- `public/samples/generic-menu.jpg` — a menu for Menu mode
+- `public/samples/fare-board.jpg` — a fare board for Price mode
+- `public/samples/notice-sign.jpg` — a public notice for Scan mode
 
-Lens keeps working before those image files are added: each sample button then shows the bundled, labelled result from `src/data/lensCache.js`. Those cached results are illustrative fallbacks, not real menus, provider quotes, or market prices. Uploaded photos are downscaled in the browser before analysis.
+Until an image is added, its sample button shows a cached illustrative result from `src/data/lensCache.js`. Cached content is not a real sign, menu, quotation or current local instruction.

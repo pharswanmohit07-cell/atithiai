@@ -1,53 +1,45 @@
-// Seeded Price Lens examples are illustrative UI fallbacks, not market quotations.
+// Cached examples are illustrative UI fallbacks, not current signs, menus or quotations.
 export const LENS_SAMPLE_CACHE = {
   "sample-taxi": {
-    id: "sample-taxi",
-    imageType: "taxi",
-    summary: "This demo fare-board example illustrates the questions to ask before agreeing to a ride. It is not a real provider quote.",
-    visiblePrices: [],
-    potentialConcerns: ["Confirm whether the fare is per vehicle or per guest.", "Ask which stops, tolls, waiting time and luggage are included."],
-    nextStep: "Ask the provider or hotel team to confirm the total price and inclusions.",
-    fairPrice: { verdict: "Can't tell", roughRange: "", explanation: "This example is a cached illustration and contains no verified local price information." },
+    id:"sample-taxi", imageType:"other", detectedLanguage:"English",
+    detectedText:"Fare board example. Ask whether the fare includes waiting time and tolls.",
+    translation:"Fare board example. Ask whether the fare includes waiting time and tolls.",
+    summary:"An illustrative fare-board example. It is not a real provider quote.",
+    visiblePrices:[], potentialConcerns:["Confirm what is included before agreeing to a fare."],
+    fairPrice:{verdict:"Can't tell",roughRange:"",explanation:"No visible or verified comparison price is included in this cached example."},
+    confidence:"medium"
   },
   "sample-menu": {
-    id: "sample-menu",
-    detectedLanguage: "English",
-    detectedText: "Sample soup — vegetables, broth. Sample rice bowl — ingredients vary.",
-    translation: "Sample soup — vegetables, broth. Sample rice bowl — ingredients vary.",
-    confidence: "medium",
-    dishes: [
-      { name: "Sample soup", explanation: "Illustrative menu text only. Ingredients and allergens are not confirmed.", dietGuess: "Unknown — confirm with staff", spiceGuess: "Unknown — confirm with staff" },
-      { name: "Sample rice bowl", explanation: "Illustrative menu text only. Ingredients and allergens are not confirmed.", dietGuess: "May be vegetarian; confirm with staff", spiceGuess: "Unknown — confirm with staff" }
+    id:"sample-menu", imageType:"menu", detectedLanguage:"English",
+    detectedText:"Sample soup — vegetables and broth. Sample rice bowl — ingredients vary.",
+    translation:"Sample soup — vegetables and broth. Sample rice bowl — ingredients vary.",
+    summary:"Illustrative menu text only. No real menu or ingredient list is represented.",
+    dishes:[
+      {name:"Sample soup",explanation:"This is an illustrative dish name, not a restaurant listing.",dietGuess:"Unknown — confirm locally",spiceGuess:"Unknown — confirm locally"},
+      {name:"Sample rice bowl",explanation:"This is an illustrative dish name, not a restaurant listing.",dietGuess:"Unknown — confirm locally",spiceGuess:"Unknown — confirm locally"}
     ],
-    imageType: "menu",
-    summary: "This demo menu example shows how to check portion sizes, inclusions and extra charges before ordering. It is not a real restaurant menu.",
-    visiblePrices: [],
-    potentialConcerns: ["Confirm portion size and whether taxes are included.", "Check allergens and preparation details with the kitchen."],
-    nextStep: "Confirm the exact dish, ingredients and final bill with the venue.",
-    fairPrice: { verdict: "Can't tell", roughRange: "", explanation: "This example contains no verified comparison prices." },
+    confidence:"medium"
   },
   "sample-service": {
-    id: "sample-service",
-    imageType: "other",
-    summary: "This demo notice-sign example illustrates how to read and translate a public notice. It is illustrative and not a real venue notice.",
-    visiblePrices: [],
-    potentialConcerns: ["Confirm that the notice is current with the venue.", "Ask hotel staff to explain any instruction that could affect your plans."],
-    nextStep: "Ask the hotel to confirm the meaning and current relevance of this notice.",
-    fairPrice: { verdict: "Can't tell", roughRange: "", explanation: "This example contains no verified comparison prices." },
-  },
+    id:"sample-service", imageType:"other", detectedLanguage:"English",
+    detectedText:"Sample notice: Please check local signs for current instructions.",
+    translation:"Sample notice: Please check local signs for current instructions.",
+    summary:"Illustrative notice text only. It is not a real venue notice or instruction.",
+    confidence:"medium"
+  }
 };
 
-export function getSeedLensResult(sampleId, language = "English") {
-  const seed = LENS_SAMPLE_CACHE[sampleId];
-  if (!seed) return null;
+export function getSeedLensResult(sampleId, language = "en") {
+  const seed=LENS_SAMPLE_CACHE[sampleId];
+  if(!seed)return null;
   return {
     ...seed,
-    visiblePrices: [...seed.visiblePrices],
-    potentialConcerns: [...seed.potentialConcerns],
-    fairPrice: { ...seed.fairPrice },
+    visiblePrices:[...(seed.visiblePrices||[])],
+    dishes:(seed.dishes||[]).map((dish)=>({...dish})),
+    fairPrice:seed.fairPrice?{...seed.fairPrice}:undefined,
     language,
-    disclaimer: "AI estimate only. This demo example is not a quote or tariff.",
+    disclaimer:"AI estimate. Verify locally.",
     sampleId,
-    source: "cached-demo-result",
+    source:"cached-demo-result"
   };
 }
