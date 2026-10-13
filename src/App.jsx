@@ -329,8 +329,8 @@ export default function AtithiAI() {
           }}
           className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-all ${
             weather === "sunny"
-              ? "bg-brand text-white hover:bg-[#2A2A2A]"
-              : "bg-[#3B82F6] text-white hover:bg-[#2563EB]"
+              ? "bg-brand text-white hover:bg-brand/90"
+              : "bg-sky-600 text-white hover:bg-blue-700"
           }`}
         >
           {weather === "sunny" ? <CloudRain size={16} /> : <Sun size={16} />}
@@ -446,7 +446,7 @@ function GuestApp(props) {
           <div className="relative -top-6">
             <button
               onClick={() => setActiveTab("ai")}
-              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform ${activeTab === "ai" ? "bg-accent text-white shadow-[#BCA37F]/30" : "bg-surface text-accent-text shadow-black/10"}`}
+              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform ${activeTab === "ai" ? "bg-brand text-white shadow-brand/30" : "bg-surface text-accent-text shadow-black/10"}`}
             >
               <motion.div whileTap={{ scale: 0.9 }} animate={activeTab === "ai" ? { y: [0, -3, 0] } : { y: 0 }} transition={{ duration: 0.28 }}>
                 <IconBadge icon={Sparkles} tone="violet" size="md" className="!h-12 !w-12 rounded-full" />
@@ -751,7 +751,7 @@ function HomeTab({
                   <div
                     className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 ${
                       item.status === "completed"
-                        ? "bg-muted border-[#8C857B]"
+                        ? "bg-muted border-muted"
                         : item.status === "current"
                           ? "bg-brand border-brand"
                           : item.isVulnerableToWeather && weather === "rainy"
@@ -1201,7 +1201,7 @@ function AITab({ onRequest }) {
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Ask for a recommendation or service..."
-          className="min-w-0 flex-1 bg-surface-2 rounded-full py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-[#BCA37F]"
+          className="min-w-0 flex-1 bg-surface-2 rounded-full py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           aria-label="Send message"
