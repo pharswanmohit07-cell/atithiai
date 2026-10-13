@@ -8,6 +8,7 @@ import { CORRIDOR_WAYPOINTS, DEMO_HOMESTAYS, getNearestDemoHomestays } from "./d
 import { CORRIDOR_ITINERARY } from "./data/guest.js";
 import DemoControls from "./components/DemoControls.jsx";
 import RouteMap from "./components/RouteMap.jsx";
+import AltitudeSentinel from "./components/AltitudeSentinel.jsx";
 import RouteGuardCard, { ActionsTakenByAtithi } from "./components/RouteGuardCard.jsx";
 import {
   ActionsTakenLog,
@@ -240,6 +241,7 @@ export default function AtithiAI() {
     weather, weatherSource, weatherObservation, weatherLoading, weatherError,
     manualRainOverride, toggleManualRainOverride,
     disruptions, simulateLandslide, clearDemoEvents,
+    rescuePassContext, updateRescuePassAltitude,
   } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
@@ -259,6 +261,12 @@ export default function AtithiAI() {
   const [requests, setRequests] = useState(() =>
     INITIAL_REQUESTS,
   );
+
+  const simulateAscent = () => {
+    const index = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === selectedWaypointId);
+    const next = CORRIDOR_WAYPOINTS[(Math.max(0, index) + 1) % CORRIDOR_WAYPOINTS.length];
+    if (next) setSelectedWaypointId(next.id);
+  };
 
   useEffect(() => {
     const applyPlan = (event) => {
@@ -545,6 +553,8 @@ export default function AtithiAI() {
           routeActions={routeActions}
           onRouteReroute={handleRouteReroute}
           onKeepWaiting={handleKeepWaiting}
+          onAltitudeAdvisoryChange={updateRescuePassAltitude}
+          rescuePassContext={rescuePassContext}
           lowCrowdPlaces={lowCrowdContext}
           actionsLog={actionsLog}
           crowdSelectionIds={crowdSelectionIds}
@@ -615,6 +625,8 @@ export default function AtithiAI() {
           isRainOverride={manualRainOverride}
           onToggleWeather={toggleManualRainOverride}
           onSimulateLandslide={simulateLandslide}
+          onSimulateAscent={simulateAscent}
+          selectedWaypoint={selectedWaypoint}
           onClearDemoEvents={handleClearRouteGuardDemo}
         />
       )}
@@ -770,6 +782,7 @@ function GuestApp(props) {
 function HomeTab({
   guest, persona, preferences, weather, weatherSource, selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weatherObservation, weatherLoading, weatherError,
   disruptions = [], actionsLog = [], routeGuardDisruption, nearestSafeVillages = [], routeSegment = [], detourVillage, routeActions = [], onRouteReroute, onKeepWaiting,
+  onAltitudeAdvisoryChange, rescuePassContext,
   guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
   itinerary, showAIIntervention, isResolving, acceptAlternative, keepOriginal, addRequest, setActiveTab,
 }) {
@@ -853,6 +866,15 @@ function HomeTab({
           {weatherError && <p role="status" className="mt-3 text-xs text-amber-700 dark:text-amber-300">{weatherError}</p>}
           <p className="mt-3 text-[9px] leading-relaxed text-muted">Weather data informs planning but cannot confirm road access, landslides or safe travel. Check current local authority advice.</p>
         </section>
+
+        <AltitudeSentinel
+          persona={persona}
+          itinerary={itinerary}
+          selectedWaypoint={selectedWaypoint}
+          selectedWaypointId={selectedWaypointId}
+          setSelectedWaypointId={setSelectedWaypointId}
+          onAdvisoryChange={onAltitudeAdvisoryChange}
+        />
 
         <RouteMap
           selectedWaypointId={selectedWaypointId}
