@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import IconBadge from "./components/ui/IconBadge.jsx";
+import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import {
   Sun,
   CloudRain,
@@ -251,7 +252,7 @@ export default function AtithiAI() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F5F2] text-[#1C1C1C] font-sans selection:bg-[#BCA37F] selection:text-white">
+    <div className="min-h-screen bg-bg text-text font-sans selection:bg-accent selection:text-text">
       {appMode === "guest" ? (
         <GuestApp
           weather={weather}
@@ -277,14 +278,14 @@ export default function AtithiAI() {
       {!isDemoControlsOpen && (
         <button
           onClick={() => setIsDemoControlsOpen(true)}
-          className="fixed bottom-4 right-4 z-50 rounded-full bg-[#1C1C1C] text-white px-3 py-2 text-xs font-medium shadow-lg md:hidden"
+          className="fixed bottom-4 right-4 z-50 rounded-full bg-brand text-white px-3 py-2 text-xs font-medium shadow-lg md:hidden"
         >
           Controls
         </button>
       )}
 
       <div
-        className={`fixed bottom-4 right-4 z-50 flex flex-col gap-3 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-[#E5E0D8] transition-all duration-300 md:bottom-6 md:right-6 ${
+        className={`fixed bottom-4 right-4 z-50 flex flex-col gap-3 bg-surface/90 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-border transition-all duration-300 md:bottom-6 md:right-6 ${
           isDemoControlsOpen
             ? "translate-x-0 opacity-100"
             : "translate-x-[130%] opacity-0 pointer-events-none md:translate-x-0 md:opacity-100 md:pointer-events-auto"
@@ -294,25 +295,25 @@ export default function AtithiAI() {
           type="button"
           aria-label="Close demo controls"
           onClick={() => setIsDemoControlsOpen(false)}
-          className="absolute -top-2.5 -right-2.5 flex h-7 w-7 items-center justify-center rounded-full border border-[#E5E0D8] bg-white text-[#1C1C1C] shadow-sm md:hidden"
+          className="absolute -top-2.5 -right-2.5 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-surface text-text shadow-sm md:hidden"
         >
           <X size={14} />
         </button>
 
-        <p className="text-xs font-semibold tracking-wider text-[#8C857B] uppercase mb-1">
+        <p className="text-xs font-semibold tracking-wider text-muted uppercase mb-1">
           Demo Controls
         </p>
 
-        <div className="flex bg-[#F0ECE4] rounded-lg p-1">
+        <div className="flex bg-surface-2 rounded-lg p-1">
           <button
             onClick={() => setAppMode("guest")}
-            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "guest" ? "bg-white shadow-sm text-[#1C1C1C]" : "text-[#8C857B] hover:text-[#1C1C1C]"}`}
+            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "guest" ? "bg-surface shadow-sm text-text" : "text-muted hover:text-text"}`}
           >
             Guest App
           </button>
           <button
             onClick={() => setAppMode("admin")}
-            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "admin" ? "bg-white shadow-sm text-[#1C1C1C]" : "text-[#8C857B] hover:text-[#1C1C1C]"}`}
+            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "admin" ? "bg-surface shadow-sm text-text" : "text-muted hover:text-text"}`}
           >
             Admin
           </button>
@@ -328,8 +329,8 @@ export default function AtithiAI() {
           }}
           className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-all ${
             weather === "sunny"
-              ? "bg-[#1C1C1C] text-white hover:bg-[#2A2A2A]"
-              : "bg-[#3B82F6] text-white hover:bg-[#2563EB]"
+              ? "bg-brand text-white hover:bg-brand/90"
+              : "bg-sky-600 text-white hover:bg-blue-700"
           }`}
         >
           {weather === "sunny" ? <CloudRain size={16} /> : <Sun size={16} />}
@@ -356,8 +357,8 @@ function GuestApp(props) {
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-[#EAE6DF] p-0 md:p-8">
-      <div className="w-full max-w-[430px] bg-[#F7F5F2] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col relative h-[100dvh] md:h-[850px] border-[8px] border-[#1C1C1C]">
+    <div className="flex justify-center min-h-screen bg-bg p-0 md:p-8">
+      <div className="w-full max-w-[430px] bg-bg md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col relative h-[100dvh] md:h-[850px] border-[8px] border-brand">
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
           <AnimatePresence mode="wait">
@@ -428,7 +429,7 @@ function GuestApp(props) {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-[#E5E0D8] px-6 py-4 flex justify-between items-center z-40 pb-safe">
+        <div className="absolute bottom-0 left-0 right-0 bg-surface/90 backdrop-blur-xl border-t border-border px-6 py-4 flex justify-between items-center z-40 pb-safe">
           <NavIcon
             icon={Home}
             label="Home"
@@ -445,7 +446,7 @@ function GuestApp(props) {
           <div className="relative -top-6">
             <button
               onClick={() => setActiveTab("ai")}
-              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform ${activeTab === "ai" ? "bg-[#BCA37F] text-white shadow-[#BCA37F]/30" : "bg-white text-[#BCA37F] shadow-black/10"}`}
+              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform ${activeTab === "ai" ? "bg-brand text-white shadow-brand/30" : "bg-surface text-accent-text shadow-black/10"}`}
             >
               <motion.div whileTap={{ scale: 0.9 }} animate={activeTab === "ai" ? { y: [0, -3, 0] } : { y: 0 }} transition={{ duration: 0.28 }}>
                 <IconBadge icon={Sparkles} tone="violet" size="md" className="!h-12 !w-12 rounded-full" />
@@ -505,13 +506,16 @@ function HomeTab({
                 Monday · October 5, 2026
               </p>
             </div>
-            <button
-              onClick={() => setActiveTab("profile")}
-              aria-label="Open profile"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur"
-            >
-              <IconBadge icon={User} tone="sky" size="sm" className="!h-9 !w-9 rounded-full border border-white/30" />
-            </button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle compact />
+              <button
+                onClick={() => setActiveTab("profile")}
+                aria-label="Open profile"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-surface/10 text-white backdrop-blur"
+              >
+                <IconBadge icon={User} tone="sky" size="sm" className="!h-9 !w-9 rounded-full border border-white/30" />
+              </button>
+            </div>
           </div>
           <div>
             <p className="mb-1 text-sm font-medium text-[#F0D6AD]">
@@ -544,13 +548,13 @@ function HomeTab({
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setActiveTab("services")}
-            className="flex items-center justify-between rounded-xl border border-[#E4DED3] bg-white px-3.5 py-3 text-left shadow-sm"
+            className="flex items-center justify-between rounded-xl border border-border bg-surface px-3.5 py-3 text-left shadow-sm"
           >
             <span>
-              <span className="block text-[10px] uppercase tracking-wide text-[#9B7C53]">
+              <span className="block text-[10px] uppercase tracking-wide text-accent-text">
                 At your service
               </span>
-              <span className="mt-1 block text-xs font-semibold text-[#293C34]">
+              <span className="mt-1 block text-xs font-semibold text-text">
                 Room requests
               </span>
             </span>
@@ -558,13 +562,13 @@ function HomeTab({
           </button>
           <button
             onClick={() => setActiveTab("ai")}
-            className="flex items-center justify-between rounded-xl border border-[#E4DED3] bg-white px-3.5 py-3 text-left shadow-sm"
+            className="flex items-center justify-between rounded-xl border border-border bg-surface px-3.5 py-3 text-left shadow-sm"
           >
             <span>
-              <span className="block text-[10px] uppercase tracking-wide text-[#9B7C53]">
+              <span className="block text-[10px] uppercase tracking-wide text-accent-text">
                 Your companion
               </span>
-              <span className="mt-1 block text-xs font-semibold text-[#293C34]">
+              <span className="mt-1 block text-xs font-semibold text-text">
                 Ask concierge
               </span>
             </span>
@@ -577,15 +581,15 @@ function HomeTab({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl p-5 shadow-sm border border-[#E5E0D8]"
+              className="bg-surface rounded-2xl p-5 shadow-sm border border-border"
             >
               <div className="flex gap-3">
                 <Sparkles
                   size={20}
-                  className="text-[#BCA37F] shrink-0 mt-0.5"
+                  className="text-accent-text shrink-0 mt-0.5"
                 />
                 <div>
-                  <p className="text-[#1C1C1C] leading-relaxed">
+                  <p className="text-text leading-relaxed">
                     {weather === "sunny"
                       ? "We've planned a relaxed morning followed by your city tour. Your plans are looking perfect for today's weather."
                       : "I've updated your schedule for the rain. Enjoy a cozy afternoon indoors."}
@@ -602,7 +606,7 @@ function HomeTab({
               initial={{ opacity: 0, height: 0, y: 20 }}
               animate={{ opacity: 1, height: "auto", y: 0 }}
               exit={{ opacity: 0, height: 0, scale: 0.95 }}
-              className="bg-[#1C1C1C] rounded-2xl overflow-hidden shadow-xl"
+              className="bg-brand rounded-2xl overflow-hidden shadow-xl"
             >
               <div className="p-5 border-b border-white/10">
                 <div className="flex items-center gap-2 text-amber-400 mb-3">
@@ -642,7 +646,7 @@ function HomeTab({
                       <button
                         key={alt.id}
                         onClick={() => acceptAlternative(alt)}
-                        className="w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-colors group flex items-start gap-4"
+                        className="w-full text-left bg-surface/5 hover:bg-surface/10 border border-white/10 rounded-xl p-4 transition-colors group flex items-start gap-4"
                       >
                         <IconBadge icon={alt.icon} tone={alt.id === "alt_1" ? "sky" : "violet"} size="md" className="shrink-0" />
                         <div>
@@ -652,7 +656,7 @@ function HomeTab({
                           <p className="text-white/50 text-xs mb-2">
                             {alt.desc}
                           </p>
-                          <span className="text-[10px] uppercase tracking-wider text-[#BCA37F] font-semibold bg-[#BCA37F]/10 px-2 py-1 rounded">
+                          <span className="text-[10px] uppercase tracking-wider text-accent-text font-semibold bg-accent/10 px-2 py-1 rounded">
                             {alt.match}
                           </span>
                         </div>
@@ -672,12 +676,12 @@ function HomeTab({
         </AnimatePresence>
 
         {currentPlan && (
-          <section className="overflow-hidden rounded-2xl bg-[#253C33] text-white shadow-[0_14px_28px_rgba(31,48,40,0.14)]">
+          <section className="overflow-hidden rounded-2xl bg-brand text-white shadow-[0_14px_28px_rgba(31,48,40,0.14)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E7C99C]">
                 <IconBadge icon={Clock} tone="teal" size="sm" className="!h-7 !w-7" /> Next up
               </span>
-              <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold">
+              <span className="rounded-full bg-surface/10 px-2.5 py-1 text-[10px] font-semibold">
                 {currentPlan.time}
               </span>
             </div>
@@ -693,7 +697,7 @@ function HomeTab({
                 {currentPlan.duration || "Curated for you"}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <div className="rounded-xl bg-white/8 p-3">
+                <div className="rounded-xl bg-surface/8 p-3">
                   <p className="text-[9px] uppercase tracking-wide text-white/50">
                     Your guide
                   </p>
@@ -701,7 +705,7 @@ function HomeTab({
                     {currentPlan.host || "Your local host"}
                   </p>
                 </div>
-                <div className="rounded-xl bg-white/8 p-3">
+                <div className="rounded-xl bg-surface/8 p-3">
                   <p className="text-[9px] uppercase tracking-wide text-white/50">
                     Meet here
                   </p>
@@ -718,7 +722,7 @@ function HomeTab({
                     detail: `${currentPlan.pickup || "Hotel lobby"} · ${currentPlan.location || currentPlan.title}`,
                   })
                 }
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#E7C99C] px-3.5 py-2.5 text-left text-[11px] font-bold text-[#263E35]"
+                className="mt-3 flex w-full items-center justify-between rounded-xl bg-accent px-3.5 py-2.5 text-left text-[11px] font-bold text-text"
               >
                 Confirm my pickup <ChevronRight size={15} />
               </button>
@@ -728,13 +732,13 @@ function HomeTab({
 
         <div>
           <div className="flex justify-between items-end mb-6">
-            <h2 className="font-serif text-2xl text-[#1C1C1C]">Today's Stay</h2>
-            <span className="text-sm font-medium text-[#8C857B]">
+            <h2 className="font-serif text-2xl text-text">Today's Stay</h2>
+            <span className="text-sm font-medium text-muted">
               October 5, 2026
             </span>
           </div>
 
-          <div className="relative border-l-2 border-[#E5E0D8] ml-4 space-y-8 pb-4">
+          <div className="relative border-l-2 border-border ml-4 space-y-8 pb-4">
             <AnimatePresence>
               {itinerary.map((item) => (
                 <motion.div
@@ -747,46 +751,46 @@ function HomeTab({
                   <div
                     className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 ${
                       item.status === "completed"
-                        ? "bg-[#8C857B] border-[#8C857B]"
+                        ? "bg-muted border-muted"
                         : item.status === "current"
-                          ? "bg-[#1C1C1C] border-[#1C1C1C]"
+                          ? "bg-brand border-brand"
                           : item.isVulnerableToWeather && weather === "rainy"
-                            ? "bg-white border-red-500 animate-pulse"
-                            : "bg-white border-[#E5E0D8]"
+                            ? "bg-surface border-red-500 animate-pulse"
+                            : "bg-surface border-border"
                     }`}
                   />
 
                   <div
                     className={`
                     rounded-2xl p-4 transition-all
-                    ${item.status === "current" ? "bg-white shadow-md border border-[#E5E0D8]" : ""}
+                    ${item.status === "current" ? "bg-surface shadow-md border border-border" : ""}
                     ${item.isVulnerableToWeather && weather === "rainy" ? "bg-red-50 border border-red-100" : ""}
                   `}
                   >
                     <p
                       className={`text-xs font-semibold tracking-wider mb-1 ${
                         item.status === "completed"
-                          ? "text-[#A39C93]"
+                          ? "text-muted"
                           : item.status === "current"
-                            ? "text-[#BCA37F]"
+                            ? "text-accent-text"
                             : item.isVulnerableToWeather && weather === "rainy"
                               ? "text-red-500"
-                              : "text-[#8C857B]"
+                              : "text-muted"
                       }`}
                     >
                       {item.time}
                     </p>
                     <h3
-                      className={`font-medium text-lg mb-1 ${item.status === "completed" ? "text-[#8C857B] line-through" : "text-[#1C1C1C]"}`}
+                      className={`font-medium text-lg mb-1 ${item.status === "completed" ? "text-muted line-through" : "text-text"}`}
                     >
                       {item.title}
                     </h3>
-                    <p className="text-sm text-[#6B655C] leading-snug">
+                    <p className="text-sm text-muted leading-snug">
                       {item.desc}
                     </p>
 
                     {item.aiAdjusted && (
-                      <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[#BCA37F] bg-[#BCA37F]/10 px-2 py-1 rounded-md">
+                      <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-accent-text bg-accent/10 px-2 py-1 rounded-md">
                         <IconBadge icon={Sparkles} tone="violet" size="sm" className="!h-7 !w-7" /> Adjusted by AI
                       </div>
                     )}
@@ -797,19 +801,19 @@ function HomeTab({
           </div>
         </div>
 
-        <div className="pt-4 border-t border-[#E5E0D8]">
-          <h2 className="font-serif text-2xl text-[#1C1C1C] mb-4">
+        <div className="pt-4 border-t border-border">
+          <h2 className="font-serif text-2xl text-text mb-4">
             Tonight's Dining
           </h2>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#E5E0D8]">
+          <div className="bg-surface rounded-2xl p-5 shadow-sm border border-border">
             <div className="w-full h-32 rounded-xl bg-[url('https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center mb-4" />
             <div className="flex justify-between items-start mb-2">
               <h3 className="font-medium text-lg">Saffron Heritage Room</h3>
-              <span className="bg-[#1C1C1C] text-white text-xs px-2 py-1 rounded">
+              <span className="bg-brand text-white text-xs px-2 py-1 rounded">
                 Booked
               </span>
             </div>
-            <p className="text-sm text-[#6B655C] mb-4 border-l-2 border-[#BCA37F] pl-3 italic">
+            <p className="text-sm text-muted mb-4 border-l-2 border-accent pl-3 italic">
               "Recommended because you prefer quiet, vegetarian fine-dining.
               Chef Anand has prepared a custom tasting menu."
             </p>
@@ -822,7 +826,7 @@ function HomeTab({
                     detail: "Vegetarian tasting menu for tonight at 7:30 PM",
                   })
                 }
-                className="flex-1 bg-[#F0ECE4] text-[#1C1C1C] text-sm py-2 rounded-lg font-medium hover:bg-[#E5E0D8] transition-colors"
+                className="flex-1 bg-surface-2 text-text text-sm py-2 rounded-lg font-medium hover:bg-border transition-colors"
               >
                 View Custom Menu
               </button>
@@ -853,22 +857,22 @@ function DiscoverTab({ onRequest }) {
     <div className="px-5 pb-8 pt-8 sm:px-6">
       <div className="mb-5 flex items-end justify-between">
         <div>
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9B7C53]">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-text">
             The local edit · No. 05
           </p>
-          <h1 className="font-serif text-[34px] leading-none text-[#202A26]">
+          <h1 className="font-serif text-[34px] leading-none text-text">
             Discover
             <br />
             <span className="italic">Dehradun.</span>
           </h1>
         </div>
-        <span className="mb-1 flex items-center gap-1 text-xs text-[#73766D]">
+        <span className="mb-1 flex items-center gap-1 text-xs text-muted">
           <IconBadge icon={MapPin} tone="teal" size="sm" className="!h-7 !w-7 rounded-full" /> 30.3165° N
         </span>
       </div>
       <button
         onClick={() => setSelected(EXPERIENCES[3])}
-        className="discover-feature relative mb-5 flex h-[218px] w-full items-end overflow-hidden rounded-2xl bg-[#263E35] text-left text-white shadow-lg"
+        className="discover-feature relative mb-5 flex h-[218px] w-full items-end overflow-hidden rounded-2xl bg-brand text-left text-white shadow-lg"
       >
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-[1.03]"
@@ -880,7 +884,7 @@ function DiscoverTab({ onRequest }) {
             <span className="rounded-full border border-white/25 bg-black/20 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] backdrop-blur">
               Outside the ordinary · {EXPERIENCES[3].category}
             </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-[#263E35]">
+            <span className="flex items-center gap-1 rounded-full bg-surface/90 px-2 py-1 text-[10px] font-bold text-text">
               ★ {EXPERIENCES[3].rating}
             </span>
           </div>
@@ -893,7 +897,7 @@ function DiscoverTab({ onRequest }) {
                 {EXPERIENCES[3].location} · {EXPERIENCES[3].duration}
               </p>
             </div>
-            <span className="shrink-0 rounded-full bg-[#E7C99C] px-3 py-2 text-[10px] font-bold text-[#263E35]">
+            <span className="shrink-0 rounded-full bg-accent px-3 py-2 text-[10px] font-bold text-text">
               Explore <ChevronRight size={13} className="ml-1 inline" />
             </span>
           </div>
@@ -905,7 +909,7 @@ function DiscoverTab({ onRequest }) {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search experiences"
-          className="w-full bg-white border border-[#E5E0D8] rounded-xl py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#BCA37F]"
+          className="w-full bg-surface border border-border rounded-xl py-2.5 pl-10 pr-3 text-sm outline-none focus:border-accent"
         />
       </label>
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
@@ -915,7 +919,7 @@ function DiscoverTab({ onRequest }) {
             <button
               key={item}
               onClick={() => setCategory(item)}
-              className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors ${category === item ? "bg-[#1C1C1C] text-white shadow-sm" : "bg-white border border-[#E5E0D8] text-[#4F514B]"}`}
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors ${category === item ? "bg-brand text-white shadow-sm" : "bg-surface border border-border text-muted"}`}
             >
               <IconBadge icon={CategoryIcon} tone={categoryTones[item]} size="sm" className="!h-7 !w-7 rounded-full" />
               {item}
@@ -925,14 +929,14 @@ function DiscoverTab({ onRequest }) {
       </div>
       <div className="mb-3 flex items-end justify-between">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.15em] text-[#9B7C53]">
+          <p className="text-[10px] uppercase tracking-[0.15em] text-accent-text">
             Chosen for you
           </p>
-          <h2 className="font-serif text-[22px] leading-tight text-[#202A26]">
+          <h2 className="font-serif text-[22px] leading-tight text-text">
             A little more local
           </h2>
         </div>
-        <span className="text-[10px] text-[#858177]">
+        <span className="text-[10px] text-muted">
           {filtered.length} experiences
         </span>
       </div>
@@ -940,7 +944,7 @@ function DiscoverTab({ onRequest }) {
         {filtered.map((experience) => (
           <article
             key={experience.id}
-            className="flex overflow-hidden rounded-2xl border border-[#E4DED3] bg-white shadow-sm"
+            className="flex overflow-hidden rounded-2xl border border-border bg-surface shadow-sm"
           >
             <div
               className="w-[104px] shrink-0 bg-cover bg-center"
@@ -948,31 +952,31 @@ function DiscoverTab({ onRequest }) {
             />
             <div className="min-w-0 flex-1 p-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#9A7A4F]">
+                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-accent-text">
                   {experience.category} · {experience.duration}
                 </span>
-                <span className="shrink-0 text-[10px] font-semibold text-[#536B58]">
+                <span className="shrink-0 text-[10px] font-semibold text-muted">
                   ★ {experience.rating}
                 </span>
               </div>
-              <h3 className="mt-1 font-serif text-[18px] leading-tight text-[#26362E]">
+              <h3 className="mt-1 font-serif text-[18px] leading-tight text-text">
                 {experience.title}
               </h3>
-              <p className="mt-1 text-[10px] leading-snug text-[#77766E]">
+              <p className="mt-1 text-[10px] leading-snug text-muted">
                 {experience.location}
               </p>
               <div className="mt-2 flex items-center justify-between gap-2">
-                <span className="truncate text-[10px] font-semibold text-[#3F4D44]">
+                <span className="truncate text-[10px] font-semibold text-muted">
                   {experience.time}
                 </span>
                 <button
                   onClick={() => setSelected(experience)}
-                  className="shrink-0 text-[10px] font-bold text-[#9A7545]"
+                  className="shrink-0 text-[10px] font-bold text-accent-text"
                 >
                   Details <ChevronRight size={12} className="inline" />
                 </button>
               </div>
-              <p className="mt-1 text-[9px] text-[#89857C]">
+              <p className="mt-1 text-[9px] text-muted">
                 {experience.price} · {experience.availability}
               </p>
               <p className="sr-only">{experience.desc}</p>
@@ -980,7 +984,7 @@ function DiscoverTab({ onRequest }) {
           </article>
         ))}
         {filtered.length === 0 && (
-          <p className="text-center text-sm text-[#8C857B] py-10">
+          <p className="text-center text-sm text-muted py-10">
             No experiences match that search.
           </p>
         )}
@@ -993,7 +997,7 @@ function DiscoverTab({ onRequest }) {
           <section
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-sm bg-[#F7F5F2] rounded-2xl overflow-hidden shadow-2xl"
+            className="w-full max-w-sm bg-bg rounded-2xl overflow-hidden shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div
@@ -1002,7 +1006,7 @@ function DiscoverTab({ onRequest }) {
             />
             <div className="p-5">
               <div className="flex justify-between">
-                <span className="text-xs uppercase text-[#9A7A4F] font-semibold">
+                <span className="text-xs uppercase text-accent-text font-semibold">
                   {selected.category}
                 </span>
                 <button aria-label="Close" onClick={() => setSelected(null)}>
@@ -1013,38 +1017,38 @@ function DiscoverTab({ onRequest }) {
                 <h2 className="font-serif text-2xl leading-tight">
                   {selected.title}
                 </h2>
-                <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#EAF1E8] px-2 py-1 text-[10px] font-bold text-[#536B58]">
+                <span className="flex shrink-0 items-center gap-1 rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold text-muted">
                   ★ {selected.rating}
                 </span>
               </div>
-              <p className="text-sm text-[#6B655C] mt-2">{selected.desc}</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-3 text-xs">
+              <p className="text-sm text-muted mt-2">{selected.desc}</p>
+              <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-surface p-3 text-xs">
                 <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
+                  <p className="text-[9px] uppercase tracking-wide text-accent-text">
                     When
                   </p>
                   <p className="mt-1 font-semibold">{selected.time}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
+                  <p className="text-[9px] uppercase tracking-wide text-accent-text">
                     Duration
                   </p>
                   <p className="mt-1 font-semibold">{selected.duration}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
+                  <p className="text-[9px] uppercase tracking-wide text-accent-text">
                     Where
                   </p>
                   <p className="mt-1 font-semibold">{selected.location}</p>
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
+                  <p className="text-[9px] uppercase tracking-wide text-accent-text">
                     From
                   </p>
                   <p className="mt-1 font-semibold">{selected.price}</p>
                 </div>
               </div>
-              <p className="mt-3 text-[10px] text-[#6B655C]">
+              <p className="mt-3 text-[10px] text-muted">
                 {selected.availability}
               </p>
               <button
@@ -1056,7 +1060,7 @@ function DiscoverTab({ onRequest }) {
                   });
                   setSelected(null);
                 }}
-                className="w-full mt-5 bg-[#1C1C1C] text-white py-3 rounded-xl text-sm font-medium"
+                className="w-full mt-5 bg-brand text-white py-3 rounded-xl text-sm font-medium"
               >
                 Request reservation
               </button>
@@ -1149,10 +1153,10 @@ function AITab({ onRequest }) {
   };
 
   return (
-    <div className="h-full min-h-[560px] flex flex-col bg-[#F7F5F2]">
-      <div className="pt-12 px-6 pb-4 bg-white border-b border-[#E5E0D8] shadow-sm relative z-10">
+    <div className="h-full min-h-[560px] flex flex-col bg-bg">
+      <div className="pt-12 px-6 pb-4 bg-surface border-b border-border shadow-sm relative z-10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#1C1C1C] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center">
             <IconBadge icon={Sparkles} tone="saffron" size="sm" />
           </div>
           <div>
@@ -1167,7 +1171,7 @@ function AITab({ onRequest }) {
         {messages.map((message, index) => (
           <div
             key={`${index}-${message.from}`}
-            className={`max-w-[86%] rounded-2xl p-4 text-sm leading-relaxed ${message.from === "guest" ? "ml-auto bg-[#1C1C1C] text-white rounded-br-sm" : "bg-white shadow-sm border border-[#E5E0D8] rounded-tl-sm"}`}
+            className={`max-w-[86%] rounded-2xl p-4 text-sm leading-relaxed ${message.from === "guest" ? "ml-auto bg-brand text-white rounded-br-sm" : "bg-surface shadow-sm border border-border rounded-tl-sm"}`}
           >
             {message.text}
           </div>
@@ -1178,7 +1182,7 @@ function AITab({ onRequest }) {
               <button
                 key={reply}
                 onClick={() => sendMessage(reply)}
-                className="bg-white text-[#1C1C1C] text-xs font-medium px-3 py-2 rounded-full border border-[#E5E0D8]"
+                className="bg-surface text-text text-xs font-medium px-3 py-2 rounded-full border border-border"
               >
                 {reply}
               </button>
@@ -1191,19 +1195,19 @@ function AITab({ onRequest }) {
           event.preventDefault();
           sendMessage();
         }}
-        className="px-4 py-3 bg-white border-t border-[#E5E0D8] flex gap-2"
+        className="px-4 py-3 bg-surface border-t border-border flex gap-2"
       >
         <input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder="Ask for a recommendation or service..."
-          className="min-w-0 flex-1 bg-[#F0ECE4] rounded-full py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-[#BCA37F]"
+          className="min-w-0 flex-1 bg-surface-2 rounded-full py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           aria-label="Send message"
           type="submit"
           disabled={!draft.trim()}
-          className="w-11 h-11 shrink-0 rounded-full bg-[#1C1C1C] flex items-center justify-center text-white disabled:opacity-40"
+          className="w-11 h-11 shrink-0 rounded-full bg-brand flex items-center justify-center text-white disabled:opacity-40"
         >
           <Send size={16} />
         </button>
@@ -1278,19 +1282,19 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
     <div className="services-page px-5 pt-8 pb-8 sm:px-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#233D35] text-[#E7C99C]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-[#E7C99C]">
             <IconBadge icon={Sparkles} tone="violet" size="sm" className="!h-9 !w-9 rounded-full" />
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#827D73]">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted">
               The Aranya House
             </p>
-            <p className="text-xs font-semibold text-[#293C34]">
+            <p className="text-xs font-semibold text-text">
               Guest services
             </p>
           </div>
         </div>
-        <span className="flex items-center gap-1.5 rounded-full border border-[#DCD6CB] bg-white/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#5C645C]">
+        <span className="flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
           <span className="h-1.5 w-1.5 rounded-full bg-[#73927D]" />
           Here for you
         </span>
@@ -1298,18 +1302,18 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
 
       <div className="mb-5 flex items-end justify-between gap-2">
         <div>
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#9B7C53]">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-accent-text">
             Monday · October 5
           </p>
-          <h1 className="font-serif text-[34px] leading-none text-[#202A26]">
+          <h1 className="font-serif text-[34px] leading-none text-text">
             Make yourself
             <br />
             at home.
           </h1>
         </div>
         <div className="pb-1 text-right">
-          <p className="text-xs text-[#77766E]">Dehradun</p>
-          <p className="mt-1 flex items-center justify-end gap-1 text-sm font-medium text-[#293C34]">
+          <p className="text-xs text-muted">Dehradun</p>
+          <p className="mt-1 flex items-center justify-end gap-1 text-sm font-medium text-text">
             <IconBadge icon={Sun} tone="saffron" size="sm" className="!h-7 !w-7 rounded-full" /> 24°
           </p>
         </div>
@@ -1317,7 +1321,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
 
       <div className="stay-summary mb-7 flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 text-white">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface/10">
             <IconBadge icon={BedDouble} tone="sky" size="sm" />
           </div>
           <div className="min-w-0">
@@ -1330,7 +1334,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
             </p>
           </div>
         </div>
-        <div className="h-8 w-px bg-white/15" />
+        <div className="h-8 w-px bg-surface/15" />
         <div className="shrink-0 text-right">
           <p className="text-[10px] uppercase tracking-[0.12em] text-white/60">
             Check out
@@ -1343,14 +1347,14 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
 
       <div className="mb-3 flex items-end justify-between">
         <div>
-          <h2 className="font-serif text-[23px] leading-tight text-[#202A26]">
+          <h2 className="font-serif text-[23px] leading-tight text-text">
             At your service
           </h2>
-          <p className="mt-1 text-xs text-[#79776F]">
+          <p className="mt-1 text-xs text-muted">
             A few thoughtful touches, whenever you need.
           </p>
         </div>
-        <span className="pb-1 text-[10px] uppercase tracking-[0.12em] text-[#9B7C53]">
+        <span className="pb-1 text-[10px] uppercase tracking-[0.12em] text-accent-text">
           01 — 06
         </span>
       </div>
@@ -1359,22 +1363,22 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
           <button
             key={svc.name}
             onClick={() => setSelectedService(svc.name)}
-            className="service-tile group min-h-[140px] rounded-2xl border border-[#E4DED3] bg-[#FFFEFC] p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-[#B69A70] hover:shadow-[0_12px_24px_rgba(38,51,43,0.08)]"
+            className="service-tile group min-h-[140px] rounded-2xl border border-border bg-surface p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_12px_24px_rgba(38,51,43,0.08)]"
           >
             <span className="mb-3 flex items-center justify-between">
               <IconBadge icon={svc.icon} tone={svc.tone} size="sm" className="transition-transform group-hover:-translate-y-0.5" />
               <ChevronRight
                 size={15}
-                className="text-[#B7B0A4] transition-transform group-hover:translate-x-0.5"
+                className="text-muted transition-transform group-hover:translate-x-0.5"
               />
             </span>
-            <span className="block text-[13px] font-semibold leading-tight text-[#25332D]">
+            <span className="block text-[13px] font-semibold leading-tight text-text">
               {svc.name}
             </span>
-            <span className="mt-1 block min-h-8 text-[10px] leading-[1.45] text-[#89857C]">
+            <span className="mt-1 block min-h-8 text-[10px] leading-[1.45] text-muted">
               {svc.detail}
             </span>
-            <span className="mt-1 inline-flex rounded-full bg-[#F4F1EA] px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-[#92754F]">
+            <span className="mt-1 inline-flex rounded-full bg-surface-2 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-accent-text">
               {svc.eta}
             </span>
           </button>
@@ -1385,7 +1389,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
         className="concierge-banner mt-5 flex w-full items-center justify-between rounded-2xl p-4.5 text-left text-white transition-transform hover:-translate-y-0.5"
       >
         <span className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-[#E7C99C]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-surface/5 text-[#E7C99C]">
             <IconBadge icon={Sparkles} tone="violet" size="sm" />
           </span>
           <span>
@@ -1397,21 +1401,21 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
             </span>
           </span>
         </span>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface/10">
           <ChevronRight size={17} className="text-[#E7C99C]" />
         </span>
       </button>
       <section className="mt-7">
         <div className="mb-3 flex items-end justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9B7C53]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-accent-text">
               In good hands
             </p>
-            <h2 className="mt-0.5 font-serif text-[23px] leading-tight text-[#202A26]">
+            <h2 className="mt-0.5 font-serif text-[23px] leading-tight text-text">
               Your requests
             </h2>
           </div>
-          <span className="rounded-full bg-[#EDE9E0] px-2.5 py-1 text-[10px] font-semibold text-[#62685F]">
+          <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-semibold text-muted">
             {
               requests.filter((request) => request.status !== "Completed")
                 .length
@@ -1423,10 +1427,10 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
           {requests.map((request) => (
             <div
               key={request.id}
-              className="request-row rounded-xl border border-[#E5E0D8] bg-white/90 px-3.5 py-3"
+              className="request-row rounded-xl border border-border bg-surface/90 px-3.5 py-3"
             >
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F2EFE8] text-[#45594C]">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-muted">
                   {request.status === "Completed" ? (
                     <IconBadge icon={Check} tone="emerald" size="sm" className="!h-7 !w-7 rounded-lg" />
                   ) : (
@@ -1435,19 +1439,19 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex justify-between gap-2">
-                    <span className="truncate text-xs font-semibold text-[#29352F]">
+                    <span className="truncate text-xs font-semibold text-text">
                       {request.title}
                     </span>
                     <span
-                      className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold ${request.status === "Completed" ? "bg-[#EAF1E8] text-[#54705B]" : "bg-[#F5EFE4] text-[#9A7545]"}`}
+                      className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold ${request.status === "Completed" ? "bg-surface-2 text-muted" : "bg-surface-2 text-accent-text"}`}
                     >
                       {request.status}
                     </span>
                   </div>
-                  <p className="mt-1 truncate text-[10px] text-[#77766E]">
+                  <p className="mt-1 truncate text-[10px] text-muted">
                     {request.category} · {request.detail}
                   </p>
-                  <p className="mt-1.5 text-[9px] uppercase tracking-wide text-[#A19B8F]">
+                  <p className="mt-1.5 text-[9px] uppercase tracking-wide text-muted">
                     {request.time}
                   </p>
                 </div>
@@ -1459,7 +1463,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
       {confirmation && (
         <p
           role="status"
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[80] bg-[#1C1C1C] text-white text-sm px-4 py-3 rounded-xl shadow-lg"
+          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[80] bg-brand text-white text-sm px-4 py-3 rounded-xl shadow-lg"
         >
           {confirmation}
         </p>
@@ -1474,11 +1478,11 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
             aria-modal="true"
             onSubmit={sendRequest}
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-sm bg-[#F7F5F2] rounded-2xl p-5 shadow-2xl"
+            className="w-full max-w-sm bg-bg rounded-2xl p-5 shadow-2xl"
           >
             <div className="flex justify-between">
               <div>
-                <p className="text-xs uppercase text-[#9A7A4F]">Room 402</p>
+                <p className="text-xs uppercase text-accent-text">Room 402</p>
                 <h2 className="font-serif text-2xl">{selectedService}</h2>
               </div>
               <button
@@ -1489,31 +1493,31 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
                 <X size={18} />
               </button>
             </div>
-            <label className="block mt-4 text-xs font-semibold text-[#6B655C]">
+            <label className="block mt-4 text-xs font-semibold text-muted">
               DETAILS
               <input
                 name="detail"
                 placeholder="What should the team prepare?"
-                className="w-full mt-2 p-3 rounded-xl border border-[#E5E0D8] bg-white text-sm font-normal"
+                className="w-full mt-2 p-3 rounded-xl border border-border bg-surface text-sm font-normal"
               />
             </label>
             {selectedService === "Wake-up Call" ? (
-              <label className="block mt-4 text-xs font-semibold text-[#6B655C]">
+              <label className="block mt-4 text-xs font-semibold text-muted">
                 CALL TIME
                 <input
                   name="time"
                   type="time"
                   defaultValue="07:00"
                   required
-                  className="w-full mt-2 p-3 rounded-xl border border-[#E5E0D8] bg-white text-sm font-normal"
+                  className="w-full mt-2 p-3 rounded-xl border border-border bg-surface text-sm font-normal"
                 />
               </label>
             ) : (
-              <label className="block mt-4 text-xs font-semibold text-[#6B655C]">
+              <label className="block mt-4 text-xs font-semibold text-muted">
                 WHEN
                 <select
                   name="time"
-                  className="w-full mt-2 p-3 rounded-xl border border-[#E5E0D8] bg-white text-sm font-normal"
+                  className="w-full mt-2 p-3 rounded-xl border border-border bg-surface text-sm font-normal"
                 >
                   <option>As soon as possible</option>
                   <option>In 30 minutes</option>
@@ -1524,7 +1528,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
             )}
             <button
               type="submit"
-              className="w-full mt-5 bg-[#1C1C1C] text-white py-3 rounded-xl text-sm font-medium"
+              className="w-full mt-5 bg-brand text-white py-3 rounded-xl text-sm font-medium"
             >
               Send request
             </button>
@@ -1542,12 +1546,17 @@ function ProfileTab() {
   const [openPanel, setOpenPanel] = useState("");
   return (
     <div className="profile-page px-5 pt-8 pb-8 sm:px-6">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9B7C53]">
-        Your private stay
-      </p>
-      <h1 className="mb-5 font-serif text-[34px] leading-none text-[#202A26]">
-        The guest book.
-      </h1>
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div>
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-text">
+            Your private stay
+          </p>
+          <h1 className="font-serif text-[34px] leading-none text-text">
+            The guest book.
+          </h1>
+        </div>
+        <ThemeToggle compact />
+      </div>
       <div className="profile-pass relative mb-5 overflow-hidden rounded-2xl p-5 text-white shadow-lg">
         <div className="relative flex items-start justify-between">
           <div>
@@ -1555,7 +1564,7 @@ function ProfileTab() {
               Atithi · Private guest
             </p>
             <div className="mt-5 flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-white/5 font-serif text-2xl text-[#E7C99C]">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-surface/5 font-serif text-2xl text-[#E7C99C]">
                 V
               </div>
               <div>
@@ -1566,7 +1575,7 @@ function ProfileTab() {
               </div>
             </div>
           </div>
-          <span className="flex items-center gap-1 rounded-full border border-[#E7C99C]/35 bg-white/5 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#E7C99C]">
+          <span className="flex items-center gap-1 rounded-full border border-[#E7C99C]/35 bg-surface/5 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#E7C99C]">
             <ShieldCheck size={12} /> Signature
           </span>
         </div>
@@ -1579,65 +1588,65 @@ function ProfileTab() {
           </span>
         </div>
       </div>
-      <section className="mb-6 rounded-2xl border border-[#E4DED3] bg-white p-4 shadow-sm">
+      <section className="mb-6 rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#9B7C53]">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-accent-text">
               October 3 – 7, 2026
             </p>
-            <h2 className="mt-0.5 font-serif text-[20px] text-[#26362E]">
+            <h2 className="mt-0.5 font-serif text-[20px] text-text">
               Your stay
             </h2>
           </div>
-          <span className="rounded-full bg-[#EAF1E8] px-2.5 py-1 text-[9px] font-semibold text-[#54705B]">
+          <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[9px] font-semibold text-muted">
             In residence
           </span>
         </div>
         <div className="grid grid-cols-3 divide-x divide-[#E8E3D9]">
           <div className="pr-2">
-            <p className="text-[9px] uppercase tracking-wide text-[#999388]">
+            <p className="text-[9px] uppercase tracking-wide text-muted">
               Room
             </p>
-            <p className="mt-1 text-xs font-semibold text-[#293C34]">
+            <p className="mt-1 text-xs font-semibold text-text">
               402 Suite
             </p>
           </div>
           <div className="px-3">
-            <p className="text-[9px] uppercase tracking-wide text-[#999388]">
+            <p className="text-[9px] uppercase tracking-wide text-muted">
               Guests
             </p>
-            <p className="mt-1 text-xs font-semibold text-[#293C34]">
+            <p className="mt-1 text-xs font-semibold text-text">
               2 adults
             </p>
           </div>
           <div className="pl-3">
-            <p className="text-[9px] uppercase tracking-wide text-[#999388]">
+            <p className="text-[9px] uppercase tracking-wide text-muted">
               Nights
             </p>
-            <p className="mt-1 text-xs font-semibold text-[#293C34]">
+            <p className="mt-1 text-xs font-semibold text-text">
               4 nights
             </p>
           </div>
         </div>
       </section>
       <section className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#8C857B] mb-3">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
           AI Personalization
         </h3>
-        <div className="bg-white rounded-2xl border border-[#E5E0D8] overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
           <button
             onClick={() => setOpenPanel("preferences")}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-2"
           >
             <span className="flex items-center gap-3">
               <IconBadge icon={Sparkles} tone="violet" size="sm" />
               <span className="text-sm font-medium">Diet & interests</span>
             </span>
-            <span className="flex items-center gap-2 text-xs text-[#8C857B]">
+            <span className="flex items-center gap-2 text-xs text-muted">
               {diet} <ChevronRight size={16} />
             </span>
           </button>
-          <div className="border-t border-[#E5E0D8]" />
+          <div className="border-t border-border" />
           <ProfileToggle
             icon={Settings}
             label="Auto-adjust plans"
@@ -1647,23 +1656,23 @@ function ProfileTab() {
         </div>
       </section>
       <section>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#8C857B] mb-3">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
           Account Settings
         </h3>
-        <div className="bg-white rounded-2xl border border-[#E5E0D8] overflow-hidden">
+        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
           <button
             onClick={() => setOpenPanel("payment")}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-2"
           >
             <span className="flex items-center gap-3">
               <IconBadge icon={CreditCard} tone="teal" size="sm" />
               <span className="text-sm font-medium">Payment methods</span>
             </span>
-            <span className="flex items-center gap-2 text-xs text-[#8C857B]">
+            <span className="flex items-center gap-2 text-xs text-muted">
               •••• 2048 <ChevronRight size={16} />
             </span>
           </button>
-          <div className="border-t border-[#E5E0D8]" />
+          <div className="border-t border-border" />
           <ProfileToggle
             icon={Bell}
             label="Notifications"
@@ -1680,7 +1689,7 @@ function ProfileTab() {
           <section
             role="dialog"
             aria-modal="true"
-            className="w-full max-w-sm bg-[#F7F5F2] rounded-2xl p-5 shadow-2xl"
+            className="w-full max-w-sm bg-bg rounded-2xl p-5 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex justify-between items-start">
@@ -1695,12 +1704,12 @@ function ProfileTab() {
             </div>
             {openPanel === "preferences" ? (
               <>
-                <label className="block mt-5 text-xs font-semibold text-[#6B655C]">
+                <label className="block mt-5 text-xs font-semibold text-muted">
                   DIET
                   <select
                     value={diet}
                     onChange={(event) => setDiet(event.target.value)}
-                    className="block w-full mt-2 rounded-xl border border-[#E5E0D8] bg-white px-3 py-3 text-sm font-normal"
+                    className="block w-full mt-2 rounded-xl border border-border bg-surface px-3 py-3 text-sm font-normal"
                   >
                     <option>Vegetarian</option>
                     <option>Vegan</option>
@@ -1708,21 +1717,21 @@ function ProfileTab() {
                     <option>Gluten-free</option>
                   </select>
                 </label>
-                <p className="text-xs text-[#8C857B] mt-4">
+                <p className="text-xs text-muted mt-4">
                   Interests: Culture · Wellness · Quiet Dining
                 </p>
               </>
             ) : (
-              <div className="mt-5 rounded-xl bg-white p-4 border border-[#E5E0D8]">
+              <div className="mt-5 rounded-xl bg-surface p-4 border border-border">
                 <p className="font-medium text-sm">Visa ending in 2048</p>
-                <p className="text-xs text-[#8C857B] mt-1">
+                <p className="text-xs text-muted mt-1">
                   Primary payment method · Expires 08/28
                 </p>
               </div>
             )}
             <button
               onClick={() => setOpenPanel("")}
-              className="w-full mt-5 bg-[#1C1C1C] text-white py-3 rounded-xl text-sm font-medium"
+              className="w-full mt-5 bg-brand text-white py-3 rounded-xl text-sm font-medium"
             >
               Done
             </button>
@@ -1739,17 +1748,17 @@ function ProfileToggle({ icon: Icon, label, checked, onChange }) {
       type="button"
       aria-pressed={checked}
       onClick={onChange}
-      className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
+      className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-2"
     >
       <span className="flex items-center gap-3">
         <IconBadge icon={Icon} tone={label === "Notifications" ? "coral" : "emerald"} size="sm" />
         <span className="text-sm font-medium">{label}</span>
       </span>
       <span
-        className={`w-10 h-6 rounded-full relative transition-colors ${checked ? "bg-[#1C1C1C]" : "bg-[#D8D3CB]"}`}
+        className={`w-10 h-6 rounded-full relative transition-colors ${checked ? "bg-brand" : "bg-border"}`}
       >
         <span
-          className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${checked ? "right-1" : "left-1"}`}
+          className={`absolute top-1 w-4 h-4 rounded-full bg-surface transition-all ${checked ? "right-1" : "left-1"}`}
         />
       </span>
     </button>
@@ -1766,7 +1775,7 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
         <IconBadge icon={Icon} tone={active ? "saffron" : "teal"} size="sm" className={active ? "" : "opacity-85"} />
       </motion.div>
       <span
-        className={`text-[10px] font-medium ${active ? "text-[#1C1C1C]" : "text-[#A39C93]"}`}
+        className={`text-[10px] font-medium ${active ? "text-text" : "text-muted"}`}
       >
         {label}
       </span>
@@ -1782,9 +1791,9 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
   const isResolved = weather === "rainy" && itinerary.some((i) => i.aiAdjusted);
 
   return (
-    <div className="min-h-screen flex bg-[#F0ECE4]">
+    <div className="min-h-screen flex bg-surface-2">
       {/* Sidebar */}
-      <div className="w-64 bg-[#1C1C1C] text-white flex flex-col">
+      <div className="w-64 bg-brand text-white flex flex-col">
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-2 mb-1">
             <IconBadge icon={Sparkles} tone="saffron" size="sm" />
@@ -1811,26 +1820,27 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
       <div className="flex-1 overflow-y-auto p-8">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-2xl font-serif text-[#1C1C1C]">
+            <h1 className="text-2xl font-serif text-text">
               AI Operations Dashboard
             </h1>
-            <p className="text-[#6B655C]">
+            <p className="text-muted">
               Real-time guest personalization overview
             </p>
           </div>
 
           <div className="flex gap-4">
-            <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-[#E5E0D8] flex items-center gap-3">
+            <div className="bg-surface px-4 py-2 rounded-lg shadow-sm border border-border flex items-center gap-3">
               <IconBadge icon={Thermometer} tone="coral" size="sm" pulse={isConflict} />
               <div className="flex flex-col">
-                <span className="text-xs text-[#8C857B] uppercase font-semibold">
+                <span className="text-xs text-muted uppercase font-semibold">
                   Live Weather
                 </span>
-                <span className="text-sm font-medium capitalize text-[#1C1C1C]">
+                <span className="text-sm font-medium capitalize text-text">
                   {weather} (Detecting Context)
                 </span>
               </div>
             </div>
+            <ThemeToggle compact />
           </div>
         </header>
 
@@ -1854,27 +1864,27 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
         </div>
 
         <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 bg-white rounded-2xl shadow-sm border border-[#E5E0D8] p-6">
+          <div className="col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
             <h2 className="text-lg font-serif mb-4 flex items-center gap-2">
               <IconBadge icon={User} tone="teal" size="sm" /> Live Guest Activity
             </h2>
             <div className="space-y-4">
               <div
-                className={`p-4 rounded-xl border ${isConflict ? "bg-red-50 border-red-100" : isResolved ? "bg-[#F9F8F6] border-[#BCA37F]" : "border-[#E5E0D8]"}`}
+                className={`p-4 rounded-xl border ${isConflict ? "bg-red-50 border-red-100 dark:bg-rose-950/30 dark:border-rose-900/60" : isResolved ? "bg-surface-2 border-accent" : "border-border"}`}
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex gap-3 items-center">
-                    <div className="w-10 h-10 rounded-full bg-[#1C1C1C] text-white flex items-center justify-center font-serif">
+                    <div className="w-10 h-10 rounded-full bg-brand text-white flex items-center justify-center font-serif">
                       V
                     </div>
                     <div>
-                      <h3 className="font-medium text-[#1C1C1C]">
+                      <h3 className="font-medium text-text">
                         Virat Sharma{" "}
-                        <span className="text-xs font-normal text-[#8C857B] bg-[#F0ECE4] px-2 py-0.5 rounded ml-2">
+                        <span className="text-xs font-normal text-muted bg-surface-2 px-2 py-0.5 rounded ml-2">
                           Room 402
                         </span>
                       </h3>
-                      <p className="text-xs text-[#6B655C]">
+                      <p className="text-xs text-muted">
                         VIP • Vegetarian • Wellness Focus
                       </p>
                     </div>
@@ -1882,28 +1892,28 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
                 </div>
 
                 {isConflict && (
-                  <div className="bg-white p-3 rounded-lg border border-red-100 mt-2">
+                  <div className="bg-surface p-3 rounded-lg border border-red-100 mt-2">
                     <div className="flex items-center gap-2 text-red-600 mb-1">
                       <IconBadge icon={CloudRain} tone="coral" size="sm" pulse />{" "}
                       <span className="text-sm font-semibold">
                         Weather Conflict Detected (4:00 PM)
                       </span>
                     </div>
-                    <p className="text-sm text-[#1C1C1C] mb-2">
+                    <p className="text-sm text-text mb-2">
                       Outdoor Botanical Garden Walk compromised.
                     </p>
                   </div>
                 )}
 
                 {isResolved && (
-                  <div className="bg-white p-3 rounded-lg border border-[#E5E0D8] mt-2">
-                    <div className="flex items-center gap-2 text-[#1C1C1C] mb-1">
+                  <div className="bg-surface p-3 rounded-lg border border-border mt-2">
+                    <div className="flex items-center gap-2 text-text mb-1">
                       <IconBadge icon={Check} tone="emerald" size="sm" />{" "}
                       <span className="text-sm font-semibold">
                         Guest accepted AI Alternative
                       </span>
                     </div>
-                    <p className="text-sm text-[#6B655C]">
+                    <p className="text-sm text-muted">
                       Swapped 'Botanical Walk' for 'National Art Museum' due to
                       rain.
                     </p>
@@ -1911,8 +1921,8 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
                 )}
 
                 {!isConflict && !isResolved && (
-                  <div className="bg-[#F0ECE4] p-3 rounded-lg mt-2">
-                    <p className="text-sm text-[#6B655C]">
+                  <div className="bg-surface-2 p-3 rounded-lg mt-2">
+                    <p className="text-sm text-muted">
                       Enjoying Private City Tour. Next: Lunch at The Courtyard.
                     </p>
                   </div>
@@ -1929,14 +1939,14 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
 function SidebarItem({ icon: Icon, label, active, count, alert, tone = "teal" }) {
   return (
     <button
-      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${active ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
+      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${active ? "bg-surface/10 text-white" : "text-white/60 hover:bg-surface/5 hover:text-white"}`}
     >
       <div className="flex items-center gap-3">
         <IconBadge icon={Icon} tone={alert ? "coral" : tone} size="sm" pulse={alert} />
         <span className="text-sm font-medium">{label}</span>
       </div>
       {count && (
-        <span className="bg-white/10 text-xs px-2 py-0.5 rounded-full">
+        <span className="bg-surface/10 text-xs px-2 py-0.5 rounded-full">
           {count}
         </span>
       )}
@@ -1950,20 +1960,20 @@ function SidebarItem({ icon: Icon, label, active, count, alert, tone = "teal" })
 function StatCard({ title, value, trend, alert, icon = LayoutDashboard, tone = "teal" }) {
   return (
     <div
-      className={`bg-white rounded-2xl p-5 shadow-sm border ${alert ? "border-red-200" : "border-[#E5E0D8]"}`}
+      className={`bg-surface rounded-2xl p-5 shadow-sm border ${alert ? "border-red-200" : "border-border"}`}
     >
       <div className="mb-3 flex items-center gap-3">
         <IconBadge icon={icon} tone={alert ? "coral" : tone} size="md" pulse={alert} />
-        <h3 className="text-sm font-semibold text-[#555A53]">{title}</h3>
+        <h3 className="text-sm font-semibold text-muted">{title}</h3>
       </div>
       <div className="flex items-end justify-between">
         <span
-          className={`text-3xl font-serif ${alert ? "text-red-600" : "text-[#1C1C1C]"}`}
+          className={`text-3xl font-serif ${alert ? "text-red-600" : "text-text"}`}
         >
           {value}
         </span>
         <span
-          className={`text-xs font-medium px-2 py-1 rounded-md ${alert ? "bg-red-50 text-red-600" : "bg-[#F0ECE4] text-[#6B655C]"}`}
+          className={`text-xs font-medium px-2 py-1 rounded-md ${alert ? "bg-red-50 text-red-600" : "bg-surface-2 text-muted"}`}
         >
           {trend}
         </span>
