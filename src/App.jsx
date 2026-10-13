@@ -252,7 +252,7 @@ export default function AtithiAI() {
   };
 
   return (
-    <div className="min-h-screen bg-bg text-text font-sans selection:bg-accent selection:text-white">
+    <div className="min-h-screen bg-bg text-text font-sans selection:bg-accent selection:text-text">
       {appMode === "guest" ? (
         <GuestApp
           weather={weather}
