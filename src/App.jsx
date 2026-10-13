@@ -1914,6 +1914,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention, staffUser, onL
               </div>
             </div>
             <ThemeToggle compact />
+            <span className="hidden text-xs text-muted lg:inline">Signed in as {staffUser?.name || "Staff"}</span>
             <button type="button" onClick={onLogout} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-2"><LogOut size={15}/> Log out</button>
           </div>
         </header>
