@@ -116,6 +116,7 @@ export default async function handler(req, res) {
   if (!apiKey) return send(res, 200, fallback(language, mode));
 
   const controller = new AbortController();
+  // Keep provider work bounded; the client has its own shorter sample timeout.
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
     const prompt = [
