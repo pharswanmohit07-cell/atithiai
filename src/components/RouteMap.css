@@ -52,7 +52,7 @@
   display: inline-block;
   margin-bottom: 5px;
   border-radius: 9999px;
-  background: #fee2e2;
+  background: rgb(var(--coral-rgb) / 0.16);
   padding: 3px 7px;
   color: #991b1b;
   font-size: 9px;
@@ -62,7 +62,7 @@
 
 .dark .route-guard-demo-tag {
   background: #4c1d24;
-  color: #fecaca;
+  color: rgb(var(--coral-rgb));
 }
 
 .route-guard-legend-line {
@@ -72,7 +72,7 @@
   border-top: 3px solid #405b83;
 }
 .route-guard-legend-line.blocked {
-  border-top: 3px dashed #dc2626;
+  border-top: 3px dashed rgb(var(--coral-rgb));
 }
 .route-guard-legend-line.detour {
   border-top: 3px dashed #16a34a;
