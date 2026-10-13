@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
+import DemoModeBar from "./components/DemoModeBar.jsx";
+import { demoFetch } from "./lib/demoCache.js";
 import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
 import DiscoverTab from "./components/DiscoverTab.jsx";
 import PlanTab from "./components/PlanTab.jsx";
@@ -134,7 +136,7 @@ function PlaceCard({ place, destination, formatCurrency, inPlan, onAdd, onRemove
 
 function WeatherPanel({ destination, weather, loading, error, formatNumber }) {
   return <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-accent-text">Live weather · Open-Meteo</p><h2 className="mt-1 font-serif text-2xl">{weather?.condition || (loading ? "Checking conditions…" : "Weather unavailable")}</h2></div><span className="rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: destination.themeColors.accentSoft, color: destination.themeColors.accent }}>{destination.city}</span></div>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-accent-text">{weather?.source === "cached-demo" ? "Cached demo result · Open-Meteo snapshot" : "Live weather · Open-Meteo"}</p><h2 className="mt-1 font-serif text-2xl">{weather?.condition || (loading ? "Checking conditions…" : "Weather unavailable")}</h2></div><span className="rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: destination.themeColors.accentSoft, color: destination.themeColors.accent }}>{destination.city}</span></div>
     {weather ? <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">{[
       ["Temperature", formatNumber(weather.temperatureC, destination.locale, { maximumFractionDigits: 0 }) + "°C"],
       ["Feels like", weather.feelsLikeC == null ? "—" : formatNumber(weather.feelsLikeC, destination.locale, { maximumFractionDigits: 0 }) + "°C"],
@@ -164,7 +166,7 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
   </main>;
 }
 
-function fallbackIntent(text) {
+function fallbackIntent(text, currencySymbol = "") {
   const value = String(text || "").toLowerCase();
   let intent = "other";
   if (/\b(plan|itinerary|plan my day|day plan)\b/.test(value)) intent = "plan_day";
@@ -189,7 +191,8 @@ function fallbackIntent(text) {
   else if (/\bhalal\b/.test(value)) diet = "halal";
   else if (/gluten[- ]?(free|aware)/.test(value)) diet = "gluten-aware";
   else if (/\bnon[- ]?veg(etarian)?\b/.test(value)) diet = "non-veg";
-  const budgetMatch = value.match(/(?:under|below|less than|max|up to|budget of)\s*(?:₹|€|\$|£|¥|rp\.?\s*)?([\d][\d,.]*)/);
+  const escapedSymbol = String(currencySymbol || "").split("").map((character) => "\\^$.*+?()[]{}|/".includes(character) ? "\\" + character : character).join("");
+  const budgetMatch = value.match(new RegExp("(?:under|below|less than|max|up to|budget of)\\\\s*(?:" + (escapedSymbol ? escapedSymbol + "\\\\s*" : "") + ")?([\\\\d][\\\\d,.]*)", "i"));
   let maxBudgetLocal = null;
   if (budgetMatch) {
     const amount = Number(budgetMatch[1].replace(/,(?=\d{3}(?:\D|$))/g, "").replace(",", "."));
@@ -296,11 +299,11 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     addChatMessage({ role: "guest", text: message });
     setSending(true);
     let requestLanguage = replyLanguage === "auto" ? detectTextLanguage(message) : replyLanguage;
-    let parsedIntent = fallbackIntent(message);
+    let parsedIntent = fallbackIntent(message, destination.currency.symbol);
     const intentController = new AbortController();
     const intentTimeout = window.setTimeout(() => intentController.abort(), 3000);
     try {
-      const response = await fetch("/api/intent", {
+      const response = await demoFetch("/api/intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: intentController.signal,
@@ -309,6 +312,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
           city: destination.city,
           country: destination.country,
           currency: destination.currency.code,
+          currencySymbol: destination.currency.symbol,
           languages: profile.languages
         })
       });
@@ -350,7 +354,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 7000);
     try {
-      const response = await fetch("/api/chat", {
+      const response = await demoFetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: controller.signal,
@@ -447,10 +451,11 @@ export default function AtithiAI() {
     setActiveTab("home");
   };
 
-  if (!started) return <WelcomeScreen destination={destination} destinations={destinations} selectDestination={selectDestination} onStart={goStart}/>;
-  if (!profile.onboardingComplete) return <ProfileOnboarding destination={destination} onFinish={() => setActiveTab("home")}/>;
+  if (!started) return <><DemoModeBar/><WelcomeScreen destination={destination} destinations={destinations} selectDestination={selectDestination} onStart={goStart}/></>;
+  if (!profile.onboardingComplete) return <><DemoModeBar/><ProfileOnboarding destination={destination} onFinish={() => setActiveTab("home")}/></>;
 
   return <main className="min-h-screen bg-bg pb-[calc(5.75rem+env(safe-area-inset-bottom))] text-text">
+    <DemoModeBar/>
     <header className="sticky top-0 z-40 border-b border-border bg-surface/85 px-4 py-3 shadow-sm backdrop-blur-xl sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
         <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Go beyond the usual</span></span></button>
