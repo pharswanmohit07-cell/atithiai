@@ -5,7 +5,7 @@ import { transform } from "esbuild";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const extensions = new Set([".js", ".jsx", ".mjs"]);
-const scanRoots = ["src", "api", "scripts"];
+const scanRoots = ["src", "api", "scripts", "netlify"];
 const candidates = [];
 const failures = [];
 
