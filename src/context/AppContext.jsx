@@ -7,6 +7,7 @@ const COMPLETED_KEY = "atithi-onboarding-complete";
 const PERSONA_KEY = "atithi-persona";
 const WAYPOINT_KEY = "atithi-selected-waypoint";
 const RESCUE_ALTITUDE_KEY = "atithi-rescue-pass-altitude";
+const CACHED_DEMO_KEY = "atithi-cached-demo-mode";
 
 export const DEFAULT_PREFERENCES = {
   interests: ["nature", "culture"],
@@ -60,6 +61,9 @@ function readWaypoint() {
   const saved = safeRead(WAYPOINT_KEY, DEFAULT_CORRIDOR_WAYPOINT_ID);
   return CORRIDOR_WAYPOINTS.some((item) => item.id === saved) ? saved : DEFAULT_CORRIDOR_WAYPOINT_ID;
 }
+function readCachedDemoMode() {
+  return safeRead(CACHED_DEMO_KEY, false) === true;
+}
 function readRescuePassAltitude() {
   const saved = safeRead(RESCUE_ALTITUDE_KEY, null);
   if (!saved || typeof saved !== "object") {
@@ -107,6 +111,7 @@ export function AppProvider({ children }) {
   const [manualRainOverride, setManualRainOverride] = useState(false);
   const [disruptions, setDisruptions] = useState([]);
   const [rescuePassContext, setRescuePassContext] = useState(readRescuePassAltitude);
+  const [cachedDemoMode, setCachedDemoModeState] = useState(readCachedDemoMode);
 
   const selectedWaypoint = useMemo(
     () => CORRIDOR_WAYPOINTS.find((item) => item.id === selectedWaypointIdState) || CORRIDOR_WAYPOINTS.find((item) => item.id === DEFAULT_CORRIDOR_WAYPOINT_ID),
@@ -152,6 +157,12 @@ export function AppProvider({ children }) {
     if (!CORRIDOR_WAYPOINTS.some((item) => item.id === id)) return;
     setSelectedWaypointIdState(id);
     try { localStorage.setItem(WAYPOINT_KEY, JSON.stringify(id)); } catch { /* Selection remains in memory. */ }
+  }, []);
+
+  const setCachedDemoMode = useCallback((enabled) => {
+    const next = Boolean(enabled);
+    setCachedDemoModeState(next);
+    try { localStorage.setItem(CACHED_DEMO_KEY, JSON.stringify(next)); } catch { /* Session-only toggle remains usable if storage is unavailable. */ }
   }, []);
 
   const toggleManualRainOverride = useCallback(() => {
