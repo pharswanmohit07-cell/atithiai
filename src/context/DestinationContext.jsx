@@ -73,51 +73,66 @@ export function DestinationProvider({ children }) {
       .then((payload) => {
         const current = payload?.current;
         if (!current || !Number.isFinite(Number(current.temperature_2m))) throw new Error("Weather response was incomplete.");
-        const weather = {
+        const condition = describeWeather(Number(current.weather_code));
+        if (!active) return;
+        setWeather({
+          destinationId: destination.id,
           temperatureC: Number(current.temperature_2m),
-          feelsLikeC: Number(current.apparent_temperature),
-          humidity: Number(current.relative_humidity_2m),
-          windKmh: Number(current.wind_speed_10m),
-          precipitation: Number(current.precipitation),
-          condition: describeWeather(Number(current.weather_code)).label,
-          kind: describeWeather(Number(current.weather_code)).kind,
-          updatedAt: payload.current.time
-        };
-        if (active) setWeather(weather);
+          feelsLikeC: Number.isFinite(Number(current.apparent_temperature)) ? Number(current.apparent_temperature) : null,
+          humidity: Number.isFinite(Number(current.relative_humidity_2m)) ? Number(current.relative_humidity_2m) : null,
+          precipitationMm: Number.isFinite(Number(current.precipitation)) ? Number(current.precipitation) : null,
+          windKmh: Number.isFinite(Number(current.wind_speed_10m)) ? Number(current.wind_speed_10m) : null,
+          condition: condition.label,
+          kind: condition.kind,
+          observedAt: String(current.time || ""),
+          source: "live"
+        });
       })
       .catch((error) => {
-        if (active && error?.name !== "AbortError") setWeatherError("Live weather is temporarily unavailable.");
+        if (!active) return;
+        setWeatherError(error?.name === "AbortError"
+          ? "Live weather timed out. Check a trusted forecast before going out."
+          : "Live weather is temporarily unavailable. Check local conditions before going out.");
       })
       .finally(() => {
         window.clearTimeout(timeout);
         if (active) setWeatherLoading(false);
       });
-    return () => { active = false; window.clearTimeout(timeout); controller.abort(); };
-  }, [destination]);
 
-  const formatCurrency = useCallback((value) => {
-    const amount = Number(value);
-    if (!Number.isFinite(amount)) return "—";
+    return () => {
+      active = false;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [destination.id, destination.lat, destination.lon, destination.timezone]);
+
+  const formatCurrency = useCallback((amount, options = {}) => {
+    const value = Number(amount);
+    if (!Number.isFinite(value)) return "—";
     try {
       return new Intl.NumberFormat(destination.locale, {
-        style: "currency", currency: destination.currency.code,
-        maximumFractionDigits: ["IDR", "JPY", "KRW", "VND", "CLP"].includes(destination.currency.code) ? 0 : 2
-      }).format(amount);
-    } catch { return new Intl.NumberFormat(destination.locale).format(amount) + " " + destination.currency.code; }
-  }, [destination]);
+        style: "currency",
+        currency: destination.currency.code,
+        maximumFractionDigits: ["IDR", "JPY", "KRW", "VND", "CLP"].includes(destination.currency.code) ? 0 : 2,
+        ...options
+      }).format(value);
+    } catch {
+      return new Intl.NumberFormat(destination.locale, { maximumFractionDigits: 2 }).format(value) + " " + destination.currency.code;
+    }
+  }, [destination.currency.code, destination.locale]);
 
   const formatNumber = useCallback((value, options = {}) => {
-    const amount = Number(value);
-    if (!Number.isFinite(amount)) return "—";
-    try { return new Intl.NumberFormat(destination.locale, options).format(amount); }
-    catch { return String(value); }
-  }, [destination]);
+    const number = Number(value);
+    if (!Number.isFinite(number)) return "—";
+    return new Intl.NumberFormat(destination.locale, options).format(number);
+  }, [destination.locale]);
 
-  const emergencyNumber = destination.emergencyNumber || "112";
   const value = useMemo(() => ({
-    destination, destinations: DESTINATIONS, selectDestination, weather, weatherLoading,
-    weatherError, formatCurrency, formatNumber, emergencyNumber
-  }), [destination, selectDestination, weather, weatherLoading, weatherError, formatCurrency, formatNumber, emergencyNumber]);
+    destination, destinations: DESTINATIONS, selectDestination, formatCurrency, formatNumber,
+    mapCenter: [destination.lat, destination.lon],
+    weather: weather?.destinationId === destination.id ? weather : null,
+    weatherLoading, weatherError, emergencyNumber: destination.emergencyNumber
+  }), [destination, selectDestination, formatCurrency, formatNumber, weather, weatherLoading, weatherError]);
 
   return <DestinationContext.Provider value={value}>{children}</DestinationContext.Provider>;
 }
