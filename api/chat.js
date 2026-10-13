@@ -103,7 +103,7 @@ export default async function handler(req, res) {
   if (!process.env.GEMINI_API_KEY) return send(res, 200, { reply: fallback, source: "local-fallback", reason: "missing_api_key", language });
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 6500);
+  const timeout = setTimeout(() => controller.abort(), 8500);
   try {
     const prompt = [
       "You are Atithi AI, a personalized travel companion for hidden places, local stories and experiences that make a destination feel personal.",
@@ -147,7 +147,7 @@ export default async function handler(req, res) {
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.25, maxOutputTokens: 320 }
+          generationConfig: { maxOutputTokens: 320, thinkingConfig: { thinkingLevel: "low" } }
         })
       }
     );

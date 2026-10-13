@@ -60,7 +60,7 @@ export default function DestinationMap({
     <div className="flex flex-wrap items-center justify-between gap-3 p-3">
       <div>
         <h2 className="font-serif text-xl">Explore the map</h2>
-        <p className="text-[10px] text-muted">Approximate locations · estimated crowd levels · map tiles require connectivity</p>
+        <p className="text-[10px] text-muted">OpenStreetMap / CARTO tiles · no API key required · map tiles need connectivity</p>
       </div>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => setLocateRequest((value) => value + 1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold"><LocateFixed size={14}/>Locate me</button>

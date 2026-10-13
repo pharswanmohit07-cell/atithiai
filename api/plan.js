@@ -79,7 +79,7 @@ export default async function handler(req, res) {
   if (!key || !affectedStop.title) return send(res, 200, { advisory: safeFallback });
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 2500);
+  const timeout = setTimeout(() => controller.abort(), 4500);
   try {
     const prompt = [
       "Write one calm travel advisory of at most 45 words in language " + language + ".",
@@ -101,7 +101,7 @@ export default async function handler(req, res) {
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { advisory: { type: "STRING" } }, required: ["advisory"] }, temperature: 0.2, maxOutputTokens: 180 }
+          generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { advisory: { type: "STRING" } }, required: ["advisory"] }, maxOutputTokens: 180, thinkingConfig: { thinkingLevel: "low" } }
         })
       }
     );

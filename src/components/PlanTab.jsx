@@ -457,7 +457,7 @@ export default function PlanTab() {
     setAdvisory(fallback);
     setAdvisoryLoading(true);
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 3000);
+    const timeout = window.setTimeout(() => controller.abort(), 5000);
     demoFetch("/api/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

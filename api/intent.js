@@ -165,7 +165,7 @@ export default async function handler(req, res) {
   if (!process.env.GEMINI_API_KEY) return send(res, 200, fallback);
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeout = setTimeout(() => controller.abort(), 6500);
   try {
     const prompt = [
       "You are a travel-message intent parser. Extract meaning only; do not recommend or rank anything.",
@@ -188,8 +188,8 @@ export default async function handler(req, res) {
           generationConfig: {
             responseMimeType: "application/json",
             responseSchema: intentSchema(),
-            temperature: 0,
-            maxOutputTokens: 600
+            maxOutputTokens: 600,
+            thinkingConfig: { thinkingLevel: "low" }
           }
         })
       }

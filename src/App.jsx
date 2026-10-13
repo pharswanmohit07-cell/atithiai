@@ -324,7 +324,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     let requestLanguage = replyLanguage === "auto" ? detectTextLanguage(message) : replyLanguage;
     let parsedIntent = fallbackIntent(message, destination.currency.symbol);
     const intentController = new AbortController();
-    const intentTimeout = window.setTimeout(() => intentController.abort(), 3000);
+    const intentTimeout = window.setTimeout(() => intentController.abort(), 2600);
     try {
       const response = await demoFetch("/api/intent", {
         method: "POST",
@@ -375,7 +375,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     })));
     let reply = fallback;
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 7000);
+    const timeout = window.setTimeout(() => controller.abort(), 9500);
     try {
       const response = await demoFetch("/api/chat", {
         method: "POST",

@@ -140,7 +140,8 @@ export default async function handler(req, res) {
         contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageBase64 } }] }],
         // The prompt defines mode-specific fields; normalize() validates the returned JSON shape.
         generationConfig: {
-          responseMimeType: "application/json"
+          responseMimeType: "application/json",
+          thinkingConfig: { thinkingLevel: "low" }
         }
       })
     });
