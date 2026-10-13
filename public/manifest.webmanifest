@@ -1,0 +1,15 @@
+{
+  "name": "Atithi AI Travel Companion",
+  "short_name": "Atithi AI",
+  "description": "A personalized travel companion for hidden places, local stories and experiences beyond the usual.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1E1038",
+  "theme_color": "#1E1038",
+  "lang": "en",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

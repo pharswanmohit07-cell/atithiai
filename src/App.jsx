@@ -1,1961 +1,545 @@
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
-  Sun,
-  CloudRain,
-  Clock,
-  MapPin,
-  Utensils,
-  Sparkles,
-  MessageSquare,
-  Home,
-  LayoutDashboard,
-  User,
-  Bell,
-  ChevronRight,
-  Check,
-  Compass,
-  Coffee,
-  ShieldCheck,
-  Thermometer,
-  Wind,
-  Droplets,
-  CalendarDays,
-  Search,
-  BedDouble,
-  Bath,
-  Car,
-  Settings,
-  CreditCard,
-  ChevronLeft,
-  Send,
-  X,
+  ArrowRight, CalendarDays, Check, Compass, Heart,
+  Languages, MapPin, MessageCircle, Plus, Send, ShieldAlert,
+  Sparkles, Sun, Users, X
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import ThemeToggle from "./components/ui/ThemeToggle.jsx";
+import IconBadge from "./components/ui/IconBadge.jsx";
+import LensTab from "./components/guest/LensTab.jsx";
+import DemoModeBar from "./components/DemoModeBar.jsx";
+import { demoFetch, isCachedDemoMode } from "./lib/demoCache.js";
+import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
+import DiscoverTab from "./components/DiscoverTab.jsx";
+import PlanTab from "./components/PlanTab.jsx";
+import { useDestination } from "./context/DestinationContext.jsx";
+import { useTravelContext } from "./context/TravelContext.jsx";
+import { useProfile } from "./context/ProfileContext.jsx";
+import { rankPlaces, rankDishes, rankExperiences } from "./lib/rank.js";
+import { getDefaultLanguage, detectTextLanguage, languageBase, LANGUAGE_OPTIONS, targetLanguageTag, t } from "./i18n.js";
 
-const GUEST = {
-  name: "Virat",
-  lastName: "Sharma",
-  room: "402 (Luxury Suite)",
-  preferences: {
-    diet: "Vegetarian",
-    interests: ["Culture", "Wellness", "Quiet Dining"],
-    vibe: "Relaxing",
-  },
+const DestinationMap = lazy(() => import("./components/DestinationMap.jsx"));
+const TABS = [
+  { id: "home", label: "Home", Icon: Sun },
+  { id: "discover", label: "Discover", Icon: Compass },
+  { id: "plan", label: "Plan", Icon: CalendarDays },
+  { id: "lens", label: "Lens", Icon: Languages },
+  { id: "chat", label: "Chat", Icon: MessageCircle },
+  { id: "profile", label: "Profile", Icon: Users }
+];
+const CATEGORY_OPTIONS = ["viewpoint", "market", "cafe", "culture", "nature", "craft", "wellness"];
+const CATEGORY_LABELS = {
+  viewpoint: "Viewpoint", market: "Market", cafe: "Café", culture: "Culture",
+  nature: "Nature", craft: "Craft", wellness: "Wellness"
 };
-
-const SUNNY_ITINERARY = [
-  {
-    id: 1,
-    time: "09:00 AM",
-    title: "In-Room Breakfast",
-    desc: "Vegetarian Continental, Green Tea",
-    icon: Coffee,
-    type: "dining",
-    status: "completed",
-  },
-  {
-    id: 2,
-    time: "11:00 AM",
-    title: "Private City Tour",
-    desc: "Heritage sites and local markets",
-    location: "Old Town · Dehradun",
-    host: "Arjun Mehta · Local guide",
-    duration: "2.5 hours",
-    pickup: "Hotel lobby · 10:50 AM",
-    icon: Compass,
-    type: "activity",
-    status: "current",
-  },
-  {
-    id: 3,
-    time: "02:00 PM",
-    title: "Light Lunch at The Courtyard",
-    desc: "Reserved table by the fountain",
-    icon: Utensils,
-    type: "dining",
-    status: "upcoming",
-  },
-  {
-    id: 4,
-    time: "04:00 PM",
-    title: "Botanical Garden Walk",
-    desc: "Outdoor guided nature walk",
-    icon: MapPin,
-    type: "activity",
-    status: "upcoming",
-    isVulnerableToWeather: true,
-  },
-  {
-    id: 5,
-    time: "07:30 PM",
-    title: "Dinner at Saffron",
-    desc: "Chef's special vegetarian tasting menu",
-    icon: Utensils,
-    type: "dining",
-    status: "upcoming",
-  },
+const PACE_OPTIONS = [
+  { value: "slow", label: "Slow and thoughtful" },
+  { value: "balanced", label: "A little of everything" },
+  { value: "curious", label: "Curious and active" }
+];
+const DIET_OPTIONS = [
+  ["any", "No preference"], ["veg", "Vegetarian"], ["vegan", "Vegan"],
+  ["nonVeg", "Non-vegetarian"], ["halal", "Halal only where confirmed"], ["glutenFree", "Gluten-free only where confirmed"]
 ];
 
-const AI_ALTERNATIVES = [
-  {
-    id: "alt_1",
-    title: "National Art Museum",
-    desc: "Private indoor guided tour (15 mins away).",
-    icon: MapPin,
-    match: "98% match with 'Culture'",
-  },
-  {
-    id: "alt_2",
-    title: "Signature Ayurvedic Spa",
-    desc: "60-min deep tissue massage in the wellness center.",
-    icon: Sparkles,
-    match: "95% match with 'Wellness'",
-  },
-];
+function formatNumber(value, locale, options = {}) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  try { return new Intl.NumberFormat(locale, options).format(number); } catch { return String(number); }
+}
+function formatDate(value, locale, timezone) {
+  try { return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: timezone }).format(new Date(value)); }
+  catch { return new Date(value).toISOString(); }
+}
 
-const EXPERIENCES = [
-  {
-    id: 1,
-    title: "Ayurvedic Rejuvenation",
-    category: "Wellness",
-    time: "Today, 5:30 PM",
-    desc: "A restorative 60-minute massage with warm herbal oils in the wellness suite.",
-    rating: "4.9",
-    duration: "60 min",
-    location: "Wellness Pavilion",
-    price: "₹3,200",
-    availability: "2 times available",
-    img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    title: "Chef's Tasting Menu",
-    category: "Dining",
-    time: "Today, 7:30 PM",
-    desc: "A five-course vegetarian tasting menu featuring produce from the foothills.",
-    rating: "4.8",
-    duration: "2 hours",
-    location: "Saffron Heritage Room",
-    price: "₹2,400 / guest",
-    availability: "Tables for 2 or 4",
-    img: "https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    title: "Heritage Sunset Walk",
-    category: "Culture",
-    time: "Tomorrow, 4:45 PM",
-    desc: "A private guided walk through the old town and evening food market.",
-    rating: "4.9",
-    duration: "90 min",
-    location: "Old Town · meet in lobby",
-    price: "₹1,800 / guest",
-    availability: "Private guide available",
-    img: "https://images.unsplash.com/photo-1599839619722-39751411ea63?q=80&w=1000&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    title: "Forest Bathing at Maldevta",
-    category: "Wellness",
-    time: "Tomorrow, 8:30 AM",
-    desc: "A slow, guided walk through cedar shade with tea beside the river.",
-    rating: "4.9",
-    duration: "2 hours",
-    location: "Maldevta · pickup included",
-    price: "₹2,600 / guest",
-    availability: "3 places remaining",
-    img: "https://images.unsplash.com/photo-1448375240586-882707db888b?q=85&w=1000&auto=format&fit=crop",
-  },
-];
+function formatPackMoney(value, destination) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "—";
+  try {
+    return new Intl.NumberFormat(destination.locale, {
+      style: "currency",
+      currency: destination.currency.code,
+      maximumFractionDigits: ["IDR", "JPY", "KRW", "VND", "CLP"].includes(destination.currency.code) ? 0 : 2
+    }).format(amount);
+  } catch {
+    return new Intl.NumberFormat(destination.locale, { maximumFractionDigits: 2 }).format(amount) + " " + destination.currency.code;
+  }
+}
+function destinationDaypart(timezone) {
+  try {
+    const hour = Number(new Intl.DateTimeFormat("en", { hour: "2-digit", hourCycle: "h23", timeZone: timezone }).format(new Date()));
+    return hour < 11 ? "morning" : hour < 16 ? "afternoon" : "evening";
+  } catch {
+    return "afternoon";
+  }
+}
 
-const INITIAL_REQUESTS = [
-  {
-    id: 1,
-    title: "Fresh towels",
-    category: "Housekeeping",
-    detail: "2 bath towels",
-    status: "On the way",
-    time: "Today, 10:18 AM",
-  },
-  {
-    id: 2,
-    title: "Breakfast for two",
-    category: "In-Room Dining",
-    detail: "Vegetarian continental",
-    status: "Completed",
-    time: "Today, 8:42 AM",
-  },
-];
-
-// --- MAIN APP ---
-export default function AtithiAI() {
-  const [appMode, setAppMode] = useState("guest");
-  const [weather, setWeather] = useState("sunny");
-  const [itinerary, setItinerary] = useState(SUNNY_ITINERARY);
-  const [showAIIntervention, setShowAIIntervention] = useState(false);
-  const [isResolving, setIsResolving] = useState(false);
-  const [activeGuestTab, setActiveGuestTab] = useState("services");
-  const [isDemoControlsOpen, setIsDemoControlsOpen] = useState(true);
-  const [requests, setRequests] = useState(INITIAL_REQUESTS);
-
-  const addRequest = (request) => {
-    setRequests((current) => [
-      {
-        id: Date.now(),
-        title: request.title,
-        category: request.category,
-        detail: request.detail || "Requested for Room 402",
-        status: "Received",
-        time: "Today, just now",
-      },
-      ...current,
-    ]);
+function niceWord(value) {
+  return String(value || "").replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+function saveStarted() {
+  try { localStorage.setItem("atithi-started-exploring", "yes"); } catch { /* The welcome screen still exits for this session. */ }
+}
+function readStarted() {
+  try { return localStorage.getItem("atithi-started-exploring") === "yes"; } catch { return false; }
+}
+function localChatFallback(message, destination, language) {
+  const base = detectTextLanguage(message);
+  const chosen = language === "auto" ? base : language;
+  const messages = {
+    en: "I can help you explore places, local stories, experiences and food from this destination pack. These are ideas rather than live bookings; check details locally.",
+    hi: "मैं इस जगह की चुनिंदा जगहों, स्थानीय कहानियों, अनुभवों और खाने के बारे में मदद कर सकता हूँ। ये सुझाव हैं, लाइव बुकिंग नहीं; विवरण स्थानीय रूप से जाँचें।",
+    es: "Puedo ayudarte a descubrir lugares, historias locales, experiencias y comida de esta selección. Son ideas, no reservas en tiempo real; verifica los detalles localmente.",
+    fr: "Je peux vous aider à découvrir les lieux, histoires locales, expériences et plats de cette sélection. Ce sont des idées, pas des réservations en direct ; vérifiez sur place.",
+    de: "Ich helfe dir, Orte, lokale Geschichten, Erlebnisse und Speisen aus dieser Auswahl zu entdecken. Dies sind Ideen, keine Live-Buchungen; prüfe Details vor Ort.",
+    ja: "この目的地の場所、地域の物語、体験、料理を紹介できます。これは提案であり、リアルタイムの予約ではありません。詳細は現地で確認してください。",
+    ar: "يمكنني مساعدتك في اكتشاف الأماكن والقصص المحلية والتجارب والأطعمة في هذه الوجهة. هذه اقتراحات وليست حجوزات مباشرة؛ تحقق من التفاصيل محليًا.",
+    zh: "我可以帮助你探索此目的地的地点、当地故事、体验和美食。这些是建议，并非实时预订；请在当地确认详情。"
   };
+  if (/(hidden gem|quiet|less crowded|hidden place|gemas escondidas|joyau|versteckt|隠れた|隐秘|مخفي|छुपी)/i.test(message)) {
+    const hidden = destination.places.filter((place) => place.isHiddenGem).slice(0, 3).map((place) => place.name);
+    if (hidden.length) return (messages[chosen] || messages.en) + " Hidden-place ideas: " + hidden.join(", ") + ".";
+  }
+  return (messages[chosen] || messages.en) + " " + destination.city + ".";
+}
 
-  useEffect(() => {
-    if (
-      weather === "rainy" &&
-      itinerary.some((item) => item.isVulnerableToWeather)
-    ) {
-      setTimeout(() => setShowAIIntervention(true), 600);
-    } else {
-      setShowAIIntervention(false);
-    }
-  }, [weather, itinerary]);
+function DemoNote({ children = "Demo content · AI-assisted, verify locally" }) {
+  return <p className="mt-2 text-[10px] leading-relaxed text-muted">{children}</p>;
+}
 
-  const acceptAlternative = (alt) => {
-    setIsResolving(true);
-    setTimeout(() => {
-      setItinerary((prev) =>
-        prev.map((item) =>
-          item.time === "04:00 PM"
-            ? {
-                ...item,
-                title: alt.title,
-                desc: alt.desc,
-                isVulnerableToWeather: false,
-                icon: alt.icon,
-                aiAdjusted: true,
-              }
-            : item,
-        ),
-      );
-      setShowAIIntervention(false);
-      setIsResolving(false);
-    }, 1200);
-  };
-
-  const keepOriginal = () => {
-    setShowAIIntervention(false);
-  };
-
+function PlaceCard({ place, destination, formatCurrency, inPlan, onAdd, onRemove }) {
+  const [saved, setSaved] = useState(false);
   return (
-    <div className="min-h-screen bg-[#F7F5F2] text-[#1C1C1C] font-sans selection:bg-[#BCA37F] selection:text-white">
-      {appMode === "guest" ? (
-        <GuestApp
-          weather={weather}
-          itinerary={itinerary}
-          showAIIntervention={showAIIntervention}
-          isResolving={isResolving}
-          acceptAlternative={acceptAlternative}
-          keepOriginal={keepOriginal}
-          activeTab={activeGuestTab}
-          setActiveTab={setActiveGuestTab}
-          requests={requests}
-          addRequest={addRequest}
-        />
-      ) : (
-        <AdminDashboard
-          weather={weather}
-          itinerary={itinerary}
-          showAIIntervention={showAIIntervention}
-          requests={requests}
-        />
-      )}
-
-      {!isDemoControlsOpen && (
-        <button
-          onClick={() => setIsDemoControlsOpen(true)}
-          className="fixed bottom-4 right-4 z-50 rounded-full bg-[#1C1C1C] text-white px-3 py-2 text-xs font-medium shadow-lg md:hidden"
-        >
-          Controls
-        </button>
-      )}
-
-      <div
-        className={`fixed bottom-4 right-4 z-50 flex flex-col gap-3 bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-[#E5E0D8] transition-all duration-300 md:bottom-6 md:right-6 ${
-          isDemoControlsOpen
-            ? "translate-x-0 opacity-100"
-            : "translate-x-[130%] opacity-0 pointer-events-none md:translate-x-0 md:opacity-100 md:pointer-events-auto"
-        }`}
-      >
-        <button
-          type="button"
-          aria-label="Close demo controls"
-          onClick={() => setIsDemoControlsOpen(false)}
-          className="absolute -top-2.5 -right-2.5 flex h-7 w-7 items-center justify-center rounded-full border border-[#E5E0D8] bg-white text-[#1C1C1C] shadow-sm md:hidden"
-        >
-          <X size={14} />
-        </button>
-
-        <p className="text-xs font-semibold tracking-wider text-[#8C857B] uppercase mb-1">
-          Demo Controls
-        </p>
-
-        <div className="flex bg-[#F0ECE4] rounded-lg p-1">
-          <button
-            onClick={() => setAppMode("guest")}
-            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "guest" ? "bg-white shadow-sm text-[#1C1C1C]" : "text-[#8C857B] hover:text-[#1C1C1C]"}`}
-          >
-            Guest App
-          </button>
-          <button
-            onClick={() => setAppMode("admin")}
-            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "admin" ? "bg-white shadow-sm text-[#1C1C1C]" : "text-[#8C857B] hover:text-[#1C1C1C]"}`}
-          >
-            Admin
-          </button>
-        </div>
-
-        <button
-          onClick={() => {
-            if (weather === "sunny") setWeather("rainy");
-            else {
-              setWeather("sunny");
-              setItinerary(SUNNY_ITINERARY);
-            }
-          }}
-          className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-all ${
-            weather === "sunny"
-              ? "bg-[#1C1C1C] text-white hover:bg-[#2A2A2A]"
-              : "bg-[#3B82F6] text-white hover:bg-[#2563EB]"
-          }`}
-        >
-          {weather === "sunny" ? <CloudRain size={16} /> : <Sun size={16} />}
-          {weather === "sunny" ? "Trigger Rain (4:00 PM)" : "Reset Weather"}
-        </button>
+    <motion.article layout className="flex min-w-0 flex-col rounded-2xl border border-border bg-bg p-4 transition-colors hover:bg-surface-2/50">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold">{CATEGORY_LABELS[place.category] || niceWord(place.category)}</span>
+        {place.isHiddenGem && <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ backgroundColor: destination.themeColors.accentSoft, color: destination.themeColors.accent }}><Sparkles size={11}/>Hidden-place pick</span>}
       </div>
-    </div>
+      <h3 className="mt-3 font-serif text-xl leading-snug">{place.name}</h3>
+      <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{place.localStory}</p>
+      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-muted">
+        <span>{niceWord(place.bestTime)}</span><span>·</span>
+        <span>{formatNumber(place.durationMin, destination.locale)} min</span><span>·</span>
+        <span>{niceWord(place.crowdLevel)} crowd estimate</span>
+      </div>
+      <p className="mt-2 text-xs font-semibold">{place.avgSpendLocal > 0 ? "Illustrative spend: " + formatCurrency(place.avgSpendLocal) : "No spend estimate"}</p>
+      <div className="mt-3 flex flex-wrap gap-1.5">{place.tags.slice(0, 4).map((tag) => <span key={tag} className="rounded-md border border-border px-2 py-1 text-[10px] text-muted">{tag}</span>)}</div>
+      <div className="mt-4 flex gap-2">
+        <button type="button" onClick={() => inPlan ? onRemove(place.id) : onAdd(place)} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-white" style={{ backgroundColor: destination.themeColors.accent }}>{inPlan ? <><Check size={14}/> In plan · Remove</> : <><Plus size={14}/> Add to plan</>}</button>
+        <button type="button" onClick={() => setSaved((value) => !value)} aria-pressed={saved} aria-label={saved ? "Unsave place" : "Save place"} className={"inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border border-border px-3 " + (saved ? "bg-surface-2 text-text" : "bg-surface text-muted")}><Heart size={16} fill={saved ? "currentColor" : "none"}/></button>
+      </div>
+      <DemoNote />
+    </motion.article>
   );
 }
 
-// --- GUEST APP CONTAINER ---
-function GuestApp(props) {
-  const { activeTab, setActiveTab } = props;
+function WeatherPanel({ destination, weather, loading, error, formatNumber }) {
+  return <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-accent-text">{weather?.source === "cached-demo" ? "Cached demo result · Open-Meteo snapshot" : "Live weather · Open-Meteo"}</p><h2 className="mt-1 font-serif text-2xl">{weather?.condition || (loading ? "Checking conditions…" : "Weather unavailable")}</h2></div><span className="rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: destination.themeColors.accentSoft, color: destination.themeColors.accent }}>{destination.city}</span></div>
+    {weather ? <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">{[
+      ["Temperature", formatNumber(weather.temperatureC, destination.locale, { maximumFractionDigits: 0 }) + "°C"],
+      ["Feels like", weather.feelsLikeC == null ? "—" : formatNumber(weather.feelsLikeC, destination.locale, { maximumFractionDigits: 0 }) + "°C"],
+      ["Wind", weather.windKmh == null ? "—" : formatNumber(weather.windKmh, destination.locale, { maximumFractionDigits: 0 }) + " km/h"],
+      ["Humidity", weather.humidity == null ? "—" : formatNumber(weather.humidity, destination.locale, { maximumFractionDigits: 0 }) + "%"]
+    ].map(([label, value]) => <div key={label} className="rounded-xl bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1 text-lg font-bold">{value}</p></div>)}</div> : <p className="mt-3 text-xs text-muted">{error || "A network connection is needed for live weather."}</p>}
+    <DemoNote>Weather is the only live destination feed. It does not verify opening times, transport, crowds, access or safety.</DemoNote>
+  </section>;
+}
 
-  const tabVariants = {
-    hidden: { opacity: 0, y: 10, scale: 0.98 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.3, ease: "easeOut" },
+function WelcomeScreen({ destination, destinations, selectDestination, onStart }) {
+  return <main className="min-h-screen bg-bg px-4 py-5 text-text sm:px-6 sm:py-8">
+    <header className="mx-auto flex max-w-5xl items-center justify-between"><div className="flex items-center gap-3"><IconBadge icon={Compass} tone="gold" size="lg" /><div><p className="font-serif text-2xl leading-none">Atithi AI</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Go beyond the usual</p></div></div><ThemeToggle compact/></header>
+    <section className="pitch-hero mx-auto mt-6 max-w-5xl overflow-hidden rounded-[2rem] p-6 text-white shadow-2xl sm:mt-10 sm:p-10" style={{ "--destination-accent": destination.themeColors.accent }}>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">A more personal way to explore</p>
+      <h1 className="deck-heading mt-4 max-w-3xl font-display text-4xl leading-tight sm:text-6xl">Find the places and stories that make a destination feel personal.</h1>
+      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/80 sm:text-base">Discover neighbourhood details, local food and thoughtful experiences beyond the usual shortlist — at your own pace.</p>
+      <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-3">
+        {destinations.map((item) => <button key={item.id} type="button" onClick={() => selectDestination(item.id)} aria-pressed={destination.id === item.id} className={"min-h-28 rounded-2xl border p-4 text-left transition-colors " + (destination.id === item.id ? "border-white bg-white text-slate-900" : "border-white/25 bg-white/10 text-white hover:bg-white/20")}>
+          <span className="text-[10px] font-extrabold uppercase tracking-[0.17em]">{item.country}</span><span className="mt-2 block font-serif text-2xl">{item.city}</span>
+          <span className="mt-1 block text-xs opacity-75">{item.primaryLanguages.slice(0, 2).join(" · ")}</span>
+        </button>)}
+      </div>
+      <button type="button" onClick={onStart} className="btn-primary mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold">{ "Start exploring" } <ArrowRight size={17}/></button>
+    </section>
+    <p className="mx-auto mt-4 max-w-5xl text-[10px] leading-relaxed text-muted">Demo content · Place details, stories and spend ranges are AI-assisted examples. Confirm details locally. Only weather is live.</p>
+  </main>;
+}
+
+function fallbackIntent(text, currencySymbol = "") {
+  const value = String(text || "").toLowerCase();
+  let intent = "other";
+  if (/\b(plan|itinerary|plan my day|day plan)\b/.test(value)) intent = "plan_day";
+  else if (/\b(food|dish|eat|menu|restaurant|vegan|vegetarian|spicy)\b/.test(value)) intent = "find_food";
+  else if (/\b(experience|workshop|class|guide|activity|craft|tour)\b/.test(value)) intent = "find_experience";
+  else if (/\b(help|support|lost|translate|emergency)\b/.test(value)) intent = "help";
+  else if (/\b(place|visit|see|hidden|quiet|crowded|nearby|viewpoint|museum|market|park|find|where)\b/.test(value)) intent = "find_place";
+  const categories = [];
+  const categoryPhrases = [
+    ["nature", /\b(nature|park|forest|garden|walk|hike|landscape)\b/],
+    ["market", /\b(market|bazaar|shopping)\b/],
+    ["cafe", /\b(cafe|café|coffee|tea)\b/],
+    ["culture", /\b(culture|history|heritage|museum|temple|music)\b/],
+    ["craft", /\b(craft|artisan|pottery|textile|tile|painting|woodcarving|ceramic)\b/],
+    ["viewpoint", /\b(view|viewpoint|sunset|overlook)\b/],
+    ["wellness", /\b(wellness|yoga|massage|relax|meditate)\b/]
+  ];
+  for (const [category, pattern] of categoryPhrases) if (pattern.test(value)) categories.push(category);
+  let diet = null;
+  if (/\bvegan\b/.test(value)) diet = "vegan";
+  else if (/\bvegetarian\b|\bveg\b/.test(value)) diet = "veg";
+  else if (/\bhalal\b/.test(value)) diet = "halal";
+  else if (/gluten[- ]?(free|aware)/.test(value)) diet = "gluten-aware";
+  else if (/\bnon[- ]?veg(etarian)?\b/.test(value)) diet = "non-veg";
+  const budgetMatch = value.match(new RegExp("(?:under|below|less than|max|up to|budget of)\\s*(?:" + (currencySymbol ? String(currencySymbol) + "\\s*" : "") + ")?([\\d][\\d,.]*)", "i"));
+  let maxBudgetLocal = null;
+  if (budgetMatch) {
+    const amount = Number(budgetMatch[1].replace(/,(?=\d{3}(?:\D|$))/g, "").replace(",", "."));
+    if (Number.isFinite(amount) && amount > 0) maxBudgetLocal = amount;
+  }
+  const timeOfDay = /\b(morning|breakfast|sunrise)\b/.test(value) ? "morning" : /\b(afternoon|lunch|noon)\b/.test(value) ? "afternoon" : /\b(evening|night|dinner|sunset)\b/.test(value) ? "evening" : null;
+  const durationMatch = value.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h\b|minutes?|mins?|m\b)/);
+  const durationMin = durationMatch ? Number(durationMatch[1]) * (/hour|hr|\bh\b/.test(durationMatch[2]) ? 60 : 1) : null;
+  return {
+    intent,
+    filters: {
+      categories, diet, maxBudgetLocal, timeOfDay,
+      mood: /\b(quiet|calm|peaceful|relaxed|slow)\b/.test(value) ? "quiet" : null,
+      avoidCrowds: /\b(avoid crowds|less crowded|not crowded|quiet|crowd-free)\b/.test(value) ? true : null,
+      indoorOnly: /\b(indoors?|inside|rainy day|rainy|rain|wet weather)\b/.test(value) ? true : null,
+      durationMin: Number.isFinite(durationMin) ? durationMin : null
     },
-    exit: { opacity: 0, y: -10, scale: 0.98, transition: { duration: 0.2 } },
+    language: targetLanguageTag(detectTextLanguage(text))
   };
-
-  return (
-    <div className="flex justify-center min-h-screen bg-[#EAE6DF] p-0 md:p-8">
-      <div className="w-full max-w-[430px] bg-[#F7F5F2] md:rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col relative h-[100dvh] md:h-[850px] border-[8px] border-[#1C1C1C]">
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto pb-28 scrollbar-hide">
-          <AnimatePresence mode="wait">
-            {activeTab === "home" && (
-              <motion.div
-                key="home"
-                variants={tabVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <HomeTab {...props} />
-              </motion.div>
-            )}
-            {activeTab === "discover" && (
-              <motion.div
-                key="discover"
-                variants={tabVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="h-full"
-              >
-                <DiscoverTab onRequest={props.addRequest} />
-              </motion.div>
-            )}
-            {activeTab === "ai" && (
-              <motion.div
-                key="ai"
-                variants={tabVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="h-full"
-              >
-                <AITab onRequest={props.addRequest} />
-              </motion.div>
-            )}
-            {activeTab === "services" && (
-              <motion.div
-                key="services"
-                variants={tabVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="h-full"
-              >
-                <ServicesTab
-                  requests={props.requests}
-                  onRequest={props.addRequest}
-                  setActiveTab={setActiveTab}
-                />
-              </motion.div>
-            )}
-            {activeTab === "profile" && (
-              <motion.div
-                key="profile"
-                variants={tabVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="h-full"
-              >
-                <ProfileTab />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Bottom Navigation */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-[#E5E0D8] px-6 py-4 flex justify-between items-center z-40 pb-safe">
-          <NavIcon
-            icon={Home}
-            label="Home"
-            active={activeTab === "home"}
-            onClick={() => setActiveTab("home")}
-          />
-          <NavIcon
-            icon={Compass}
-            label="Discover"
-            active={activeTab === "discover"}
-            onClick={() => setActiveTab("discover")}
-          />
-
-          <div className="relative -top-6">
-            <button
-              onClick={() => setActiveTab("ai")}
-              className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform ${activeTab === "ai" ? "bg-[#BCA37F] text-white shadow-[#BCA37F]/30" : "bg-white text-[#BCA37F] shadow-black/10"}`}
-            >
-              <Sparkles size={24} />
-            </button>
-          </div>
-
-          <NavIcon
-            icon={Bell}
-            label="Services"
-            active={activeTab === "services"}
-            onClick={() => setActiveTab("services")}
-          />
-          <NavIcon
-            icon={User}
-            label="Profile"
-            active={activeTab === "profile"}
-            onClick={() => setActiveTab("profile")}
-          />
-        </div>
-      </div>
-    </div>
-  );
+}
+function resolveChatResult(destination, result) {
+  if (!result || typeof result.id !== "string") return null;
+  const collection = result.itemType === "place" ? destination.places : result.itemType === "experience" ? destination.experiences : result.itemType === "dish" ? destination.dishes : [];
+  const item = collection.find((entry) => entry.id === result.id);
+  if (!item) return null;
+  const title = result.itemType === "experience" ? item.title : item.name;
+  const description = item.localStory || item.description || "";
+  const price = result.itemType === "place"
+    ? item.avgSpendLocal > 0 ? "Illustrative spend: " + formatPackMoney(item.avgSpendLocal, destination) : "No spend estimate"
+    : result.itemType === "experience"
+      ? "Illustrative estimate: " + formatPackMoney(item.priceLocal, destination)
+      : Array.isArray(item.priceRangeLocal) ? "Demo range: " + formatPackMoney(item.priceRangeLocal[0], destination) + " – " + formatPackMoney(item.priceRangeLocal[1], destination) : "";
+  let mapPlace = result.itemType === "place" ? item : destination.places.find((place) => place.category === item.category);
+  if (!mapPlace && result.itemType === "dish") mapPlace = destination.places.find((place) => ["market", "cafe"].includes(place.category));
+  if (!mapPlace) mapPlace = destination.places[0];
+  return { ...item, id: item.id, itemType: result.itemType, title, description, price, reasons: result.reasons || [], score: result.score || 0, mapPlaceId: mapPlace?.id };
+}
+function localRankedReply(language, items) {
+  const base = languageBase(language);
+  const firstNames = items.slice(0, 2).map((item) => item.title).filter(Boolean).join(" and ");
+  const lead = {
+    en: "I ranked options against your preferences. These are demo ideas; confirm details locally.",
+    hi: "मैंने आपकी पसंद के अनुसार विकल्प क्रमबद्ध किए हैं। ये डेमो सुझाव हैं; स्थानीय रूप से पुष्टि करें।",
+    es: "He ordenado opciones según tus preferencias. Son ideas de demostración; verifica los detalles localmente.",
+    fr: "J’ai classé les options selon vos préférences. Ce sont des exemples ; vérifiez les détails sur place.",
+    de: "Ich habe passende Optionen nach deinen Vorlieben sortiert. Dies sind Demo-Ideen; prüfe Details vor Ort.",
+    ja: "好みに合わせて候補を並べました。デモ用の提案なので、詳細は現地で確認してください。",
+    ar: "رتبت الخيارات وفق تفضيلاتك. هذه اقتراحات تجريبية؛ تحقق من التفاصيل محليًا.",
+    zh: "我已按你的偏好排列候选项。这些是演示建议，请在当地确认详情。",
+    pt: "Ordenei as opções de acordo com as suas preferências. São ideias de demonstração; confirme os detalhes localmente.",
+    id: "Saya mengurutkan pilihan berdasarkan preferensi perjalanan Anda. Ini ide demo; verifikasi detailnya secara lokal."
+  }[base] || "I ranked options against your preferences. These are demo ideas; confirm details locally.";
+  if (!items.length) {
+    return {
+      en:"I couldn't find an option matching every filter in this destination pack. Try relaxing a constraint and verify details locally.",
+      hi:"इस डेस्टिनेशन पैक में सभी फ़िल्टर से मेल खाता विकल्प नहीं मिला। कोई फ़िल्टर ढीला करके स्थानीय रूप से पुष्टि करें।",
+      es:"No encontré una opción que cumpla todos los filtros. Prueba a relajar uno y verifica los detalles localmente.",
+      fr:"Aucune option ne correspond à tous les filtres. Essayez d’en assouplir un et vérifiez sur place.",
+      de:"Keine Option erfüllt alle Filter. Lockere einen Filter und prüfe die Details vor Ort.",
+      ja:"すべての条件に合う候補がありません。条件を緩めて現地で確認してください。",
+      ar:"لم أجد خيارًا يطابق جميع المرشحات. خفف أحد الشروط وتحقق محليًا.",
+      zh:"没有找到符合所有筛选条件的选项。请放宽一个条件并在当地确认。",
+      pt:"Não encontrei uma opção que corresponda a todos os filtros. Tente flexibilizar um e confirme localmente.",
+      id:"Tidak ada pilihan yang cocok dengan semua filter. Coba longgarkan satu kriteria dan verifikasi secara lokal."
+    }[base] || "I couldn't find an option matching every filter. Try relaxing a constraint and verify locally.";
+  }
+  return firstNames ? lead + " " + firstNames + "." : lead;
+}
+function ChatResultCard({ destination, result, added, onAdd, onShowMap }) {
+  const title = result.title;
+  const description = result.description;
+  return <article className="rounded-xl border border-border bg-bg p-3">
+    <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-serif text-lg leading-snug">{title}</h3><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold capitalize">{result.itemType}</span></div>
+    <p className="mt-1 text-xs leading-relaxed text-muted">{description}</p>
+    {result.itemType === "dish" && result.whereToEat && <p className="mt-1 text-[10px] text-muted">Suggested area: {result.whereToEat}</p>}
+    {result.itemType !== "place" && <p className="mt-1 text-[10px] leading-relaxed text-muted">Map opens a related area from this destination pack, not a verified host or food-provider location.</p>}
+    {result.price && <p className="mt-2 text-xs font-bold">{result.price} <span className="font-normal text-muted">· demo</span></p>}
+    {result.reasons.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{result.reasons.slice(0, 4).map((reason, index) => <span key={reason + index} className="rounded-full border border-border bg-surface px-2 py-1 text-[9px] leading-relaxed text-muted">{reason}</span>)}</div>}
+    <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={onAdd} disabled={added} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{added ? <Check size={13}/> : <Plus size={13}/>} {added ? "Added to plan" : "Add to plan"}</button><button type="button" onClick={onShowMap} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-bold"><MapPin size={13}/>Show on map</button></div>
+  </article>;
+}
+function chatFallbackMessage(reason) {
+  const messages = {
+    cached_demo_mode: "Cached demo mode is enabled, so this message did not call Gemini. Turn it off in the Demo Mode bar and retry.",
+    no_ranked_items: "No matching items were selected from this destination pack. Try asking for places, food, or experiences.",
+    missing_api_key: "GEMINI_API_KEY is missing from this deployment. Add it to Vercel Preview and redeploy.",
+    provider_http_400: "Gemini rejected the request (HTTP 400). Check the model name and API request.",
+    provider_http_401: "Google rejected the key (HTTP 401). Use a valid Google AI Studio Gemini API key, then redeploy.",
+    provider_http_403: "Google denied the request (HTTP 403). Check API-key restrictions and Gemini API access.",
+    provider_http_404: "Gemini model was not found (HTTP 404). Set GEMINI_MODEL to gemini-2.5-flash and redeploy.",
+    provider_http_429: "Gemini quota or rate limit was reached (HTTP 429). Check usage and limits in AI Studio.",
+    provider_http_5xx: "Gemini returned a temporary server error. Retry shortly.",
+    timeout: "Gemini took too long to respond. Retry, and check provider availability if it continues.",
+    request_timeout: "The browser timed out waiting for the chat API. Retry once.",
+    network_error: "The browser could not reach /api/chat. Check this deployment and the Network panel.",
+    request_failed: "The chat API returned an error response. Inspect the /api/chat request in DevTools.",
+    response_rejected: "Gemini responded, but the app rejected the response format. Retry with a shorter question.",
+    provider_error: "The Gemini request failed. Check the /api/chat response reason in DevTools.",
+    not_gemini: "The API returned a fallback response instead of a Gemini-generated response."
+  };
+  return messages[reason] || messages.provider_error;
 }
 
-// --- TAB COMPONENTS ---
-
-function HomeTab({
-  weather,
-  itinerary,
-  showAIIntervention,
-  isResolving,
-  acceptAlternative,
-  keepOriginal,
-  addRequest,
-  setActiveTab,
-}) {
-  const currentPlan = itinerary.find((item) => item.status === "current");
-  return (
-    <>
-      <div className="home-hero relative min-h-[330px] overflow-hidden bg-[#20362E] text-white">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=85&w=1200&auto=format&fit=crop')",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#13231E]/55 via-[#13231E]/15 to-[#13231E]/90" />
-        <div className="relative flex min-h-[330px] flex-col justify-between px-6 pb-5 pt-11">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
-                The Aranya House
-              </p>
-              <p className="mt-1 text-xs text-white/85">
-                Monday · October 5, 2026
-              </p>
-            </div>
-            <button
-              onClick={() => setActiveTab("profile")}
-              aria-label="Open profile"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur"
-            >
-              <User size={19} />
-            </button>
-          </div>
-          <div>
-            <p className="mb-1 text-sm font-medium text-[#F0D6AD]">
-              A slower kind of morning
-            </p>
-            <h1 className="max-w-[290px] font-serif text-[42px] leading-[0.93]">
-              Good morning,
-              <br />
-              <span className="italic">{GUEST.name}.</span>
-            </h1>
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              <span className="rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium backdrop-blur">
-                Suite 402 · Luxury
-              </span>
-              <span className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium backdrop-blur">
-                {weather === "sunny" ? (
-                  <Sun size={12} className="text-[#F0D6AD]" />
-                ) : (
-                  <CloudRain size={12} className="text-blue-200" />
-                )}
-                {weather === "sunny" ? "24° · Clear" : "19° · Rain"}{" "}
-                <span className="text-white/60">Dehradun</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-5 py-5 space-y-6 sm:px-6">
-        <div className="grid grid-cols-2 gap-2.5">
-          <button
-            onClick={() => setActiveTab("services")}
-            className="flex items-center justify-between rounded-xl border border-[#E4DED3] bg-white px-3.5 py-3 text-left shadow-sm"
-          >
-            <span>
-              <span className="block text-[10px] uppercase tracking-wide text-[#9B7C53]">
-                At your service
-              </span>
-              <span className="mt-1 block text-xs font-semibold text-[#293C34]">
-                Room requests
-              </span>
-            </span>
-            <BedDouble size={18} className="text-[#435B4D]" />
-          </button>
-          <button
-            onClick={() => setActiveTab("ai")}
-            className="flex items-center justify-between rounded-xl border border-[#E4DED3] bg-white px-3.5 py-3 text-left shadow-sm"
-          >
-            <span>
-              <span className="block text-[10px] uppercase tracking-wide text-[#9B7C53]">
-                Your companion
-              </span>
-              <span className="mt-1 block text-xs font-semibold text-[#293C34]">
-                Ask concierge
-              </span>
-            </span>
-            <Sparkles size={18} className="text-[#9B7C53]" />
-          </button>
-        </div>
-        <AnimatePresence mode="popLayout">
-          {!showAIIntervention && !isResolving && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl p-5 shadow-sm border border-[#E5E0D8]"
-            >
-              <div className="flex gap-3">
-                <Sparkles
-                  size={20}
-                  className="text-[#BCA37F] shrink-0 mt-0.5"
-                />
-                <div>
-                  <p className="text-[#1C1C1C] leading-relaxed">
-                    {weather === "sunny"
-                      ? "We've planned a relaxed morning followed by your city tour. Your plans are looking perfect for today's weather."
-                      : "I've updated your schedule for the rain. Enjoy a cozy afternoon indoors."}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {showAIIntervention && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, y: 20 }}
-              animate={{ opacity: 1, height: "auto", y: 0 }}
-              exit={{ opacity: 0, height: 0, scale: 0.95 }}
-              className="bg-[#1C1C1C] rounded-2xl overflow-hidden shadow-xl"
-            >
-              <div className="p-5 border-b border-white/10">
-                <div className="flex items-center gap-2 text-amber-400 mb-3">
-                  <CloudRain size={18} />
-                  <span className="text-sm font-medium tracking-wide uppercase">
-                    Weather Alert
-                  </span>
-                </div>
-                <p className="text-white text-lg font-serif mb-2 leading-snug">
-                  Rain is expected around 4:00 PM.
-                </p>
-                <p className="text-white/70 text-sm">
-                  Your outdoor Botanical Garden Walk will be affected. I've
-                  found suitable indoor alternatives based on your preference
-                  for Cultural and Wellness activities.
-                </p>
-              </div>
-
-              <div className="p-5 bg-[#252525] space-y-3">
-                {isResolving ? (
-                  <div className="py-8 flex flex-col items-center justify-center text-white/70">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1.5,
-                        ease: "linear",
-                      }}
-                    >
-                      <Sparkles size={24} className="text-[#BCA37F]" />
-                    </motion.div>
-                    <p className="mt-3 text-sm">Updating your itinerary...</p>
-                  </div>
-                ) : (
-                  <>
-                    {AI_ALTERNATIVES.map((alt) => (
-                      <button
-                        key={alt.id}
-                        onClick={() => acceptAlternative(alt)}
-                        className="w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-colors group flex items-start gap-4"
-                      >
-                        <div className="bg-[#1C1C1C] p-2 rounded-lg group-hover:bg-[#BCA37F] transition-colors shrink-0">
-                          <alt.icon
-                            size={20}
-                            className="text-[#BCA37F] group-hover:text-white transition-colors"
-                          />
-                        </div>
-                        <div>
-                          <h4 className="text-white font-medium mb-1">
-                            {alt.title}
-                          </h4>
-                          <p className="text-white/50 text-xs mb-2">
-                            {alt.desc}
-                          </p>
-                          <span className="text-[10px] uppercase tracking-wider text-[#BCA37F] font-semibold bg-[#BCA37F]/10 px-2 py-1 rounded">
-                            {alt.match}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                    <button
-                      onClick={keepOriginal}
-                      className="w-full text-center text-white/50 text-sm py-2 mt-2 hover:text-white transition-colors"
-                    >
-                      Keep original plan
-                    </button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {currentPlan && (
-          <section className="overflow-hidden rounded-2xl bg-[#253C33] text-white shadow-[0_14px_28px_rgba(31,48,40,0.14)]">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E7C99C]">
-                <Clock size={13} /> Next up
-              </span>
-              <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold">
-                {currentPlan.time}
-              </span>
-            </div>
-            <div className="p-4">
-              <p className="text-[10px] uppercase tracking-wide text-white/55">
-                Your morning, thoughtfully planned
-              </p>
-              <h2 className="mt-1 font-serif text-[25px] leading-tight">
-                {currentPlan.title}
-              </h2>
-              <p className="mt-1 text-xs text-white/70">
-                {currentPlan.location || currentPlan.desc} ·{" "}
-                {currentPlan.duration || "Curated for you"}
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <div className="rounded-xl bg-white/8 p-3">
-                  <p className="text-[9px] uppercase tracking-wide text-white/50">
-                    Your guide
-                  </p>
-                  <p className="mt-1 text-[11px] font-semibold">
-                    {currentPlan.host || "Your local host"}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white/8 p-3">
-                  <p className="text-[9px] uppercase tracking-wide text-white/50">
-                    Meet here
-                  </p>
-                  <p className="mt-1 text-[11px] font-semibold">
-                    {currentPlan.pickup || "Hotel lobby"}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() =>
-                  addRequest({
-                    title: "Tour pickup confirmation",
-                    category: "Valet / Transport",
-                    detail: `${currentPlan.pickup || "Hotel lobby"} · ${currentPlan.location || currentPlan.title}`,
-                  })
-                }
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-[#E7C99C] px-3.5 py-2.5 text-left text-[11px] font-bold text-[#263E35]"
-              >
-                Confirm my pickup <ChevronRight size={15} />
-              </button>
-            </div>
-          </section>
-        )}
-
-        <div>
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="font-serif text-2xl text-[#1C1C1C]">Today's Stay</h2>
-            <span className="text-sm font-medium text-[#8C857B]">
-              October 5, 2026
-            </span>
-          </div>
-
-          <div className="relative border-l-2 border-[#E5E0D8] ml-4 space-y-8 pb-4">
-            <AnimatePresence>
-              {itinerary.map((item) => (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="relative pl-6"
-                >
-                  <div
-                    className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 ${
-                      item.status === "completed"
-                        ? "bg-[#8C857B] border-[#8C857B]"
-                        : item.status === "current"
-                          ? "bg-[#1C1C1C] border-[#1C1C1C]"
-                          : item.isVulnerableToWeather && weather === "rainy"
-                            ? "bg-white border-red-500 animate-pulse"
-                            : "bg-white border-[#E5E0D8]"
-                    }`}
-                  />
-
-                  <div
-                    className={`
-                    rounded-2xl p-4 transition-all
-                    ${item.status === "current" ? "bg-white shadow-md border border-[#E5E0D8]" : ""}
-                    ${item.isVulnerableToWeather && weather === "rainy" ? "bg-red-50 border border-red-100" : ""}
-                  `}
-                  >
-                    <p
-                      className={`text-xs font-semibold tracking-wider mb-1 ${
-                        item.status === "completed"
-                          ? "text-[#A39C93]"
-                          : item.status === "current"
-                            ? "text-[#BCA37F]"
-                            : item.isVulnerableToWeather && weather === "rainy"
-                              ? "text-red-500"
-                              : "text-[#8C857B]"
-                      }`}
-                    >
-                      {item.time}
-                    </p>
-                    <h3
-                      className={`font-medium text-lg mb-1 ${item.status === "completed" ? "text-[#8C857B] line-through" : "text-[#1C1C1C]"}`}
-                    >
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-[#6B655C] leading-snug">
-                      {item.desc}
-                    </p>
-
-                    {item.aiAdjusted && (
-                      <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[#BCA37F] bg-[#BCA37F]/10 px-2 py-1 rounded-md">
-                        <Sparkles size={12} /> Adjusted by AI
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-[#E5E0D8]">
-          <h2 className="font-serif text-2xl text-[#1C1C1C] mb-4">
-            Tonight's Dining
-          </h2>
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-[#E5E0D8]">
-            <div className="w-full h-32 rounded-xl bg-[url('https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center mb-4" />
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-medium text-lg">Saffron Heritage Room</h3>
-              <span className="bg-[#1C1C1C] text-white text-xs px-2 py-1 rounded">
-                Booked
-              </span>
-            </div>
-            <p className="text-sm text-[#6B655C] mb-4 border-l-2 border-[#BCA37F] pl-3 italic">
-              "Recommended because you prefer quiet, vegetarian fine-dining.
-              Chef Anand has prepared a custom tasting menu."
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() =>
-                  addRequest({
-                    title: "Saffron tasting menu",
-                    category: "In-Room Dining",
-                    detail: "Vegetarian tasting menu for tonight at 7:30 PM",
-                  })
-                }
-                className="flex-1 bg-[#F0ECE4] text-[#1C1C1C] text-sm py-2 rounded-lg font-medium hover:bg-[#E5E0D8] transition-colors"
-              >
-                View Custom Menu
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function DiscoverTab({ onRequest }) {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
-  const [selected, setSelected] = useState(null);
-  const categories = ["All", "Wellness", "Dining", "Culture"];
-  const filtered = EXPERIENCES.filter(
-    (experience) =>
-      (category === "All" || experience.category === category) &&
-      `${experience.title} ${experience.desc}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-  );
-
-  return (
-    <div className="px-5 pb-8 pt-8 sm:px-6">
-      <div className="mb-5 flex items-end justify-between">
-        <div>
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9B7C53]">
-            The local edit · No. 05
-          </p>
-          <h1 className="font-serif text-[34px] leading-none text-[#202A26]">
-            Discover
-            <br />
-            <span className="italic">Dehradun.</span>
-          </h1>
-        </div>
-        <span className="mb-1 flex items-center gap-1 text-xs text-[#73766D]">
-          <MapPin size={13} className="text-[#9B7C53]" /> 30.3165° N
-        </span>
-      </div>
-      <button
-        onClick={() => setSelected(EXPERIENCES[3])}
-        className="discover-feature relative mb-5 flex h-[218px] w-full items-end overflow-hidden rounded-2xl bg-[#263E35] text-left text-white shadow-lg"
-      >
-        <div
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-[1.03]"
-          style={{ backgroundImage: `url(${EXPERIENCES[3].img})` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#14251F]/95 via-[#14251F]/25 to-transparent" />
-        <div className="relative w-full p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="rounded-full border border-white/25 bg-black/20 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] backdrop-blur">
-              Outside the ordinary · {EXPERIENCES[3].category}
-            </span>
-            <span className="flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-[10px] font-bold text-[#263E35]">
-              ★ {EXPERIENCES[3].rating}
-            </span>
-          </div>
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <h2 className="font-serif text-[26px] leading-none">
-                Breathe beyond the city
-              </h2>
-              <p className="mt-1.5 text-[10px] text-white/75">
-                {EXPERIENCES[3].location} · {EXPERIENCES[3].duration}
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-[#E7C99C] px-3 py-2 text-[10px] font-bold text-[#263E35]">
-              Explore <ChevronRight size={13} className="ml-1 inline" />
-            </span>
-          </div>
-        </div>
-      </button>
-      <label className="relative block mb-4">
-        <Search size={17} className="absolute left-3 top-3 text-[#8C857B]" />
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search experiences"
-          className="w-full bg-white border border-[#E5E0D8] rounded-xl py-2.5 pl-10 pr-3 text-sm outline-none focus:border-[#BCA37F]"
-        />
-      </label>
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-        {categories.map((item) => (
-          <button
-            key={item}
-            onClick={() => setCategory(item)}
-            className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap ${category === item ? "bg-[#1C1C1C] text-white" : "bg-white border border-[#E5E0D8] text-[#6B655C]"}`}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
-      <div className="mb-3 flex items-end justify-between">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.15em] text-[#9B7C53]">
-            Chosen for you
-          </p>
-          <h2 className="font-serif text-[22px] leading-tight text-[#202A26]">
-            A little more local
-          </h2>
-        </div>
-        <span className="text-[10px] text-[#858177]">
-          {filtered.length} experiences
-        </span>
-      </div>
-      <div className="space-y-3 pb-8">
-        {filtered.map((experience) => (
-          <article
-            key={experience.id}
-            className="flex overflow-hidden rounded-2xl border border-[#E4DED3] bg-white shadow-sm"
-          >
-            <div
-              className="w-[104px] shrink-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(${experience.img})` }}
-            />
-            <div className="min-w-0 flex-1 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#9A7A4F]">
-                  {experience.category} · {experience.duration}
-                </span>
-                <span className="shrink-0 text-[10px] font-semibold text-[#536B58]">
-                  ★ {experience.rating}
-                </span>
-              </div>
-              <h3 className="mt-1 font-serif text-[18px] leading-tight text-[#26362E]">
-                {experience.title}
-              </h3>
-              <p className="mt-1 text-[10px] leading-snug text-[#77766E]">
-                {experience.location}
-              </p>
-              <div className="mt-2 flex items-center justify-between gap-2">
-                <span className="truncate text-[10px] font-semibold text-[#3F4D44]">
-                  {experience.time}
-                </span>
-                <button
-                  onClick={() => setSelected(experience)}
-                  className="shrink-0 text-[10px] font-bold text-[#9A7545]"
-                >
-                  Details <ChevronRight size={12} className="inline" />
-                </button>
-              </div>
-              <p className="mt-1 text-[9px] text-[#89857C]">
-                {experience.price} · {experience.availability}
-              </p>
-              <p className="sr-only">{experience.desc}</p>
-            </div>
-          </article>
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-center text-sm text-[#8C857B] py-10">
-            No experiences match that search.
-          </p>
-        )}
-      </div>
-      {selected && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/45 p-5 flex items-center justify-center"
-          onClick={() => setSelected(null)}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            className="w-full max-w-sm bg-[#F7F5F2] rounded-2xl overflow-hidden shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div
-              className="h-40 bg-cover bg-center"
-              style={{ backgroundImage: `url(${selected.img})` }}
-            />
-            <div className="p-5">
-              <div className="flex justify-between">
-                <span className="text-xs uppercase text-[#9A7A4F] font-semibold">
-                  {selected.category}
-                </span>
-                <button aria-label="Close" onClick={() => setSelected(null)}>
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="mt-2 flex items-start justify-between gap-3">
-                <h2 className="font-serif text-2xl leading-tight">
-                  {selected.title}
-                </h2>
-                <span className="flex shrink-0 items-center gap-1 rounded-full bg-[#EAF1E8] px-2 py-1 text-[10px] font-bold text-[#536B58]">
-                  ★ {selected.rating}
-                </span>
-              </div>
-              <p className="text-sm text-[#6B655C] mt-2">{selected.desc}</p>
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-white p-3 text-xs">
-                <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
-                    When
-                  </p>
-                  <p className="mt-1 font-semibold">{selected.time}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
-                    Duration
-                  </p>
-                  <p className="mt-1 font-semibold">{selected.duration}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
-                    Where
-                  </p>
-                  <p className="mt-1 font-semibold">{selected.location}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] uppercase tracking-wide text-[#9B7C53]">
-                    From
-                  </p>
-                  <p className="mt-1 font-semibold">{selected.price}</p>
-                </div>
-              </div>
-              <p className="mt-3 text-[10px] text-[#6B655C]">
-                {selected.availability}
-              </p>
-              <button
-                onClick={() => {
-                  onRequest({
-                    title: selected.title,
-                    category: "Experience booking",
-                    detail: `${selected.time} · ${selected.location} · ${selected.price}`,
-                  });
-                  setSelected(null);
-                }}
-                className="w-full mt-5 bg-[#1C1C1C] text-white py-3 rounded-xl text-sm font-medium"
-              >
-                Request reservation
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function AITab({ onRequest }) {
-  const [messages, setMessages] = useState([
-    {
-      from: "concierge",
-      text: `Good afternoon, ${GUEST.name}. I can help with room service, local plans, or anything you need during your stay.`,
-    },
-  ]);
+function ChatView({ destination, weather, profile, chatMessages, addChatMessage, addRequest, addItineraryItem, onShowOnMap, initialPrompt, onPrefillConsumed }) {
   const [draft, setDraft] = useState("");
-  const quickReplies = [
-    "Book the spa",
-    "Show vegetarian dining",
-    "Request fresh towels",
-  ];
-
-  const sendMessage = (text = draft) => {
-    const message = text.trim();
-    if (!message) return;
-    setMessages((current) => [...current, { from: "guest", text: message }]);
-    const lower = message.toLowerCase();
-    let reply =
-      "I have shared your request with the hotel team. They will follow up shortly.";
-    if (lower.includes("spa")) {
-      onRequest({
-        title: "Spa booking",
-        category: "Spa Booking",
-        detail: "Please arrange a wellness session.",
-      });
-      reply =
-        "I sent a spa booking request to the wellness team. They will confirm an available time shortly.";
-    } else if (
-      lower.includes("towel") ||
-      lower.includes("housekeep") ||
-      lower.includes("clean")
-    ) {
-      onRequest({
-        title: "Housekeeping request",
-        category: "Housekeeping",
-        detail: message,
-      });
-      reply =
-        "Your housekeeping request is with the team now. Track it in Hotel Services.";
-    } else if (
-      lower.includes("dining") ||
-      lower.includes("food") ||
-      lower.includes("menu")
-    ) {
-      reply =
-        "Saffron Heritage Room has a vegetarian tasting menu tonight at 7:30 PM. Ask me to book it and I will send a request.";
-    } else if (
-      lower.includes("transport") ||
-      lower.includes("car") ||
-      lower.includes("valet")
-    ) {
-      onRequest({
-        title: "Transport assistance",
-        category: "Valet / Transport",
-        detail: message,
-      });
-      reply =
-        "I forwarded your transport request to the valet desk. They will confirm shortly.";
-    } else if (lower.includes("book") || lower.includes("order")) {
-      onRequest({
-        title: "Dining request",
-        category: "In-Room Dining",
-        detail: message,
-      });
-      reply =
-        "I sent your dining request to the restaurant team. They will confirm shortly.";
-    }
-    window.setTimeout(
-      () =>
-        setMessages((current) => [
-          ...current,
-          { from: "concierge", text: reply },
-        ]),
-      350,
-    );
-    setDraft("");
+  useEffect(() => {
+    if (!initialPrompt) return;
+    setDraft(initialPrompt.slice(0, 1200));
+    onPrefillConsumed?.();
+  }, [initialPrompt, onPrefillConsumed]);
+  const [sending, setSending] = useState(false);
+  const [providerStatus, setProviderStatus] = useState({ source: "unknown", reason: "" });
+  const [replyLanguage, setReplyLanguage] = useState(() => {
+    try { return localStorage.getItem("atithi-chat-language") || "auto"; } catch { return "auto"; }
+  });
+  const [addedResults, setAddedResults] = useState([]);
+  const writeLanguage = (value) => {
+    setReplyLanguage(value);
+    try { localStorage.setItem("atithi-chat-language", value); } catch { /* Keep the selection for this session. */ }
   };
 
-  return (
-    <div className="h-full min-h-[560px] flex flex-col bg-[#F7F5F2]">
-      <div className="pt-12 px-6 pb-4 bg-white border-b border-[#E5E0D8] shadow-sm relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#1C1C1C] flex items-center justify-center">
-            <Sparkles size={20} className="text-[#BCA37F]" />
-          </div>
-          <div>
-            <h1 className="font-serif text-xl">Atithi Concierge</h1>
-            <p className="text-xs text-green-700 font-medium">
-              ● Online · ready to help
-            </p>
-          </div>
-        </div>
-      </div>
-      <div className="flex-1 p-5 overflow-y-auto space-y-3 pb-5">
-        {messages.map((message, index) => (
-          <div
-            key={`${index}-${message.from}`}
-            className={`max-w-[86%] rounded-2xl p-4 text-sm leading-relaxed ${message.from === "guest" ? "ml-auto bg-[#1C1C1C] text-white rounded-br-sm" : "bg-white shadow-sm border border-[#E5E0D8] rounded-tl-sm"}`}
-          >
-            {message.text}
-          </div>
-        ))}
-        {messages.length === 1 && (
-          <div className="flex flex-wrap gap-2 pt-2">
-            {quickReplies.map((reply) => (
-              <button
-                key={reply}
-                onClick={() => sendMessage(reply)}
-                className="bg-white text-[#1C1C1C] text-xs font-medium px-3 py-2 rounded-full border border-[#E5E0D8]"
-              >
-                {reply}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          sendMessage();
-        }}
-        className="px-4 py-3 bg-white border-t border-[#E5E0D8] flex gap-2"
-      >
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder="Ask for a recommendation or service..."
-          className="min-w-0 flex-1 bg-[#F0ECE4] rounded-full py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-[#BCA37F]"
-        />
-        <button
-          aria-label="Send message"
-          type="submit"
-          disabled={!draft.trim()}
-          className="w-11 h-11 shrink-0 rounded-full bg-[#1C1C1C] flex items-center justify-center text-white disabled:opacity-40"
-        >
-          <Send size={16} />
-        </button>
-      </form>
-    </div>
-  );
-}
-
-function ServicesTab({ requests, onRequest, setActiveTab }) {
-  const services = [
-    {
-      icon: BedDouble,
-      name: "Housekeeping",
-      detail: "Fresh towels, turndown & more",
-      eta: "~15 min",
-    },
-    {
-      icon: Utensils,
-      name: "In-Room Dining",
-      detail: "Seasonal dishes, delivered warm",
-      eta: "~30 min",
-    },
-    {
-      icon: Bath,
-      name: "Spa Booking",
-      detail: "Restore with a signature ritual",
-      eta: "View times",
-    },
-    {
-      icon: Car,
-      name: "Valet / Transport",
-      detail: "Your next ride, taken care of",
-      eta: "~8 min",
-    },
-    {
-      icon: Clock,
-      name: "Wake-up Call",
-      detail: "A gentle start, right on time",
-      eta: "Set time",
-    },
-    {
-      icon: MessageSquare,
-      name: "Reception",
-      detail: "A member of our team, anytime",
-      eta: "24 hours",
-    },
-  ];
-  const [selectedService, setSelectedService] = useState(null);
-  const [confirmation, setConfirmation] = useState("");
-  const sendRequest = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    onRequest({
-      title:
-        selectedService === "Wake-up Call"
-          ? `Wake-up call · ${form.get("time")}`
-          : selectedService,
-      category: selectedService,
-      detail: `${form.get("detail") || "Requested for Room 402"} · ${form.get("time")}`,
-    });
-    setConfirmation(`${selectedService} request sent`);
-    setSelectedService(null);
-    window.setTimeout(() => setConfirmation(""), 2500);
+    const message = draft.trim().slice(0, 1200);
+    if (!message || sending) return;
+    setProviderStatus({ source: "checking", reason: "" });
+    setDraft("");
+    addChatMessage({ role: "guest", text: message });
+    setSending(true);
+    let requestLanguage = replyLanguage === "auto" ? detectTextLanguage(message) : replyLanguage;
+    let parsedIntent = fallbackIntent(message, destination.currency.symbol);
+    const intentController = new AbortController();
+    const intentTimeout = window.setTimeout(() => intentController.abort(), 3000);
+    try {
+      const response = await demoFetch("/api/intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: intentController.signal,
+        body: JSON.stringify({
+          text: message,
+          city: destination.city,
+          country: destination.country,
+          currency: destination.currency.code,
+          currencySymbol: destination.currency.symbol,
+          languages: profile.languages
+        })
+      });
+      const payload = await response.json();
+      if (response.ok && payload && typeof payload.intent === "string" && payload.filters && typeof payload.filters === "object") parsedIntent = payload;
+    } catch {
+      // The local keyword extractor is used when intent parsing is offline or times out.
+    } finally {
+      window.clearTimeout(intentTimeout);
+    }
+
+    if (replyLanguage !== "auto") parsedIntent.language = targetLanguageTag(replyLanguage);
+    else requestLanguage = parsedIntent.language || requestLanguage;
+    const filters = {
+      ...(parsedIntent.filters || {}),
+      diet: parsedIntent.filters?.diet && parsedIntent.filters.diet !== "none" ? parsedIntent.filters.diet : (profile.diet === "none" ? null : profile.diet),
+      avoidCrowds: parsedIntent.filters?.avoidCrowds ?? profile.avoidCrowds,
+      maxBudgetLocal: parsedIntent.filters?.maxBudgetLocal ?? null
+    };
+    const freeMinutes = profile.pace === "relaxed" ? 180 : profile.pace === "packed" ? 600 : 360;
+    const context = { weather, timeOfDay: filters.timeOfDay || destinationDaypart(destination.timezone), freeMinutes, budget: profile.dailyBudget.amount };
+    let ranked = [];
+    if (parsedIntent.intent === "find_food") ranked = rankDishes(destination.dishes, profile, filters, context);
+    else if (parsedIntent.intent === "find_experience") ranked = rankExperiences(destination.experiences, profile, filters, context);
+    else if (parsedIntent.intent === "find_place" || parsedIntent.intent === "plan_day") ranked = rankPlaces(destination.places, profile, filters, context);
+    else {
+      const placeResults = rankPlaces(destination.places, profile, filters, context).slice(0, 3);
+      const experienceResults = rankExperiences(destination.experiences, profile, filters, context).slice(0, 2);
+      ranked = [...placeResults, ...experienceResults].sort((a, b) => b.score - a.score);
+    }
+    ranked = ranked.slice(0, 5).map((item) => ({
+      ...item,
+      itemType: item.itemType || (parsedIntent.intent === "find_food" ? "dish" : parsedIntent.intent === "find_experience" ? "experience" : "place")
+    }));
+    const fallback = localRankedReply(requestLanguage, ranked.map((item) => ({
+      title: item.itemType === "experience" ? item.title : item.name
+    })));
+    let reply = fallback;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 7000);
+    try {
+      const response = await demoFetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          message,
+          destinationId: destination.id,
+          replyLanguage: replyLanguage === "auto" ? (parsedIntent.language || "auto") : targetLanguageTag(replyLanguage),
+          profile,
+          weather: weather?.source === "live" ? weather : null,
+          rankedItems: ranked.map((item) => ({ id: item.id, itemType: item.itemType, score: item.score, reasons: item.reasons })),
+          intent: parsedIntent.intent
+        })
+      });
+      const payload = await response.json();
+      const usableReply = response.ok && typeof payload?.reply === "string" && payload.reply.trim() && payload.reply.trim().split(/\s+/).length <= 70;
+      if (usableReply) reply = payload.reply.trim();
+      setProviderStatus({
+        source: usableReply && payload?.source === "gemini" ? "gemini" : "fallback",
+        reason: typeof payload?.reason === "string" ? payload.reason : (usableReply ? "not_gemini" : "request_failed")
+      });
+    } catch {
+      setProviderStatus({
+        source: "fallback",
+        reason: isCachedDemoMode() ? "cached_demo_mode" : controller.signal.aborted ? "request_timeout" : "network_error"
+      });
+      // Keep deterministic ranked cards visible while reporting why Gemini did not answer.
+    } finally {
+      window.clearTimeout(timeout);
+      setSending(false);
+    }
+    addChatMessage({ role: "assistant", text: reply, intent: parsedIntent.intent, results: ranked });
+    if (/^(save|remember|add to (my )?trip|keep this|note this)$/i.test(message.trim())) {
+      addRequest({ title: "Travel note from chat", category: "Chat idea", detail: message });
+    }
   };
-  return (
-    <div className="services-page px-5 pt-8 pb-8 sm:px-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#233D35] text-[#E7C99C]">
-            <Sparkles size={17} />
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-[#827D73]">
-              The Aranya House
-            </p>
-            <p className="text-xs font-semibold text-[#293C34]">
-              Guest services
-            </p>
-          </div>
-        </div>
-        <span className="flex items-center gap-1.5 rounded-full border border-[#DCD6CB] bg-white/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#5C645C]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#73927D]" />
-          Here for you
-        </span>
-      </div>
 
-      <div className="mb-5 flex items-end justify-between gap-2">
-        <div>
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#9B7C53]">
-            Monday · October 5
-          </p>
-          <h1 className="font-serif text-[34px] leading-none text-[#202A26]">
-            Make yourself
-            <br />
-            at home.
-          </h1>
-        </div>
-        <div className="pb-1 text-right">
-          <p className="text-xs text-[#77766E]">Dehradun</p>
-          <p className="mt-1 flex items-center justify-end gap-1 text-sm font-medium text-[#293C34]">
-            <Sun size={14} className="text-[#B38A53]" /> 24°
-          </p>
-        </div>
-      </div>
-
-      <div className="stay-summary mb-7 flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 text-white">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-            <BedDouble size={19} className="text-[#E7C99C]" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-white/60">
-              Your room
-            </p>
-            <p className="truncate text-sm font-semibold">
-              402{" "}
-              <span className="font-normal text-white/60">· Luxury Suite</span>
-            </p>
-          </div>
-        </div>
-        <div className="h-8 w-px bg-white/15" />
-        <div className="shrink-0 text-right">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-white/60">
-            Check out
-          </p>
-          <p className="text-sm font-semibold">
-            Oct 7 <span className="font-normal text-white/60">· 2 nights</span>
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-3 flex items-end justify-between">
-        <div>
-          <h2 className="font-serif text-[23px] leading-tight text-[#202A26]">
-            At your service
-          </h2>
-          <p className="mt-1 text-xs text-[#79776F]">
-            A few thoughtful touches, whenever you need.
-          </p>
-        </div>
-        <span className="pb-1 text-[10px] uppercase tracking-[0.12em] text-[#9B7C53]">
-          01 — 06
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-2.5">
-        {services.map((svc) => (
-          <button
-            key={svc.name}
-            onClick={() => setSelectedService(svc.name)}
-            className="service-tile group min-h-[140px] rounded-2xl border border-[#E4DED3] bg-[#FFFEFC] p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-[#B69A70] hover:shadow-[0_12px_24px_rgba(38,51,43,0.08)]"
-          >
-            <span className="mb-3 flex items-center justify-between">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F1EEE7] text-[#31483E] transition-colors group-hover:bg-[#31483E] group-hover:text-[#E7C99C]">
-                <svc.icon size={18} />
-              </span>
-              <ChevronRight
-                size={15}
-                className="text-[#B7B0A4] transition-transform group-hover:translate-x-0.5"
-              />
-            </span>
-            <span className="block text-[13px] font-semibold leading-tight text-[#25332D]">
-              {svc.name}
-            </span>
-            <span className="mt-1 block min-h-8 text-[10px] leading-[1.45] text-[#89857C]">
-              {svc.detail}
-            </span>
-            <span className="mt-1 inline-flex rounded-full bg-[#F4F1EA] px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-[#92754F]">
-              {svc.eta}
-            </span>
-          </button>
-        ))}
-      </div>
-      <button
-        onClick={() => setActiveTab("ai")}
-        className="concierge-banner mt-5 flex w-full items-center justify-between rounded-2xl p-4.5 text-left text-white transition-transform hover:-translate-y-0.5"
-      >
-        <span className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-[#E7C99C]">
-            <Sparkles size={18} />
-          </span>
-          <span>
-            <span className="block font-serif text-[17px] text-[#E7C99C]">
-              A little extra?
-            </span>
-            <span className="mt-0.5 block text-[10px] text-white/65">
-              Your personal concierge is one message away.
-            </span>
-          </span>
-        </span>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10">
-          <ChevronRight size={17} className="text-[#E7C99C]" />
-        </span>
-      </button>
-      <section className="mt-7">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9B7C53]">
-              In good hands
-            </p>
-            <h2 className="mt-0.5 font-serif text-[23px] leading-tight text-[#202A26]">
-              Your requests
-            </h2>
-          </div>
-          <span className="rounded-full bg-[#EDE9E0] px-2.5 py-1 text-[10px] font-semibold text-[#62685F]">
-            {
-              requests.filter((request) => request.status !== "Completed")
-                .length
-            }{" "}
-            open · {requests.length} total
-          </span>
-        </div>
-        <div className="space-y-2">
-          {requests.map((request) => (
-            <div
-              key={request.id}
-              className="request-row rounded-xl border border-[#E5E0D8] bg-white/90 px-3.5 py-3"
-            >
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F2EFE8] text-[#45594C]">
-                  {request.status === "Completed" ? (
-                    <Check size={15} />
-                  ) : (
-                    <Clock size={15} />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex justify-between gap-2">
-                    <span className="truncate text-xs font-semibold text-[#29352F]">
-                      {request.title}
-                    </span>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold ${request.status === "Completed" ? "bg-[#EAF1E8] text-[#54705B]" : "bg-[#F5EFE4] text-[#9A7545]"}`}
-                    >
-                      {request.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 truncate text-[10px] text-[#77766E]">
-                    {request.category} · {request.detail}
-                  </p>
-                  <p className="mt-1.5 text-[9px] uppercase tracking-wide text-[#A19B8F]">
-                    {request.time}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-      {confirmation && (
-        <p
-          role="status"
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[80] bg-[#1C1C1C] text-white text-sm px-4 py-3 rounded-xl shadow-lg"
-        >
-          {confirmation}
-        </p>
-      )}
-      {selectedService && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/45 p-5 flex items-center justify-center"
-          onClick={() => setSelectedService(null)}
-        >
-          <form
-            role="dialog"
-            aria-modal="true"
-            onSubmit={sendRequest}
-            onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-sm bg-[#F7F5F2] rounded-2xl p-5 shadow-2xl"
-          >
-            <div className="flex justify-between">
-              <div>
-                <p className="text-xs uppercase text-[#9A7A4F]">Room 402</p>
-                <h2 className="font-serif text-2xl">{selectedService}</h2>
-              </div>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={() => setSelectedService(null)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <label className="block mt-4 text-xs font-semibold text-[#6B655C]">
-              DETAILS
-              <input
-                name="detail"
-                placeholder="What should the team prepare?"
-                className="w-full mt-2 p-3 rounded-xl border border-[#E5E0D8] bg-white text-sm font-normal"
-              />
-            </label>
-            {selectedService === "Wake-up Call" ? (
-              <label className="block mt-4 text-xs font-semibold text-[#6B655C]">
-                CALL TIME
-                <input
-                  name="time"
-                  type="time"
-                  defaultValue="07:00"
-                  required
-                  className="w-full mt-2 p-3 rounded-xl border border-[#E5E0D8] bg-white text-sm font-normal"
-                />
-              </label>
-            ) : (
-              <label className="block mt-4 text-xs font-semibold text-[#6B655C]">
-                WHEN
-                <select
-                  name="time"
-                  className="w-full mt-2 p-3 rounded-xl border border-[#E5E0D8] bg-white text-sm font-normal"
-                >
-                  <option>As soon as possible</option>
-                  <option>In 30 minutes</option>
-                  <option>At 6:00 PM</option>
-                  <option>Tomorrow morning</option>
-                </select>
-              </label>
-            )}
-            <button
-              type="submit"
-              className="w-full mt-5 bg-[#1C1C1C] text-white py-3 rounded-xl text-sm font-medium"
-            >
-              Send request
-            </button>
-          </form>
-        </div>
-      )}
+  return <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+    <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><IconBadge icon={MessageCircle} tone="teal" /><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Tell Atithi what kind of place, food or experience you have in mind.</p></div></div>
+      <label className="flex items-center gap-2 text-xs font-bold text-text">{t("replyLanguage", getDefaultLanguage())}<select value={replyLanguage} onChange={(event) => writeLanguage(event.target.value)} className="min-h-10 max-w-40 rounded-xl border border-border bg-bg px-2 py-2 text-xs"><option value="auto">{t("detectLanguage", getDefaultLanguage())}</option>{LANGUAGE_OPTIONS.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
     </div>
-  );
-}
-
-function ProfileTab() {
-  const [diet, setDiet] = useState("Vegetarian");
-  const [autoAdjust, setAutoAdjust] = useState(true);
-  const [notifications, setNotifications] = useState(true);
-  const [openPanel, setOpenPanel] = useState("");
-  return (
-    <div className="profile-page px-5 pt-8 pb-8 sm:px-6">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9B7C53]">
-        Your private stay
-      </p>
-      <h1 className="mb-5 font-serif text-[34px] leading-none text-[#202A26]">
-        The guest book.
-      </h1>
-      <div className="profile-pass relative mb-5 overflow-hidden rounded-2xl p-5 text-white shadow-lg">
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/60">
-              Atithi · Private guest
-            </p>
-            <div className="mt-5 flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-white/5 font-serif text-2xl text-[#E7C99C]">
-                V
-              </div>
-              <div>
-                <h2 className="font-serif text-[25px] leading-none">
-                  {GUEST.name} {GUEST.lastName}
-                </h2>
-                <p className="mt-1.5 text-[10px] text-white/65">{GUEST.room}</p>
-              </div>
-            </div>
-          </div>
-          <span className="flex items-center gap-1 rounded-full border border-[#E7C99C]/35 bg-white/5 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#E7C99C]">
-            <ShieldCheck size={12} /> Signature
-          </span>
-        </div>
-        <div className="relative mt-5 flex items-center justify-between border-t border-white/15 pt-3">
-          <span className="text-[9px] uppercase tracking-[0.16em] text-white/55">
-            Guest since · 2022
-          </span>
-          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#E7C99C]">
-            No. 00402 · Dehradun
-          </span>
-        </div>
-      </div>
-      <section className="mb-6 rounded-2xl border border-[#E4DED3] bg-white p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#9B7C53]">
-              October 3 – 7, 2026
-            </p>
-            <h2 className="mt-0.5 font-serif text-[20px] text-[#26362E]">
-              Your stay
-            </h2>
-          </div>
-          <span className="rounded-full bg-[#EAF1E8] px-2.5 py-1 text-[9px] font-semibold text-[#54705B]">
-            In residence
-          </span>
-        </div>
-        <div className="grid grid-cols-3 divide-x divide-[#E8E3D9]">
-          <div className="pr-2">
-            <p className="text-[9px] uppercase tracking-wide text-[#999388]">
-              Room
-            </p>
-            <p className="mt-1 text-xs font-semibold text-[#293C34]">
-              402 Suite
-            </p>
-          </div>
-          <div className="px-3">
-            <p className="text-[9px] uppercase tracking-wide text-[#999388]">
-              Guests
-            </p>
-            <p className="mt-1 text-xs font-semibold text-[#293C34]">
-              2 adults
-            </p>
-          </div>
-          <div className="pl-3">
-            <p className="text-[9px] uppercase tracking-wide text-[#999388]">
-              Nights
-            </p>
-            <p className="mt-1 text-xs font-semibold text-[#293C34]">
-              4 nights
-            </p>
-          </div>
-        </div>
-      </section>
-      <section className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#8C857B] mb-3">
-          AI Personalization
-        </h3>
-        <div className="bg-white rounded-2xl border border-[#E5E0D8] overflow-hidden">
-          <button
-            onClick={() => setOpenPanel("preferences")}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
-          >
-            <span className="flex items-center gap-3">
-              <Sparkles size={18} className="text-[#8C857B]" />
-              <span className="text-sm font-medium">Diet & interests</span>
-            </span>
-            <span className="flex items-center gap-2 text-xs text-[#8C857B]">
-              {diet} <ChevronRight size={16} />
-            </span>
-          </button>
-          <div className="border-t border-[#E5E0D8]" />
-          <ProfileToggle
-            icon={Settings}
-            label="Auto-adjust plans"
-            checked={autoAdjust}
-            onChange={() => setAutoAdjust((value) => !value)}
-          />
-        </div>
-      </section>
-      <section>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#8C857B] mb-3">
-          Account Settings
-        </h3>
-        <div className="bg-white rounded-2xl border border-[#E5E0D8] overflow-hidden">
-          <button
-            onClick={() => setOpenPanel("payment")}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
-          >
-            <span className="flex items-center gap-3">
-              <CreditCard size={18} className="text-[#8C857B]" />
-              <span className="text-sm font-medium">Payment methods</span>
-            </span>
-            <span className="flex items-center gap-2 text-xs text-[#8C857B]">
-              •••• 2048 <ChevronRight size={16} />
-            </span>
-          </button>
-          <div className="border-t border-[#E5E0D8]" />
-          <ProfileToggle
-            icon={Bell}
-            label="Notifications"
-            checked={notifications}
-            onChange={() => setNotifications((value) => !value)}
-          />
-        </div>
-      </section>
-      {openPanel && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/45 p-5 flex items-center justify-center"
-          onClick={() => setOpenPanel("")}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            className="w-full max-w-sm bg-[#F7F5F2] rounded-2xl p-5 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex justify-between items-start">
-              <h2 className="font-serif text-2xl">
-                {openPanel === "preferences"
-                  ? "Your preferences"
-                  : "Payment methods"}
-              </h2>
-              <button aria-label="Close" onClick={() => setOpenPanel("")}>
-                <X size={18} />
-              </button>
-            </div>
-            {openPanel === "preferences" ? (
-              <>
-                <label className="block mt-5 text-xs font-semibold text-[#6B655C]">
-                  DIET
-                  <select
-                    value={diet}
-                    onChange={(event) => setDiet(event.target.value)}
-                    className="block w-full mt-2 rounded-xl border border-[#E5E0D8] bg-white px-3 py-3 text-sm font-normal"
-                  >
-                    <option>Vegetarian</option>
-                    <option>Vegan</option>
-                    <option>No preference</option>
-                    <option>Gluten-free</option>
-                  </select>
-                </label>
-                <p className="text-xs text-[#8C857B] mt-4">
-                  Interests: Culture · Wellness · Quiet Dining
-                </p>
-              </>
-            ) : (
-              <div className="mt-5 rounded-xl bg-white p-4 border border-[#E5E0D8]">
-                <p className="font-medium text-sm">Visa ending in 2048</p>
-                <p className="text-xs text-[#8C857B] mt-1">
-                  Primary payment method · Expires 08/28
-                </p>
-              </div>
-            )}
-            <button
-              onClick={() => setOpenPanel("")}
-              className="w-full mt-5 bg-[#1C1C1C] text-white py-3 rounded-xl text-sm font-medium"
-            >
-              Done
-            </button>
-          </section>
-        </div>
-      )}
+    {providerStatus.source !== "unknown" && <div role="status" className={"mb-3 rounded-xl border px-3 py-2 text-xs leading-relaxed " + (providerStatus.source === "gemini" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100" : providerStatus.source === "checking" ? "border-border bg-bg text-muted" : "border-amber-500/40 bg-amber-500/10 text-amber-100")}>
+      {providerStatus.source === "checking"
+        ? "Checking live Gemini response…"
+        : providerStatus.source === "gemini"
+          ? "Gemini connected — this reply was generated by Gemini."
+          : <><strong>Local fallback active:</strong> {chatFallbackMessage(providerStatus.reason)}</>}
+    </div>}
+    <div className="mt-4 max-h-[min(62vh,640px)] space-y-3 overflow-y-auto rounded-2xl bg-bg p-3" aria-live="polite">
+      {chatMessages.map((message) => <div key={message.id} className={"max-w-[98%] rounded-2xl px-3 py-3 text-sm leading-relaxed " + (message.role === "guest" ? "ml-auto text-white" : "border border-border bg-surface text-text")} style={message.role === "guest" ? { backgroundColor: destination.themeColors.accent } : undefined}>
+        <p className="whitespace-pre-wrap">{message.text}</p><time className="mt-1 block text-[9px] opacity-60">{formatDate(message.createdAt, destination.locale, destination.timezone)}</time>
+        {message.role === "assistant" && Array.isArray(message.results) && message.results.length > 0 && <div className="mt-3 space-y-2">{message.results.map((reference) => {
+          const result = resolveChatResult(destination, reference);
+          if (!result) return null;
+          const key = reference.itemType + ":" + reference.id;
+          return <ChatResultCard key={key} destination={destination} result={result} added={addedResults.includes(key)} onAdd={() => { const stop = addItineraryItem(result, reference.itemType); if (stop) setAddedResults((current) => [...new Set([...current, key])]); }} onShowMap={() => result.mapPlaceId && onShowOnMap(result.mapPlaceId)}/>;
+        })}</div>}
+      </div>)}
+      {sending && <p role="status" className="text-xs text-muted">{t("sending", getDefaultLanguage())}</p>}
     </div>
-  );
+    <form onSubmit={submit} className="mt-3 flex gap-2"><input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={1200} placeholder={t("chatPlaceholder", getDefaultLanguage())} className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm" aria-label={t("chatPlaceholder", getDefaultLanguage())}/><button type="submit" disabled={!draft.trim() || sending} aria-label={t("send", getDefaultLanguage())} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: destination.themeColors.accent }}><Send size={15}/><span className="hidden sm:inline">{t("send", getDefaultLanguage())}</span></button></form>
+    <DemoNote>Rank scores and reason chips come from deterministic rules. Stories, hosts and spending ranges are illustrative; only weather is live.</DemoNote>
+  </section>;
 }
+export default function AtithiAI() {
+  const { destination, destinations, selectDestination, weather, weatherLoading, weatherError, formatCurrency, formatNumber, emergencyNumber } = useDestination();
+  const { itinerary, addItineraryStop, addItineraryItem, removeItineraryStop, clearItinerary, requests, addRequest, chatMessages, addChatMessage } = useTravelContext();
+  const { profile } = useProfile();
+  const [started, setStarted] = useState(readStarted);
+  const [activeTab, setActiveTab] = useState("home");
+  const [chatPrefill, setChatPrefill] = useState("");
+  const [mapFocusId, setMapFocusId] = useState(null);
 
-function ProfileToggle({ icon: Icon, label, checked, onChange }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={checked}
-      onClick={onChange}
-      className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
-    >
-      <span className="flex items-center gap-3">
-        <Icon size={18} className="text-[#8C857B]" />
-        <span className="text-sm font-medium">{label}</span>
-      </span>
-      <span
-        className={`w-10 h-6 rounded-full relative transition-colors ${checked ? "bg-[#1C1C1C]" : "bg-[#D8D3CB]"}`}
-      >
-        <span
-          className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${checked ? "right-1" : "left-1"}`}
-        />
-      </span>
-    </button>
-  );
-}
+  useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);
+  useEffect(() => {
+    const openChat = (event) => {
+      setChatPrefill(String(event.detail?.prompt || "").slice(0, 1200));
+      setActiveTab("chat");
+    };
+    window.addEventListener("atithi:open-chat", openChat);
+    return () => window.removeEventListener("atithi:open-chat", openChat);
+  }, []);
+  useEffect(() => { setMapFocusId(null); }, [destination.id]);
+  useEffect(() => {
+    if (activeTab !== "discover" || !mapFocusId) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("destination-map-container")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, mapFocusId]);
+  const planIds = useMemo(() => new Set(itinerary.map((item) => item.placeId)), [itinerary]);
+  const rankProfile = useMemo(() => ({
+    ...profile,
+    dailyBudget: {
+      ...profile.dailyBudget,
+      amount: profile.dailyBudget.amount !== null && profile.dailyBudget.currencyCode !== destination.currency.code
+        ? null
+        : profile.dailyBudget.amount
+    }
+  }), [profile, destination.currency.code]);
+  const buildPlan = () => setActiveTab("plan");
+  const showOnMap = (placeId) => {
+    if (!destination.places.some((place) => place.id === placeId)) return;
+    setMapFocusId(placeId);
+    setActiveTab("discover");
+  };
 
-function NavIcon({ icon: Icon, label, active, onClick }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-1 min-w-[64px]"
-    >
-      <Icon
-        size={22}
-        className={active ? "text-[#1C1C1C]" : "text-[#A39C93]"}
-      />
-      <span
-        className={`text-[10px] font-medium ${active ? "text-[#1C1C1C]" : "text-[#A39C93]"}`}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}
+  const goStart = () => {
+    saveStarted();
+    setStarted(true);
+    setActiveTab("home");
+  };
 
-// --- ADMIN DASHBOARD ---
-// Keeping the Admin Dashboard intact for the Demo controller
-function AdminDashboard({ weather, itinerary, showAIIntervention }) {
-  const isConflict =
-    weather === "rainy" && itinerary.some((i) => i.isVulnerableToWeather);
-  const isResolved = weather === "rainy" && itinerary.some((i) => i.aiAdjusted);
+  if (!started) return <><DemoModeBar/><WelcomeScreen destination={destination} destinations={destinations} selectDestination={selectDestination} onStart={goStart}/></>;
+  if (!profile.onboardingComplete) return <><DemoModeBar/><ProfileOnboarding destination={destination} onFinish={() => setActiveTab("home")}/></>;
 
-  return (
-    <div className="min-h-screen flex bg-[#F0ECE4]">
-      {/* Sidebar */}
-      <div className="w-64 bg-[#1C1C1C] text-white flex flex-col">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles size={20} className="text-[#BCA37F]" />
-            <span className="font-serif text-xl tracking-wide">Atithi AI</span>
-          </div>
-          <p className="text-white/50 text-xs">Hotel Command Center</p>
-        </div>
-
-        <div className="p-4 space-y-1 flex-1">
-          <SidebarItem icon={LayoutDashboard} label="Overview" active />
-          <SidebarItem icon={User} label="Active Guests" count={124} />
-          <SidebarItem
-            icon={Sparkles}
-            label="AI Control Center"
-            alert={isConflict}
-          />
-          <SidebarItem icon={Bell} label="Service Requests" count={12} />
-          <SidebarItem icon={CalendarDays} label="Bookings" />
-        </div>
+  return <main className="min-h-screen bg-bg pb-[calc(5.75rem+env(safe-area-inset-bottom))] text-text">
+    <DemoModeBar/>
+    <header className="sticky top-0 z-40 border-b border-border bg-surface/85 px-4 py-3 shadow-sm backdrop-blur-xl sm:px-6">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Go beyond the usual</span></span></button>
+        <div className="flex items-center gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-32 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-bold sm:max-w-48">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact/><a href={"tel:" + emergencyNumber} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-border px-2 py-2 text-xs font-extrabold text-text" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
       </div>
+    </header>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-8">
-        <header className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-2xl font-serif text-[#1C1C1C]">
-              AI Operations Dashboard
-            </h1>
-            <p className="text-[#6B655C]">
-              Real-time guest personalization overview
-            </p>
-          </div>
+    <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-7">
+      {activeTab === "home" && <div className="space-y-5">
+        <section className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-8" style={{ "--destination-accent": destination.themeColors.accent }}>
+          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/75">{destination.city} · {destination.country}</p>
+          <h1 className="deck-heading mt-3 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">{destination.greeting}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">A personalised travel companion for hidden places, local stories and experiences that make a destination feel personal.</p>
+          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold">Discover the unexpected <ArrowRight size={16}/></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold text-white">Build my day</button></div>
+        </section>
+        <WeatherPanel destination={destination} weather={weather} loading={weatherLoading} error={weatherError} formatNumber={formatNumber}/>
+        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="deck-heading font-serif text-2xl">A few places to begin</h2><p className="mt-1 text-xs text-muted">A changing mix of well-known landmarks and quieter corners.</p></div><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">All places <ArrowRight size={14}/></button></div>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">{[...destination.places].sort((a,b)=>Number(b.isHiddenGem)-Number(a.isHiddenGem)).slice(0,3).map((place)=><PlaceCard key={place.id} place={place} destination={destination} formatCurrency={formatCurrency} inPlan={planIds.has(place.id)} onAdd={addItineraryStop} onRemove={removeItineraryStop}/>)}</div><DemoNote/>
+        </section>
+        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Your plan</h2><p className="mt-1 text-xs text-muted">{formatNumber(itinerary.length, destination.locale)} places saved for this destination.</p></div><button type="button" onClick={() => setActiveTab("plan")} className="min-h-10 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white">Review plan</button></div>{itinerary.length > 0 ? <ol className="mt-3 space-y-2">{itinerary.slice(0,3).map((stop,index)=><li key={stop.id || stop.placeId} className="flex items-center gap-3 rounded-xl bg-bg p-3"><span className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">{stop.title}</span><span className="block text-[10px] text-muted">{niceWord(stop.bestTime || "any")}</span></span><button type="button" onClick={()=>removeItineraryStop(stop.id || stop.placeId)} className="min-h-9 rounded-lg border border-border px-2 text-xs">Remove</button></li>)}</ol> : <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">Save a place from Discover or build a suggested day to start your plan.</p>}</section>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><button type="button" onClick={() => setActiveTab("lens")} className="rounded-2xl border border-border bg-surface p-4 text-left hover:bg-surface-2"><Languages className="text-accent-text"/><h2 className="mt-2 font-serif text-xl">Translate what you see</h2><p className="mt-1 text-xs text-muted">Scan signs, menus and fare boards using Atithi Lens.</p></button><button type="button" onClick={() => setActiveTab("chat")} className="rounded-2xl border border-border bg-surface p-4 text-left hover:bg-surface-2"><MessageCircle className="text-accent-text"/><h2 className="mt-2 font-serif text-xl">Ask a travel question</h2><p className="mt-1 text-xs text-muted">Chat in your own language and explore ideas from this destination pack.</p></button></div>
+      </div>}
 
-          <div className="flex gap-4">
-            <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-[#E5E0D8] flex items-center gap-3">
-              <Thermometer size={18} className="text-[#8C857B]" />
-              <div className="flex flex-col">
-                <span className="text-xs text-[#8C857B] uppercase font-semibold">
-                  Live Weather
-                </span>
-                <span className="text-sm font-medium capitalize text-[#1C1C1C]">
-                  {weather} (Detecting Context)
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
+      {activeTab === "discover" && <DiscoverTab
+        destination={destination}
+        profile={rankProfile}
+        weather={weather}
+        itinerary={itinerary}
+        requests={requests}
+        addItineraryItem={addItineraryItem}
+        removeItineraryStop={removeItineraryStop}
+        addRequest={addRequest}
+        onShowOnMap={showOnMap}
+        focusPlaceId={mapFocusId}
+      />}
 
-        <div className="grid grid-cols-3 gap-6 mb-8">
-          <StatCard
-            title="Active AI Interventions"
-            value={isConflict ? "1" : "0"}
-            trend={isConflict ? "Requires attention" : "All clear"}
-            alert={isConflict}
-          />
-          <StatCard title="Auto-Resolved by AI" value="48" trend="+12% today" />
-          <StatCard
-            title="Guest Satisfaction (AI)"
-            value="4.9/5"
-            trend="Top 5% globally"
-          />
-        </div>
+      {activeTab === "plan" && <PlanTab/>}
 
-        <div className="grid grid-cols-3 gap-6">
-          <div className="col-span-2 bg-white rounded-2xl shadow-sm border border-[#E5E0D8] p-6">
-            <h2 className="text-lg font-serif mb-4 flex items-center gap-2">
-              <User size={18} /> Live Guest Activity
-            </h2>
-            <div className="space-y-4">
-              <div
-                className={`p-4 rounded-xl border ${isConflict ? "bg-red-50 border-red-100" : isResolved ? "bg-[#F9F8F6] border-[#BCA37F]" : "border-[#E5E0D8]"}`}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex gap-3 items-center">
-                    <div className="w-10 h-10 rounded-full bg-[#1C1C1C] text-white flex items-center justify-center font-serif">
-                      V
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-[#1C1C1C]">
-                        Virat Sharma{" "}
-                        <span className="text-xs font-normal text-[#8C857B] bg-[#F0ECE4] px-2 py-0.5 rounded ml-2">
-                          Room 402
-                        </span>
-                      </h3>
-                      <p className="text-xs text-[#6B655C]">
-                        VIP • Vegetarian • Wellness Focus
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {isConflict && (
-                  <div className="bg-white p-3 rounded-lg border border-red-100 mt-2">
-                    <div className="flex items-center gap-2 text-red-600 mb-1">
-                      <CloudRain size={16} />{" "}
-                      <span className="text-sm font-semibold">
-                        Weather Conflict Detected (4:00 PM)
-                      </span>
-                    </div>
-                    <p className="text-sm text-[#1C1C1C] mb-2">
-                      Outdoor Botanical Garden Walk compromised.
-                    </p>
-                  </div>
-                )}
-
-                {isResolved && (
-                  <div className="bg-white p-3 rounded-lg border border-[#E5E0D8] mt-2">
-                    <div className="flex items-center gap-2 text-[#1C1C1C] mb-1">
-                      <Check size={16} className="text-green-600" />{" "}
-                      <span className="text-sm font-semibold">
-                        Guest accepted AI Alternative
-                      </span>
-                    </div>
-                    <p className="text-sm text-[#6B655C]">
-                      Swapped 'Botanical Walk' for 'National Art Museum' due to
-                      rain.
-                    </p>
-                  </div>
-                )}
-
-                {!isConflict && !isResolved && (
-                  <div className="bg-[#F0ECE4] p-3 rounded-lg mt-2">
-                    <p className="text-sm text-[#6B655C]">
-                      Enjoying Private City Tour. Next: Lunch at The Courtyard.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {activeTab === "lens" && <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><LensTab onRequest={(request)=>addRequest({title:request.title,category:request.category,detail:request.detail})}/></section>}
+      {activeTab === "chat" && <ChatView key={destination.id} destination={destination} weather={weather} profile={rankProfile} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest} addItineraryItem={addItineraryItem} onShowOnMap={showOnMap} initialPrompt={chatPrefill} onPrefillConsumed={() => setChatPrefill("")}/>}
+      {activeTab === "profile" && <ProfileTab destination={destination} destinations={destinations} selectDestination={selectDestination} requests={requests} formatDate={formatDate}/> }
     </div>
-  );
-}
 
-function SidebarItem({ icon: Icon, label, active, count, alert }) {
-  return (
-    <button
-      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${active ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
-    >
-      <div className="flex items-center gap-3">
-        <Icon
-          size={18}
-          className={alert ? "text-red-400" : active ? "text-[#BCA37F]" : ""}
-        />
-        <span className="text-sm font-medium">{label}</span>
-      </div>
-      {count && (
-        <span className="bg-white/10 text-xs px-2 py-0.5 rounded-full">
-          {count}
-        </span>
-      )}
-      {alert && (
-        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-      )}
-    </button>
-  );
-}
-
-function StatCard({ title, value, trend, alert }) {
-  return (
-    <div
-      className={`bg-white rounded-2xl p-5 shadow-sm border ${alert ? "border-red-200" : "border-[#E5E0D8]"}`}
-    >
-      <h3 className="text-sm font-medium text-[#8C857B] mb-2">{title}</h3>
-      <div className="flex items-end justify-between">
-        <span
-          className={`text-3xl font-serif ${alert ? "text-red-600" : "text-[#1C1C1C]"}`}
-        >
-          {value}
-        </span>
-        <span
-          className={`text-xs font-medium px-2 py-1 rounded-md ${alert ? "bg-red-50 text-red-600" : "bg-[#F0ECE4] text-[#6B655C]"}`}
-        >
-          {trend}
-        </span>
-      </div>
-    </div>
-  );
+    <nav aria-label="Main navigation" className="bottom-nav-glass fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-50 rounded-2xl px-1.5 pt-1.5 pb-1.5 sm:inset-x-1/2 sm:w-[min(46rem,calc(100%-2rem))] sm:-translate-x-1/2">
+       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><button key={id} type="button" onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<Icon size={18} className="relative z-10"/><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></button>)}</div>
+     </nav>
+  </main>;
 }
