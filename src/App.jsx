@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowRight, CalendarClock, Check, ChevronRight, CircleHelp, Clock3, Coffee,
   Compass, Globe2, Map, MessageCircle, ShieldCheck, Sparkles, Utensils,
