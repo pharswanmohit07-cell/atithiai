@@ -400,7 +400,7 @@ export default function AtithiAI() {
   const [activeTab, setActiveTab] = useState("home");
   const [mapFocusId, setMapFocusId] = useState(null);
 
-  useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);
+  useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);\n  useEffect(() => {\n    const openChat = (event) => { setChatPrefill(String(event.detail?.prompt || "").slice(0, 1200)); setActiveTab("chat"); };\n    window.addEventListener("atithi:open-chat", openChat);\n    return () => window.removeEventListener("atithi:open-chat", openChat);\n  }, []);
   useEffect(() => { setMapFocusId(null); }, [destination.id]);
   useEffect(() => {
     if (activeTab !== "discover" || !mapFocusId) return undefined;
@@ -475,7 +475,7 @@ export default function AtithiAI() {
       {activeTab === "plan" && <PlanTab/>}
 
       {activeTab === "lens" && <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><LensTab onRequest={(request)=>addRequest({title:request.title,category:request.category,detail:request.detail})}/></section>}
-      {activeTab === "chat" && <ChatView key={destination.id} destination={destination} weather={weather} profile={rankProfile} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest} addItineraryItem={addItineraryItem} onShowOnMap={showOnMap}/>}
+      {activeTab === "chat" && <ChatView key={destination.id} destination={destination} weather={weather} profile={rankProfile} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest} addItineraryItem={addItineraryItem} onShowOnMap={showOnMap} initialPrompt={chatPrefill} onPrefillConsumed={() => setChatPrefill("")}/>}
       {activeTab === "profile" && <ProfileTab destination={destination} destinations={destinations} selectDestination={selectDestination} requests={requests} formatDate={formatDate}/> }
     </div>
 
