@@ -145,14 +145,14 @@ export default function RouteGuardCard({
   const demoEvent = disruption.source === "demo";
 
   return (
-    <section className="route-guard-alert-card overflow-hidden rounded-2xl border border-amber-300/80 bg-surface shadow-md dark:border-amber-800">
+    <section className="route-guard-alert-card hazard-alert overflow-hidden rounded-2xl border border-amber-300/80 bg-surface shadow-md dark:border-amber-800">
       <div className="flex items-start gap-3 border-b border-amber-300/60 bg-amber-50 p-4 dark:border-amber-800/60 dark:bg-amber-950/25">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"><AlertTriangle size={21}/></span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.15em] text-amber-900 dark:text-amber-200">Route Guard alert</p>
             {demoEvent
-              ? <span className="rounded-full bg-rose-100 px-2 py-1 text-[9px] font-extrabold tracking-wide text-rose-800 dark:bg-rose-950/60 dark:text-rose-200">DEMO EVENT</span>
+              ? <span className="demo-badge">DEMO EVENT</span>
               : <span className="rounded-full border border-border bg-surface px-2 py-1 text-[9px] font-bold text-muted">Live weather signal</span>}
           </div>
           <h2 className="mt-1 font-serif text-xl text-text">{disruption.type === "landslide" ? "Landslide scenario" : "Rain-related segment advisory"}</h2>
