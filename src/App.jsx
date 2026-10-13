@@ -61,6 +61,7 @@ import {
   House,
   ScanLine,
   Download,
+  WifiOff,
 } from "lucide-react";
 
 const SUNNY_ITINERARY = CORRIDOR_ITINERARY.map((item, index) => ({
@@ -142,6 +143,40 @@ const EXPERIENCES = [
     img: "https://images.unsplash.com/photo-1448375240586-882707db888b?q=85&w=1000&auto=format&fit=crop",
   },
 ];
+
+function NetworkStatusBanner() {
+  const { cachedDemoMode } = useAppContext();
+  const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  if (online && !cachedDemoMode) return null;
+  return (
+    <div role="status" aria-live="polite" className="fixed inset-x-0 top-0 z-[180] flex items-start gap-2 border-b border-amber-400 bg-amber-50 px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] text-xs font-medium text-amber-950 shadow-md dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
+      <WifiOff size={16} className="mt-0.5 shrink-0" />
+      <span>{!online
+        ? "Offline: live weather may be unavailable. Local fallbacks are available; enable cached demo mode to bypass AI requests."
+        : "Cached demo mode is enabled. AI endpoints are bypassed and local demo fallbacks are being used."}</span>
+    </div>
+  );
+}
+
+function shouldShowPlacesForMessage(message) {
+  const normalized = String(message || "").toLowerCase();
+  const negatesSuggestions = /\b(?:don't|do not|dont|never|no need to|stop)\b.{0,35}\b(?:show|suggest|recommend|display|find)\b.{0,25}\b(?:places|destinations|map|options)\b/i.test(normalized)
+    || /\b(?:don't|do not|dont)\s+(?:show|suggest|recommend)\b/i.test(normalized);
+  if (negatesSuggestions) return false;
+  return /where|place|destination|visit|explore|recommend|suggest|crowd|quiet|offbeat|trip|travel|route|what can i see|what to do/i.test(normalized);
+}
 
 function rankPlacesForChat(query = "", hintedIds = []) {
   const hints = new Set(Array.isArray(hintedIds) ? hintedIds : []);
@@ -244,6 +279,7 @@ export default function AtithiAI() {
     manualRainOverride, toggleManualRainOverride,
     disruptions, simulateLandslide, clearDemoEvents,
     updateRescuePassAltitude, rescuePassContext,
+    cachedDemoMode, setCachedDemoMode,
   } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
@@ -413,7 +449,8 @@ export default function AtithiAI() {
         detail: String(request.detail || "Safety report").includes("Corridor:")
           ? request.detail
           : `${request.detail || "Safety report"} · Corridor: ${selectedWaypoint?.name || "Selected route"}`,
-        status: "Received",
+        status: request.priority === "urgent" ? "URGENT · demo log only" : "Received",
+        priority: request.priority === "urgent" ? "urgent" : "normal",
         time: "Today, just now",
       },
       ...current,
@@ -431,6 +468,16 @@ export default function AtithiAI() {
       !String(action.id).startsWith("route-redirect-")
       && !String(action.id).startsWith("route-wait-")
     ));
+  };
+
+  const resetDemo = () => {
+    try {
+      localStorage.clear();
+    } catch {
+      // Reload still resets in-memory application state if storage is blocked.
+    }
+    const query = isDemoMode ? "?demo=1" : "";
+    window.location.assign(location.pathname + query);
   };
 
   useEffect(() => {
@@ -557,6 +604,7 @@ export default function AtithiAI() {
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans selection:bg-accent selection:text-text">
+      <NetworkStatusBanner />
       {appMode === "guest" ? (
         <GuestApp
           guest={user}
@@ -664,6 +712,10 @@ export default function AtithiAI() {
           onSimulateAscent={simulateAscent}
           selectedWaypoint={selectedWaypoint}
           onClearDemoEvents={handleClearRouteGuardDemo}
+          cachedDemoMode={cachedDemoMode}
+          setCachedDemoMode={setCachedDemoMode}
+          onResetDemo={resetDemo}
+          isDemoMode={isDemoMode}
         />
       )}
     </div>
@@ -1535,15 +1587,21 @@ function AITab({ onRequest, guest, preferences, weather, weatherObservation, sel
     setMessages((current) => [...current, { from: "guest", text: message }]);
     const lower = message.toLowerCase();
     let reply = "Tell me which corridor waypoint you are considering, or ask about an active disruption, a safer pause point or lower-crowd alternatives.";
-    if (/(hazard|landslide|roadblock|road block|unsafe|scam|overcharg|overpricing|suspicious fare)/i.test(message)) {
+    if (/(emergency|urgent help|112|call an ambulance|need an ambulance)/i.test(message)) {
+      onRequest({
+        title: "URGENT: Emergency assistance request",
+        category: "Emergency",
+        priority: "urgent",
+        detail: `Emergency message received: ${message}. Demo log only; no emergency services or contacts were notified. Call 112 in India for immediate danger.`,
+      });
+      reply = "I logged an urgent demo request for the officer view, but this app cannot dispatch help. If there is immediate danger in India, call 112 now.";
+    } else if (/(hazard|landslide|roadblock|road block|unsafe|scam|overcharg|overpricing|suspicious fare)/i.test(message)) {
       onRequest({
         title: "Safety concern reported",
         category: "Trip safety",
         detail: message,
       });
       reply = "I logged this concern in the demo Trip Guardian report list for follow-up. This does not alert emergency services or verify the report; check current local guidance before proceeding.";
-    } else if (/(emergency|urgent help|112)/i.test(message)) {
-      reply = "If you or someone else is in immediate danger in India, call 112 now. This chat is not an emergency dispatch service.";
     } else if (/(weather|rain|temperature|wind|forecast)/i.test(message)) {
       reply = weatherObservation
         ? `The latest Open-Meteo observation supplied to this chat is for ${selectedWaypoint?.name || "the selected corridor waypoint"}: ${weatherObservation.temperatureC}°C, ${weatherObservation.condition}, rain ${weatherObservation.rainMm} mm, wind ${weatherObservation.windSpeedKmh ?? "unavailable"} km/h. Forecast data cannot confirm road safety or route access.`
@@ -1555,14 +1613,18 @@ function AITab({ onRequest, guest, preferences, weather, weatherObservation, sel
     }
     setDraft("");
     let finalReply = reply;
-    const shouldShowPlaces = /where|place|destination|visit|explore|recommend|suggest|crowd|quiet|offbeat|trip|travel|route|what can i see|what to do/i.test(message);
+    const shouldShowPlaces = shouldShowPlacesForMessage(message);
     let finalAction = shouldShowPlaces
       ? { type: "show_places", placeIds: lowCrowdPlaces.slice(0, 5).map((place) => place.id).filter(Boolean) }
       : { type: "none", placeIds: [] };
-    try {
-      const response = await fetch("/api/chat", {
+    if (!cachedDemoMode) {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 5500);
+      try {
+        const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           message,
           context: {
@@ -1586,8 +1648,11 @@ function AITab({ onRequest, guest, preferences, weather, weatherObservation, sel
           };
         }
       }
-    } catch {
-      // Keep a local concierge response when the serverless function is unavailable.
+      } catch {
+        // Keep the local concierge response when offline, slow, or the serverless function is unavailable.
+      } finally {
+        window.clearTimeout(timeout);
+      }
     }
     setMessages((current) => [...current, { from: "concierge", text: finalReply, query: message, action: finalAction }]);
   };
