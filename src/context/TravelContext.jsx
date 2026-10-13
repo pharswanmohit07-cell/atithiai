@@ -25,6 +25,12 @@ function readStored(key, fallback) {
 function writeStored(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Keep session state if storage is unavailable. */ }
 }
+function readPlan(key) {
+  const value = readStored(key, []);
+  return Array.isArray(value)
+    ? value.filter((item) => item && typeof item.id === "string" && ITEM_TYPES.has(item.itemType)).slice(0, 12)
+    : [];
+}
 function newId() {
   return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
@@ -49,7 +55,7 @@ export function TravelProvider({ children }) {
   const planMetaDestinationRef = useRef(destination.id);
   const skipNextPlanWrite = useRef(false);
   const skipNextMetaWrite = useRef(false);
-  const [itinerary, setItinerary] = useState(() => readStored(PLAN_PREFIX + destination.id, []).filter((item) => item && typeof item.id === "string" && typeof item.itemType === "string"));
+  const [itinerary, setItinerary] = useState(() => readPlan(PLAN_PREFIX + destination.id));
   const [planMeta, setPlanMeta] = useState(() => {
     const stored = readStored(PLAN_META_PREFIX + destination.id, {});
     return { activeDisruption: stored?.activeDisruption && typeof stored.activeDisruption === "object" ? stored.activeDisruption : null, changeLog: Array.isArray(stored?.changeLog) ? stored.changeLog.filter((item) => item && typeof item.message === "string").slice(0, 40) : [] };
@@ -68,7 +74,7 @@ export function TravelProvider({ children }) {
     planMetaDestinationRef.current = destination.id;
     skipNextPlanWrite.current = true;
     skipNextMetaWrite.current = true;
-    setItinerary(readStored(PLAN_PREFIX + destination.id, []).filter((item) => item && typeof item.id === "string" && typeof item.itemType === "string").slice(0, 12));
+    setItinerary(readPlan(PLAN_PREFIX + destination.id));
     const savedMeta = readStored(PLAN_META_PREFIX + destination.id, {});
     setPlanMeta({ activeDisruption: savedMeta?.activeDisruption && typeof savedMeta.activeDisruption === "object" ? savedMeta.activeDisruption : null, changeLog: Array.isArray(savedMeta?.changeLog) ? savedMeta.changeLog.filter((item) => item && typeof item.message === "string").slice(0, 40) : [] });
     const destinationRequests = readStored(REQUESTS_PREFIX + destination.id, [])
