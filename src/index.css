@@ -101,6 +101,14 @@ button, a, [role="button"] {
   touch-action: manipulation;
 }
 
+button {
+  min-height: 44px;
+}
+
+button[aria-label] {
+  min-width: 44px;
+}
+
 :focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
