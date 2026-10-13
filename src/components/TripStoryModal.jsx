@@ -243,7 +243,7 @@ export default function TripStoryModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[1000] flex items-end justify-center bg-[#111b17]/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-[1000] flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -271,70 +271,70 @@ export default function TripStoryModal({
               <div className="mx-auto origin-top" style={{ width: STORY_WIDTH * previewScale, height: STORY_HEIGHT * previewScale }}>
                 <motion.div
                   ref={storyRef}
-                  className="trip-story-art relative flex h-[640px] w-[360px] flex-col overflow-hidden text-[#2B342A]"
+                  className="trip-story-art relative flex h-[640px] w-[360px] flex-col overflow-hidden text-white"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.55, ease: "easeOut" } }}
                   style={{
-                    background: "linear-gradient(160deg, #FCE5BD 0%, #F6C6AB 25%, #EDB5B0 48%, #F4D7BE 70%, #FCF0D8 100%)",
-                    boxShadow: "0 18px 44px rgba(95, 59, 41, .16)",
+                    background: "linear-gradient(160deg, rgb(var(--brand-rgb)) 0%, rgb(var(--indigo-rgb)) 42%, rgb(var(--coral-rgb)) 74%, rgb(var(--accent-rgb)) 130%)",
+                    boxShadow: "0 18px 44px rgb(var(--brand-rgb) / .28)",
                     transform: `scale(${previewScale})`,
                     transformOrigin: "top left",
                   }}
                 >
                   <div className="pointer-events-none absolute -right-14 -top-9 h-52 w-52 rounded-full border border-white/45" />
-                  <div className="pointer-events-none absolute -right-5 top-0 h-36 w-36 rounded-full bg-[#FFEBC2]/85 shadow-[0_0_70px_rgba(255,232,173,.7)]" />
-                  <div className="pointer-events-none absolute -left-16 top-[245px] h-44 w-[490px] rounded-[50%] bg-[#647A61]/35 blur-[1px]" />
-                  <div className="pointer-events-none absolute -bottom-10 -left-12 h-[220px] w-[510px] rounded-[50%] bg-[#344D40]/95" />
-                  <div className="pointer-events-none absolute -bottom-20 -right-24 h-[250px] w-[450px] rounded-[50%] bg-[#243F35]/90" />
-                  <div className="pointer-events-none absolute bottom-[100px] -left-16 h-36 w-[420px] rotate-[-8deg] rounded-[50%] bg-[#415E4A]/90" />
+                  <div className="pointer-events-none absolute -right-5 top-0 h-36 w-36 rounded-full bg-saffron/35 shadow-[0_0_70px_rgba(255,232,173,.7)]" />
+                  <div className="pointer-events-none absolute -left-16 top-[245px] h-44 w-[490px] rounded-[50%] bg-teal/45 blur-[1px]" />
+                  <div className="pointer-events-none absolute -bottom-10 -left-12 h-[220px] w-[510px] rounded-[50%] bg-brand/95" />
+                  <div className="pointer-events-none absolute -bottom-20 -right-24 h-[250px] w-[450px] rounded-[50%] bg-indigo/90" />
+                  <div className="pointer-events-none absolute bottom-[100px] -left-16 h-36 w-[420px] rotate-[-8deg] rounded-[50%] bg-teal/90" />
                   <div className="relative z-10 flex h-full flex-col px-7 pb-5 pt-7">
                     <div className="flex items-center justify-between">
-                      <span className="rounded-full border border-[#394A3A]/20 bg-white/30 px-3 py-1.5 text-[8px] font-extrabold uppercase tracking-[0.22em]">Atithi AI · Trip Guardian</span>
+                      <span className="rounded-full border border-white/25 bg-white/30 px-3 py-1.5 text-[8px] font-extrabold uppercase tracking-[0.22em]">Atithi AI · Trip Guardian</span>
                       <span className="text-[9px] font-semibold tracking-wide">01 / HIMALAYAS</span>
                     </div>
-                    <p className="mt-8 text-[9px] font-extrabold uppercase tracking-[0.28em] text-[#655542]">{dateLabel}</p>
+                    <p className="mt-8 text-[9px] font-extrabold uppercase tracking-[0.28em] text-white/85">{dateLabel}</p>
                     <h1 className="mt-2 max-w-[295px] font-serif text-[37px] font-semibold leading-[0.98] tracking-[-0.04em]">A day well<br/><span className="italic">wandered.</span></h1>
-                    <p className="mt-3 max-w-[280px] text-[13px] font-medium leading-relaxed text-[#4B5546]">A little less rush. A little more wonder.</p>
+                    <p className="mt-3 max-w-[280px] text-[13px] font-medium leading-relaxed text-white/85">A little less rush. A little more wonder.</p>
 
                     <div className="mt-4 flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/55 bg-white/30 text-sm font-bold">{guestName.slice(0, 1).toUpperCase()}</div>
-                      <div className="min-w-0"><p className="truncate text-[12px] font-extrabold">{guestName}</p><p className="text-[9px] font-medium text-[#5F6250]">{weatherLabel} · Dehradun & the hills</p></div>
+                      <div className="min-w-0"><p className="truncate text-[12px] font-extrabold">{guestName}</p><p className="text-[9px] font-medium text-white/75">{weatherLabel} · Dehradun & the hills</p></div>
                     </div>
 
-                    <div className="mt-4 rounded-2xl border border-white/45 bg-[#FFF9F0]/75 p-3.5 shadow-sm backdrop-blur-sm">
+                    <div className="mt-4 rounded-2xl border border-white/45 bg-brand/55 p-3.5 shadow-sm backdrop-blur-sm">
                       <div className="mb-2 flex items-center justify-between">
-                        <p className="text-[8px] font-extrabold uppercase tracking-[0.2em] text-[#58654D]">Today's highlights</p>
+                        <p className="text-[8px] font-extrabold uppercase tracking-[0.2em] text-white/90">Today's highlights</p>
                         <Sparkles size={13}/>
                       </div>
                       {highlights.length ? highlights.map((item, index) => (
-                        <div key={`${item.title}-${index}`} className="flex gap-2.5 border-t border-[#756E58]/15 py-2 first:border-0">
-                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#435B45] text-[9px] font-bold text-white">{index + 1}</span>
-                          <div className="min-w-0"><p className="text-[10px] font-extrabold leading-snug">{item.title}</p>{item.detail && <p className="mt-0.5 line-clamp-1 text-[8px] leading-snug text-[#686858]">{item.detail}</p>}</div>
+                        <div key={`${item.title}-${index}`} className="flex gap-2.5 border-t border-white/20 py-2 first:border-0">
+                          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">{index + 1}</span>
+                          <div className="min-w-0"><p className="text-[10px] font-extrabold leading-snug">{item.title}</p>{item.detail && <p className="mt-0.5 line-clamp-1 text-[8px] leading-snug text-white/80">{item.detail}</p>}</div>
                         </div>
                       )) : <p className="py-2 text-[10px]">A few memorable moments, still to come.</p>}
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <div className="rounded-2xl border border-white/35 bg-[#203D32]/90 p-3 text-white">
-                        <Leaf size={15} className="mb-2 text-[#D9E5B4]"/>
+                      <div className="rounded-2xl border border-white/35 bg-brand/85 p-3 text-white">
+                        <Leaf size={15} className="mb-2 text-saffron"/>
                         <p className="text-[7px] font-bold uppercase tracking-[0.14em] text-white/65">Local spend</p>
                         <p className="mt-0.5 font-serif text-[22px] leading-tight">₹{INR.format(metrics.spend)}</p>
                         <p className="mt-1 text-[7px] text-white/65">Estimated in local places</p>
                       </div>
-                      <div className="rounded-2xl border border-white/45 bg-[#FFF8E9]/90 p-3">
-                        <Sun size={15} className="mb-2 text-[#9A5E38]"/>
-                        <p className="text-[7px] font-bold uppercase tracking-[0.14em] text-[#68614E]">Low-crowd picks</p>
+                      <div className="rounded-2xl border border-white/45 bg-white/90 text-text p-3">
+                        <Sun size={15} className="mb-2 text-coral"/>
+                        <p className="text-[7px] font-bold uppercase tracking-[0.14em] text-brand">Low-crowd picks</p>
                         <p className="mt-0.5 font-serif text-[22px] leading-tight">{metrics.lowCrowdPicks}</p>
-                        <p className="mt-1 text-[7px] text-[#68614E]">Quieter choices · estimated</p>
+                        <p className="mt-1 text-[7px] text-brand">Quieter choices · estimated</p>
                       </div>
                     </div>
 
-                    <div className="mt-auto rounded-2xl border border-white/35 bg-[#FFF7E9]/75 px-3 py-2.5">
+                    <div className="mt-auto rounded-2xl border border-white/35 bg-white/90 text-text px-3 py-2.5">
                       <p className="font-serif text-[12px] italic leading-snug">{displayedCaption[0]}</p>
                       <p className="mt-1 font-serif text-[11px] italic leading-snug">{displayedCaption[1]}</p>
-                      <div className="mt-2 flex items-center justify-between border-t border-[#5C6654]/15 pt-2">
+                      <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2">
                         <span className="text-[7px] font-extrabold uppercase tracking-[0.18em]">Travel gently · Leave good behind</span>
-                        <span className="text-[9px] font-black tracking-tight">atithi<span className="text-[#B56C4D]">.ai</span></span>
+                        <span className="text-[9px] font-black tracking-tight">atithi<span className="text-coral">.ai</span></span>
                       </div>
                     </div>
                   </div>
