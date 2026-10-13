@@ -85,7 +85,7 @@ const RescuePass = forwardRef(function RescuePass({
     soft: "#183B46", warm: "#352E21", warmText: "#FFD487", warmMuted: "#E8CFA8",
   } : {
     page: "#F1F3EE", card: "#FFFFFF", cardAlt: "#FAFCFA", text: "#192F2C", muted: "#4A625E",
-    border: "#BFD0C7", borderAccent: passColors.borderAccent, brand: "#10434F", brandText: "#174D52",
+    border: "#BFD0C7", borderAccent: "#B8D1BE", brand: "#10434F", brandText: "#174D52",
     accent: "#C78A25", accentText: "#765018", headerMuted: "#DBE9E4", panel: "#EDF3EF",
     soft: "#E4F0EC", warm: "#FFF0D7", warmText: "#765018", warmMuted: "#795D36",
   };
