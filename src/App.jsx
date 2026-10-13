@@ -388,6 +388,19 @@ export default function AtithiAI() {
     ]);
   };
 
+  const handleClearRouteGuardDemo = () => {
+    clearDemoEvents();
+    setDetourVillage(null);
+    setRouteActions([]);
+    setReroutesAccepted(0);
+    setRouteSpendINR(0);
+    setItinerary(SUNNY_ITINERARY);
+    setActionsLog((current) => current.filter((action) =>
+      !String(action.id).startsWith("route-redirect-")
+      && !String(action.id).startsWith("route-wait-")
+    ));
+  };
+
   useEffect(() => {
     if (
       weather === "rainy" &&
@@ -602,7 +615,7 @@ export default function AtithiAI() {
           isRainOverride={manualRainOverride}
           onToggleWeather={toggleManualRainOverride}
           onSimulateLandslide={simulateLandslide}
-          onClearDemoEvents={clearDemoEvents}
+          onClearDemoEvents={handleClearRouteGuardDemo}
         />
       )}
     </div>
