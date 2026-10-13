@@ -43,6 +43,12 @@ function formatDateTime(value) {
   return date.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 }
 
+function formatTripDate(value) {
+  const date = new Date(value + "T12:00:00");
+  if (Number.isNaN(date.getTime())) return "Date not set";
+  return date.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
 function normalizeItinerary(itinerary = []) {
   return itinerary.slice(0, 8).map((item, index) => ({
     day: item.dayLabel || (item.day ? "DAY " + item.day : "STOP " + (index + 1)),
@@ -92,8 +98,8 @@ const RescuePass = forwardRef(function RescuePass({
   const itinerary = useMemo(() => normalizeItinerary(tripItinerary), [tripItinerary]);
   const latestActions = useMemo(() => normalizeActions(actions), [actions]);
   const tripDates = startDate || endDate
-    ? (startDate ? formatDateTime(startDate + "T12:00:00").split(",")[0] : "Date not set")
-      + " — " + (endDate ? formatDateTime(endDate + "T12:00:00").split(",")[0] : "Date not set")
+    ? (startDate ? formatTripDate(startDate) : "Date not set")
+      + " — " + (endDate ? formatTripDate(endDate) : "Date not set")
     : "Trip dates not entered";
 
   const passData = useMemo(() => ({
