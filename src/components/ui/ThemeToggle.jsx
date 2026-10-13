@@ -23,7 +23,7 @@ export default function ThemeToggle({ className = "", compact = false }) {
       onClick={() => setTheme(nextTheme)}
       aria-label={`${detail.label}. Switch to ${nextLabel.toLowerCase()}.`}
       title={`${detail.label} · Click for ${nextLabel.toLowerCase()}`}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-surface/90 text-text shadow-sm backdrop-blur transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${compact ? "h-10 w-10" : "h-11 w-11"} ${className}`}
+      className={`inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-border bg-surface/90 text-text shadow-sm backdrop-blur transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${className}`}
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span
