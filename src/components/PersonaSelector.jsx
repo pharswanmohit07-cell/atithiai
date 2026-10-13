@@ -4,18 +4,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, HeartPulse, Mountain, ShieldCheck, Users } from "lucide-react";
 import { PERSONA_OPTIONS, useAppContext } from "../context/AppContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import IconBadge from "./ui/IconBadge.jsx";
 
 const ICONS = {
   pilgrim: HeartPulse,
   trekker: Mountain,
   "tourism-officer": ShieldCheck,
 };
-const TONES = {
-  pilgrim: "from-rose-100 to-amber-100 dark:from-rose-950/50 dark:to-amber-950/40",
-  trekker: "from-emerald-100 to-teal-100 dark:from-emerald-950/50 dark:to-teal-950/40",
-  "tourism-officer": "from-sky-100 to-indigo-100 dark:from-sky-950/50 dark:to-indigo-950/40",
-};
-
 export default function PersonaSelector() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,7 +60,7 @@ export default function PersonaSelector() {
                 whileTap={{ scale: .99 }}
                 className="group flex min-h-[300px] flex-col rounded-[28px] border border-border bg-surface/90 p-5 text-left shadow-sm transition-shadow hover:shadow-xl sm:p-6"
               >
-                <span className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${TONES[option.id]} text-text`}><Icon size={25}/></span>
+                <IconBadge icon={Icon} tone={isPilgrim ? "coral" : isOfficer ? "sky" : "emerald"} size="lg" />
                 <span className="mt-5 flex items-start justify-between gap-2">
                   <span><span className="block font-serif text-2xl sm:text-3xl">{option.name}</span><span className="mt-1 block text-[11px] font-semibold text-accent-text">{option.description}</span></span>
                   <ArrowRight size={18} className="mt-1 shrink-0 text-muted transition-transform group-hover:translate-x-1"/>
