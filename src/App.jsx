@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
@@ -10,6 +10,7 @@ import DemoControls from "./components/DemoControls.jsx";
 import RouteMap from "./components/RouteMap.jsx";
 import AltitudeSentinel from "./components/AltitudeSentinel.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
+import RescuePass from "./components/RescuePass.jsx";
 import RouteGuardCard, { ActionsTakenByAtithi } from "./components/RouteGuardCard.jsx";
 import {
   ActionsTakenLog,
@@ -59,6 +60,7 @@ import {
   PhoneCall,
   House,
   ScanLine,
+  Download,
 } from "lucide-react";
 
 const SUNNY_ITINERARY = CORRIDOR_ITINERARY.map((item, index) => ({
@@ -241,7 +243,7 @@ export default function AtithiAI() {
     weather, weatherSource, weatherObservation, weatherLoading, weatherError,
     manualRainOverride, toggleManualRainOverride,
     disruptions, simulateLandslide, clearDemoEvents,
-    updateRescuePassAltitude,
+    updateRescuePassAltitude, rescuePassContext,
   } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
@@ -261,6 +263,23 @@ export default function AtithiAI() {
   const [requests, setRequests] = useState(() =>
     INITIAL_REQUESTS,
   );
+  const rescuePassRef = useRef(null);
+  const rescuePassActions = useMemo(
+    () => [...routeActions, ...actionsLog].slice(0, 4),
+    [routeActions, actionsLog],
+  );
+
+  useEffect(() => {
+    if (!isDemoMode) return undefined;
+    const handleRescuePassHotkey = (event) => {
+      if (event.altKey && event.key.toLowerCase() === "p") {
+        event.preventDefault();
+        rescuePassRef.current?.openPreview();
+      }
+    };
+    window.addEventListener("keydown", handleRescuePassHotkey);
+    return () => window.removeEventListener("keydown", handleRescuePassHotkey);
+  }, [isDemoMode]);
 
   const simulateAscent = () => {
     const index = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === selectedWaypointId);
@@ -554,6 +573,8 @@ export default function AtithiAI() {
           onRouteReroute={handleRouteReroute}
           onKeepWaiting={handleKeepWaiting}
           onAltitudeAdvisoryChange={updateRescuePassAltitude}
+          onExportRescuePass={() => rescuePassRef.current?.exportPass()}
+          onPreviewRescuePass={() => rescuePassRef.current?.openPreview()}
           lowCrowdPlaces={lowCrowdContext}
           actionsLog={actionsLog}
           crowdSelectionIds={crowdSelectionIds}
@@ -613,6 +634,17 @@ export default function AtithiAI() {
           staffUser={user}
         />
       )}
+
+      <RescuePass
+        ref={rescuePassRef}
+        traveler={user}
+        persona={persona}
+        tripItinerary={itinerary}
+        currentWaypoint={selectedWaypoint}
+        altitudeAdvisoryLevel={rescuePassContext?.altitudeLevel}
+        healthTags={persona?.healthTags || []}
+        actions={rescuePassActions}
+      />
 
       {isDemoMode && (
         <DemoControls
@@ -715,6 +747,8 @@ function GuestApp(props) {
                   onRequest={props.addRequest}
                   setActiveTab={setActiveTab}
                   selectedWaypoint={props.selectedWaypoint}
+                  onExportRescuePass={props.onExportRescuePass}
+                  onPreviewRescuePass={props.onPreviewRescuePass}
                 />
               </motion.div>
             )}
@@ -785,6 +819,7 @@ function HomeTab({
   onAltitudeAdvisoryChange,
   guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
   itinerary, showAIIntervention, isResolving, acceptAlternative, keepOriginal, addRequest, setActiveTab,
+  onExportRescuePass, onPreviewRescuePass,
 }) {
   const [tripStoryOpen, setTripStoryOpen] = useState(false);
   const currentPlan = itinerary.find((item) => item.status === "current");
@@ -913,6 +948,22 @@ function HomeTab({
           />
         )}
         <ActionsTakenByAtithi actions={routeActions} />
+
+        <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-accent-text"><ShieldCheck size={19}/></span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent-text">Offline Rescue Pass</p>
+              <h2 className="mt-1 font-serif text-xl text-text">Keep your trip details handy.</h2>
+              <p className="mt-1 text-xs leading-relaxed text-muted">Export a travel summary with waypoint, altitude advisory, demo health tags and recent Atithi actions.</p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={onExportRescuePass} className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-3 text-xs font-bold text-white"><Download size={15}/> Export Rescue Pass</button>
+            <button type="button" onClick={onPreviewRescuePass} className="rounded-xl border border-border bg-surface-2 px-3 py-3 text-xs font-semibold text-text">Preview</button>
+          </div>
+          <p className="mt-2 text-[10px] leading-relaxed text-muted">Works offline after export. Save this image to your gallery; it needs no internet.</p>
+        </section>
 
         <div className="grid grid-cols-2 gap-2.5">
           <button
@@ -1623,7 +1674,7 @@ function AITab({ onRequest, guest, preferences, weather, weatherObservation, sel
   );
 }
 
-function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint, persona }) {
+function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint, persona, onExportRescuePass, onPreviewRescuePass }) {
   const [panel, setPanel] = useState("");
   const [hazardType, setHazardType] = useState("Road obstruction");
   const [hazardDetails, setHazardDetails] = useState("");
@@ -1632,6 +1683,8 @@ function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint,
     { name: "Emergency (112)", detail: "Call India’s unified emergency response number.", icon: PhoneCall, tone: "coral", href: "tel:112" },
     { name: "Find homestay", detail: "Explore clearly labelled demo village ideas; no bookings.", icon: House, tone: "emerald", onClick: () => setActiveTab("discover") },
     { name: "Scan a price (Lens)", detail: "Read visible prices and spot questions to clarify.", icon: ScanLine, tone: "violet", onClick: () => setPanel("lens") },
+    { name: "Export Rescue Pass", detail: "Save your traveller, itinerary and safety summary.", icon: Download, tone: "teal", onClick: onExportRescuePass },
+    { name: "Preview Rescue Pass", detail: "Check your dates and emergency contact before saving.", icon: ShieldCheck, tone: "teal", onClick: onPreviewRescuePass },
   ];
 
   return (
@@ -1655,7 +1708,7 @@ function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint,
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-2 text-accent-text"><Icon size={20}/></span>
               <h2 className="mt-4 text-sm font-bold text-text">{action.name}</h2>
               <p className="mt-1 text-xs leading-relaxed text-muted">{action.detail}</p>
-              <span className="mt-4 inline-flex items-center gap-1 text-[10px] font-bold text-accent-text">{action.name === "Emergency (112)" ? "Call 112" : action.name === "Find homestay" ? "See demo villages" : "Open tool"} <ChevronRight size={13}/></span>
+              <span className="mt-4 inline-flex items-center gap-1 text-[10px] font-bold text-accent-text">{action.name === "Emergency (112)" ? "Call 112" : action.name === "Find homestay" ? "See demo villages" : action.name === "Export Rescue Pass" ? "Download pass" : action.name === "Preview Rescue Pass" ? "Preview pass" : "Open tool"} <ChevronRight size={13}/></span>
             </>
           );
           const classes = "flex min-h-[170px] flex-col rounded-2xl border border-border bg-surface p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent hover:shadow-md";
