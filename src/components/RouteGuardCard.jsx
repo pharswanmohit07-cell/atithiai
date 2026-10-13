@@ -173,7 +173,7 @@ export default function RouteGuardCard({
         <div>
           <div className="mb-3 flex items-start justify-between gap-2">
             <div><h3 className="font-serif text-lg text-text">Potential pause options</h3><p className="mt-1 text-[10px] leading-relaxed text-muted">Nearest ranked illustrative village areas. Not verified safe, real accommodation, or bookable.</p></div>
-            <span className="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[8px] font-extrabold uppercase text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">Demo listing</span>
+            <span className="demo-badge shrink-0">Demo listing</span>
           </div>
           <div className="space-y-3">
             {nearestSafe.slice(0, 2).map((village, index) => (
@@ -183,7 +183,7 @@ export default function RouteGuardCard({
                   <div className="min-w-0 flex-1">
                     <h4 className="text-sm font-semibold text-text">{village.name}</h4>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      <span className="rounded-full border border-amber-300 bg-amber-100 px-2 py-1 text-[8px] font-extrabold uppercase text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">Demo listing</span>
+                      <span className="demo-badge">Demo listing</span>
                       {persona?.id === "pilgrim" && <span className="rounded-full bg-surface-2 px-2 py-1 text-[8px] font-semibold text-muted">Lower elevation considered</span>}
                     </div>
                     <p className="mt-2 text-[10px] leading-relaxed text-muted">Approx. {village.elevationM} m · ₹{village.localSpendINR} local spend · Estimated</p>
