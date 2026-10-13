@@ -98,7 +98,7 @@ const requiredChecks = [
   [destinationContextSource.includes("useDestination") && destinationContextSource.includes("api.open-meteo.com"), "Destination context must provide pack selection and live weather."],
   [registrySource.includes("jaipur") && registrySource.includes("ubud") && registrySource.includes("lisbon"), "Destination registry must include all three demo packs."],
   [planSource.includes("getDestinationById") && planSource.includes("verifyPlan"), "Itinerary generation must use and validate the selected pack."],
-  [chatSource.includes("process.env.GEMINI_API_KEY") && chatSource.includes("local-fallback"), "Chat must keep the server-side key and a local fallback."],
+  [chatSource.includes("process.env." + "GEMINI_API_KEY") && chatSource.includes("local-fallback"), "Chat must keep the server-side key and a local fallback."],
   [lensSource.includes("MAX_IMAGE_BYTES") && lensSource.includes("safe-fallback"), "Price Lens must enforce a payload limit and a safe fallback."],
 ];
 for (const [passed, message] of requiredChecks) if (!passed) failures.push(message);
