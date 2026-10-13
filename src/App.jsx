@@ -1786,7 +1786,7 @@ function AdminDashboard({
             </div>
             <ThemeToggle compact />
             <span className="hidden text-xs text-muted lg:inline">{persona?.name || staffUser?.name || "Tourism Officer"} · Demo profile</span>
-            <button type="button" onClick={onSwitchPersona} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-2"><Users size={15}/> Switch persona</button>
+            <button type="button" onClick={onSwitchPersona} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-2"><User size={15}/> Switch persona</button>
           </div>
         </header>
 
