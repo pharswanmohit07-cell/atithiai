@@ -16,6 +16,7 @@ import {
 import IconBadge from "./components/ui/IconBadge.jsx";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import PlacesMap from "./components/PlacesMap.jsx";
+import TripStoryModal from "./components/TripStoryModal.jsx";
 import {
   Sun,
   CloudRain,
@@ -47,6 +48,7 @@ import {
   Send,
   X,
   LogOut,
+  Share2,
 } from "lucide-react";
 
 const SUNNY_ITINERARY = [
@@ -652,6 +654,7 @@ function HomeTab({
   addRequest,
   setActiveTab,
 }) {
+  const [tripStoryOpen, setTripStoryOpen] = useState(false);
   const currentPlan = itinerary.find((item) => item.status === "current");
   return (
     <>
@@ -974,6 +977,28 @@ function HomeTab({
           </div>
         </div>
 
+        <motion.section
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12, duration: 0.4 }}
+          className="relative overflow-hidden rounded-2xl border border-border bg-surface p-4 shadow-sm"
+        >
+          <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-accent/15 blur-2xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F5D5A2] to-[#D88972] text-[#273D31]">
+              <Share2 size={19} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-accent-text">Keep the feeling</p>
+              <h2 className="mt-0.5 font-serif text-xl text-text">Your day, beautifully told.</h2>
+              <p className="mt-1 text-xs leading-relaxed text-muted">Turn your route and quieter local discoveries into a story worth sharing.</p>
+            </div>
+          </div>
+          <button type="button" onClick={() => setTripStoryOpen(true)} className="relative mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-xs font-bold text-white shadow-sm transition hover:opacity-90">
+            <Share2 size={15} /> Share your journey
+          </button>
+        </motion.section>
+
         <div className="pt-4 border-t border-border">
           <h2 className="font-serif text-2xl text-text mb-4">
             Local food & rest
@@ -1007,6 +1032,15 @@ function HomeTab({
           </div>
         </div>
       </div>
+      <TripStoryModal
+        open={tripStoryOpen}
+        onClose={() => setTripStoryOpen(false)}
+        guest={guest}
+        preferences={preferences}
+        weather={weather}
+        itinerary={itinerary}
+        crowdSelectionIds={crowdSelectionIds}
+      />
     </>
   );
 }
