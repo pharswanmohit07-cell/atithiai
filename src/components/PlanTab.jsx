@@ -8,7 +8,7 @@ import { rankDishes, rankExperiences, rankPlaces } from "../lib/rank.js";
 import { useDestination } from "../context/DestinationContext.jsx";
 import { useProfile } from "../context/ProfileContext.jsx";
 import { useTravelContext } from "../context/TravelContext.jsx";
-import DemoControls from "./DemoControls.jsx";
+import DemoControls from "./DemoControls.jsx";\nimport IconBadge from "./ui/IconBadge.jsx";
 
 const FLOW = [
   { id: "planned", label: "Planned route" },
