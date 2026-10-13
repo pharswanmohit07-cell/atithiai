@@ -12,7 +12,7 @@ import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import StayPass from "./components/StayPass.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
 import FlexStayCard from "./components/guest/FlexStayCard.jsx";
-import FlexStayApprovalPanel from "./components/FlexStayApprovalPanel.jsx";
+import AdminDashboard from "./components/AdminDashboard.jsx";
 import { detectChatIntent } from "./lib/chatIntents.js";
 import { evaluateFlexStay } from "./lib/flexStay.js";
 import { getDailyHotelState } from "./data/hotelState.js";
@@ -155,7 +155,7 @@ function ServiceView({ destination, formatCurrency, addRequest }) {
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white"><Compass size={20} /></span><div><h2 className="font-serif text-xl">Local experiences</h2><p className="text-xs text-muted">Curated ideas; not confirmed partners or bookings.</p></div></div>
         <button type="button" onClick={() => setShowExperiences((value) => !value)} className="mt-3 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm font-semibold text-text">{showExperiences ? "Hide experiences" : "Browse Demo listings"}</button>
-        {showExperiences && <div className="mt-3 space-y-2">{destination.experiences.map((experience) => <article key={experience.id} className="rounded-xl border border-border bg-bg p-3"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-bold">{experience.name}</h3><span className="demo-badge">Demo listing</span></div><p className="mt-1 text-xs text-muted">{experience.description}</p><p className="mt-1 text-[10px] text-muted">Suggested partner: {experience.partner}</p><button type="button" onClick={() => addRequest({ title: "Ask about " + experience.name, category: "Local experience", detail: "Guest asks staff to verify the demo listing, provider, schedule and full price before any commitment." })} className="mt-2 min-h-10 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white">Ask hotel team to verify</button></article>)}</div>}
+        {showExperiences && <div className="mt-3 space-y-2">{destination.experiences.map((experience) => <article key={experience.id} className="rounded-xl border border-border bg-bg p-3"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-bold">{experience.name}</h3><span className="demo-badge">Demo listing</span></div><p className="mt-1 text-xs text-muted">{experience.description}</p><p className="mt-1 text-[10px] text-muted">Suggested partner: {experience.partner}</p><button type="button" onClick={() => addRequest({ type: "experience_booking", title: "Experience booking inquiry: " + experience.name, category: "Local experience", detail: "Guest asks staff to verify the demo listing, provider, schedule and full price before any commitment." })} className="mt-2 min-h-10 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white">Send experience inquiry</button></article>)}</div>}
       </section>
 
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
@@ -229,25 +229,11 @@ function ProfileView({ user, preferences, updatePreferences, destination, select
   );
 }
 
-function ManagerDashboard({ destination, weather, weatherLoading, weatherError, requests, updateRequestStatus, onSwitch, selectDestination, destinations }) {
-  const orderedRequests=[...requests].sort((a,b)=>Number(b.priority==="urgent")-Number(a.priority==="urgent")||String(b.createdAt).localeCompare(String(a.createdAt)));
-  const regularRequests=orderedRequests.filter((request)=>!["flex_stay","human_handoff"].includes(request.type));
-  const pending=orderedRequests.filter((request)=>["Pending human review","Awaiting hotel approval","Waiting for team","Counter-offer sent"].includes(request.status)).length;
-  return <main className="min-h-screen bg-bg text-text"><OfflineBanner/><Header manager onSwitch={onSwitch}/><div className="mx-auto max-w-6xl space-y-5 px-4 py-5 pb-10 sm:px-6 sm:py-7">
-    <section className="rounded-3xl bg-sunrise p-5 text-white sm:p-7"><p className="text-xs font-bold uppercase tracking-[0.18em] text-white/75">Manager workspace · Demo</p><h2 className="mt-2 font-serif text-3xl sm:text-4xl">Your team stays in control.</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/80">Review guest requests, approve Flex Stay and take over human handoffs. No real charges or bookings are made.</p></section>
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-3"><div className="rounded-2xl border border-border bg-surface p-4"><p className="text-xs text-muted">Requests logged</p><p className="mt-1 text-3xl font-bold">{requests.length}</p></div><div className="rounded-2xl border border-border bg-surface p-4"><p className="text-xs text-muted">Awaiting review</p><p className="mt-1 text-3xl font-bold">{pending}</p></div><div className="rounded-2xl border border-border bg-surface p-4"><p className="text-xs text-muted">Hotel rooms · demo</p><p className="mt-1 text-3xl font-bold">{destination.hotel.rooms}</p></div></section>
-    <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Hotel and destination</h2><div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-muted">Selected destination<select value={destination.id} onChange={(e)=>selectDestination(e.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{destinations.map((d)=><option key={d.id} value={d.id}>{d.city}, {d.country}</option>)}</select></label><div className="rounded-xl bg-bg p-3 text-sm"><p className="font-semibold">{destination.hotel.name}</p><p className="mt-1 text-xs text-muted">{destination.hotel.stars}-star · {destination.hotel.rooms} rooms · Check-in {destination.hotel.checkIn} · Check-out {destination.hotel.checkOut}</p></div></div><p className="mt-3 text-xs text-muted">{weather?"Live weather: "+weather.condition+", "+weather.temperatureC+"°C.":weatherLoading?"Loading live weather…":weatherError||"Weather unavailable."} Only weather is live; room readiness, occupancy, fees and availability are simulated data.</p></section>
-    <FlexStayApprovalPanel requests={requests} destination={destination}/>
-    <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="font-serif text-2xl">Other guest requests</h2><p className="mt-1 text-xs text-muted">Money, bookings and availability must be checked by staff.</p></div><span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs font-bold">{regularRequests.length}</span></div>
-    {regularRequests.length===0?<p className="mt-4 rounded-xl bg-bg p-4 text-sm text-muted">No other requests yet.</p>:<div className="mt-4 space-y-3">{regularRequests.map((r)=><article key={r.id} className="rounded-xl border border-border bg-bg p-4"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-bold">{r.title}</h3>{r.priority==="urgent"&&<span className="rounded-full bg-rose-700 px-2 py-1 text-[9px] font-extrabold text-white">URGENT · DEMO</span>}<span className="rounded-full border border-border px-2 py-1 text-[9px] text-muted">{r.category}</span></div><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted">{r.detail}</p><div className="mt-3 flex flex-wrap items-center justify-between gap-2"><span className="text-xs text-muted">{r.status} · {new Date(r.createdAt).toLocaleString()}</span>{r.status==="Pending human review"&&<div className="flex flex-wrap gap-2"><button type="button" onClick={()=>updateRequestStatus(r.id,"Approved by staff")} className="min-h-10 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white">Approve / confirm manually</button><button type="button" onClick={()=>updateRequestStatus(r.id,"Declined by staff")} className="min-h-10 rounded-lg border border-border px-3 py-2 text-xs font-bold">Decline</button></div>}</div></article>)}</div>}</section>
-    <button type="button" onClick={onSwitch} className="min-h-11 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-text">Switch persona / destination</button>
-  </div></main>;
-}
 
 export default function AtithiAI({ mode = "guest" }) {
   const { user, logout } = useAuth();
   const { destination, destinations, selectDestination, formatCurrency, weather, weatherLoading, weatherError, cachedDemoMode, setCachedDemoMode } = useDestination();
-  const { itinerary, requests, addRequest, updateRequestStatus, preferences, updatePreferences, addItineraryStop, removeItineraryStop, setItinerary } = useHotelContext();
+  const { itinerary, requests, addRequest, preferences, updatePreferences, addItineraryStop, removeItineraryStop, setItinerary } = useHotelContext();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
   const [planLoading, setPlanLoading] = useState(false);
@@ -291,7 +277,7 @@ export default function AtithiAI({ mode = "guest" }) {
   };
 
   if (mode === "admin" || user?.role === "manager") {
-    return <ManagerDashboard destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} requests={requests} updateRequestStatus={updateRequestStatus} onSwitch={switchPersona} selectDestination={selectDestination} destinations={destinations} />;
+    return <AdminDashboard onSwitch={switchPersona} />;;
   }
 
   return (

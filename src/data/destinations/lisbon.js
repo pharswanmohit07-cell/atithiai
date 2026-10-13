@@ -10,6 +10,8 @@ export default {
   timezone: "Europe/Lisbon",
   locale: "pt-PT",
   currency: { code: "EUR", symbol: "€" },
+  // Illustrative only: these demo assumptions estimate commissions on approved experience inquiries.
+  demoCommercials: {"averageExperienceBookingValue":40,"estimatedCommissionRate":0.12},
   primaryLanguages: ["Portuguese", "English"],
   hotel: {
     name: "Tile & Tram Hotel (demo)",

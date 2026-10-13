@@ -20,6 +20,7 @@ function safeRead(key, fallback) {
   try {
     const parsed = JSON.parse(localStorage.getItem(key) || "null");
     if (Array.isArray(fallback)) return Array.isArray(parsed) ? parsed : fallback;
+    if (fallback === null) return parsed;
     return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : fallback;
   } catch { return fallback; }
 }
@@ -129,7 +130,9 @@ export function HotelProvider({ children }) {
       title: String(entry.title || "Activity recorded").slice(0, 160),
       detail: String(entry.detail || "").slice(0, 500),
       actor: ["Atithi AI", "Guest", "Front Desk", "System"].includes(entry.actor) ? entry.actor : "Atithi AI",
-      createdAt: new Date().toISOString(),
+      createdAt,
+      updatedAt: createdAt,
+      ...(alreadyResolved ? { firstResponseAt: createdAt, resolvedAt: createdAt } : {}),
       destinationId: destination.id,
       ...(entry.requestId ? { requestId: entry.requestId } : {}),
       ...(entry.undoType ? { undoType: entry.undoType } : {}),
@@ -155,6 +158,8 @@ export function HotelProvider({ children }) {
   }, []);
 
   const addRequest = useCallback((request = {}) => {
+    const createdAt = new Date().toISOString();
+    const alreadyResolved = ["Approved by hotel", "Declined by hotel", "Approved by staff", "Declined by staff", "Auto-approved (demo)", "Staff takeover active", "Reviewed by staff"].includes(request.status);
     const item = {
       id: newId(),
       type: typeof request.type === "string" ? request.type.slice(0, 40) : "guest_request",
@@ -174,6 +179,7 @@ export function HotelProvider({ children }) {
       ...(typeof request.staffNote === "string" ? { staffNote: request.staffNote.slice(0, 500) } : {}),
       ...(typeof request.billLine === "string" ? { billLine: request.billLine.slice(0, 200) } : {}),
       ...(request.finalFee != null && Number.isFinite(Number(request.finalFee)) ? { finalFee: Number(request.finalFee) } : {}),
+      ...(request.estimatedCommission != null && Number.isFinite(Number(request.estimatedCommission)) ? { estimatedCommission: Number(request.estimatedCommission) } : {}),
       ...(typeof request.approvedTime === "string" ? { approvedTime: request.approvedTime } : {}),
     };
     setRequests((current) => {

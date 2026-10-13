@@ -10,6 +10,8 @@ export default {
   timezone: "Asia/Makassar",
   locale: "id-ID",
   currency: { code: "IDR", symbol: "Rp" },
+  // Illustrative only: these demo assumptions estimate commissions on approved experience inquiries.
+  demoCommercials: {"averageExperienceBookingValue":350000,"estimatedCommissionRate":0.12},
   primaryLanguages: ["Indonesian", "Balinese", "English"],
   hotel: {
     name: "Riverside Palm Hotel (demo)",

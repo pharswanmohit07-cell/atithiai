@@ -10,6 +10,8 @@ export default {
   timezone: "Asia/Kolkata",
   locale: "en-IN",
   currency: { code: "INR", symbol: "₹" },
+  // Illustrative only: these demo assumptions estimate commissions on approved experience inquiries.
+  demoCommercials: {"averageExperienceBookingValue":1800,"estimatedCommissionRate":0.12},
   primaryLanguages: ["Hindi", "English"],
   hotel: {
     name: "Pink Courtyard Hotel (demo)",
