@@ -111,7 +111,7 @@ function normalizeIntent(parsed, text, languages = []) {
     intent: INTENTS.has(input.intent) ? input.intent : fallback.intent,
     filters: {
       categories: Array.isArray(filters.categories)
-        ? [...new Set(filters.categories.filter((value) => typeof value === "string" && CATEGORIES.has(value))].slice(0, CATEGORIES.size)
+        ? [...new Set(filters.categories.filter((value) => typeof value === "string" && CATEGORIES.has(value)))].slice(0, CATEGORIES.size)
         : fallback.filters.categories,
       diet: filterDiet,
       maxBudgetLocal: nullableNumber(filters.maxBudgetLocal) ?? fallback.filters.maxBudgetLocal,
