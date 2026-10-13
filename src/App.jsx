@@ -1,10 +1,9 @@
 import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowRight, CalendarClock, Check, ChevronRight, CircleHelp, Clock3, Coffee,
-  Compass, Globe2, Map, MessageCircle, ShieldCheck, Sparkles, Utensils,
-  Users, WifiOff, X, Building2, BedDouble, CheckCircle2, AlertTriangle, Phone,
-  LoaderCircle, MapPin,
+  ArrowRight, CalendarClock, ChevronRight, CircleHelp, Compass, Globe2, Map,
+  MessageCircle, ShieldCheck, Sparkles, Utensils, Users, WifiOff, BedDouble,
+  Phone, LoaderCircle,
 } from "lucide-react";
 import { useAuth } from "./context/AuthContext.jsx";
 import { useDestination } from "./context/DestinationContext.jsx";
