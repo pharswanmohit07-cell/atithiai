@@ -74,6 +74,32 @@ function safeContext(input = {}) {
       }
     : null;
   const suppliedPlaces = Array.isArray(input.lowCrowdPlaces) ? input.lowCrowdPlaces : [];
+  const suppliedSafeIds = Array.isArray(routeGuardInput.nearestSafe)
+    ? routeGuardInput.nearestSafe.map((item) => item?.id).filter((id) => DEMO_HOMESTAYS.some((village) => village.id === id))
+    : [];
+  const safeIds = [...new Set(suppliedSafeIds)].slice(0, 2);
+  const nearestSafe = safeIds.map((id) => {
+    const village = DEMO_HOMESTAYS.find((candidate) => candidate.id === id);
+    const distanceKm = getDistanceKm(selectedWaypoint, village);
+    return {
+      id: village.id,
+      name: village.name,
+      lat: village.lat,
+      lon: village.lon,
+      elevationM: village.elevationM,
+      localSpendINR: village.localSpendINR,
+      tags: village.tags,
+      shortDesc: village.shortDesc,
+      listingStatus: "DEMO LISTING",
+      distanceKm: Math.round(distanceKm * 10) / 10,
+      roughTravelMinutes: Math.max(1, Math.round((distanceKm / 25) * 60)),
+    };
+  }).sort((first, second) => {
+    const firstScore = first.distanceKm + (routePersona.id === "pilgrim" ? first.elevationM / 500 : 0);
+    const secondScore = second.distanceKm + (routePersona.id === "pilgrim" ? second.elevationM / 500 : 0);
+    return firstScore - secondScore;
+  });
+  const guestLanguage = typeof routeGuardInput.guestLanguage === "string" ? routeGuardInput.guestLanguage.slice(0, 40) : "en";
   const flags = { isWeekend: [0, 6].includes(new Date().getDay()), isHoliday: false };
   const lowCrowdPlaces = [];
   for (const supplied of suppliedPlaces.slice(0, 5)) {
@@ -108,6 +134,14 @@ function safeContext(input = {}) {
     weatherObservation,
     disruptions,
     lowCrowdPlaces,
+    routeGuard: {
+      enabled: Boolean(routeGuardInput.enabled && routeDisruption),
+      disruption: routeDisruption,
+      persona: routePersona,
+      currentWaypoint: { id: selectedWaypoint.id, name: selectedWaypoint.name, elevationM: selectedWaypoint.elevationM },
+      nearestSafe,
+      guestLanguage,
+    },
   };
 }
 
