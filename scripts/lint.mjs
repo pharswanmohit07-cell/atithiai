@@ -135,6 +135,14 @@ const durationResults = rank.rankExperiences([
 if (durationResults.length !== 1 || durationResults[0].id !== "short" || !Array.isArray(durationResults[0].reasons) || typeof durationResults[0].score !== "number") {
   failures.push("Ranking hard constraint failed: item duration must fit available time and output score/reasons.");
 }
+const timeResults = rank.rankPlaces([
+  { id: "morning", name: "Morning place", category: "nature", avgSpendLocal: 10, durationMin: 30, bestTime: "morning", tags: [] },
+  { id: "unknown-time", name: "Unknown time", category: "nature", avgSpendLocal: 10, durationMin: 30, bestTime: "", tags: [] },
+  { id: "evening", name: "Evening place", category: "nature", avgSpendLocal: 10, durationMin: 30, bestTime: "evening", tags: [] }
+], {}, { timeOfDay: "morning" }, { freeMinutes: 60 });
+if (timeResults.length !== 1 || timeResults[0].id !== "morning") {
+  failures.push("Ranking hard constraint failed: explicit time windows must exclude mismatched and unknown-time items.");
+}
 
 if (failures.length) {
   console.error("Source checks failed:");
