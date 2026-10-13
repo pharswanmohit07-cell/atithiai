@@ -1,4 +1,5 @@
 const MAX_HIGHLIGHTS = 3;
+const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
 
 function send(res, status, payload) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
