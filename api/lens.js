@@ -26,7 +26,7 @@ function baseLanguage(value) {
   const candidate = clean(value, 20).toLowerCase().split("-")[0];
   return VALID_LANGUAGES.has(candidate) ? candidate : "en";
 }
-function fallback(language, mode) {
+// safe-fallback responses intentionally keep the HTTP status at 200 for provider failures.\nfunction fallback(language, mode) {
   const copy = LANG[language] || LANG.en;
   const result = {
     whatIsThis: copy.what,
@@ -44,7 +44,7 @@ function send(res, status, value) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
   return res.end(JSON.stringify(value));
 }
-function safeJson(text) {
+function safeJsonParse(text) {
   if (typeof text !== "string") return null;
   const cleaned = text.trim().replace(/^\uFEFF/, "").replace(/^\x60{3}(?:json)?\s*/i, "").replace(/\s*\x60{3}$/i, "");
   try { return JSON.parse(cleaned); } catch {
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
     let providerPayload = null;
     try { providerPayload = await response.json(); } catch { return send(res, 200, fallback(language, mode)); }
     const responseText = providerPayload?.candidates?.[0]?.content?.parts?.find((part) => typeof part.text === "string")?.text;
-    const parsed = safeJson(responseText);
+    const parsed = safeJsonParse(responseText);
     if (!parsed) return send(res, 200, fallback(language, mode));
     return send(res, 200, normalize(parsed, language, mode, profileDiet));
   } catch {
