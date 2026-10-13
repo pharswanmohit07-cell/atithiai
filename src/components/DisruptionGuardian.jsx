@@ -22,7 +22,7 @@ export function GuardianCard({ disruption, itineraryItem, alternatives = [], onA
   if (!disruption || !itineraryItem) return null;
   const kind = disruption.type === "rain" ? "Rain / weather shift" : disruption.type === "landslide" ? "Landslide alert" : "Roadblock alert";
   return (
-    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-5 overflow-hidden rounded-2xl border border-amber-300/70 bg-surface shadow-sm dark:border-amber-800/70">
+    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="hazard-alert mb-5 overflow-hidden rounded-2xl border border-amber-300/70 bg-surface shadow-sm dark:border-amber-800/70">
       <div className="flex items-start gap-3 border-b border-border bg-amber-50/80 p-4 dark:bg-amber-950/20">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200"><ShieldCheck size={21}/></span>
         <div className="min-w-0 flex-1">
