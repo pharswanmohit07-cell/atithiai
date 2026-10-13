@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import IconBadge from "./components/ui/IconBadge.jsx";
 import {
   Sun,
   CloudRain,
@@ -507,7 +508,7 @@ function HomeTab({
               aria-label="Open profile"
               className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur"
             >
-              <User size={19} />
+              <IconBadge icon={User} tone="sky" size="sm" className="!h-9 !w-9 rounded-full border border-white/30" />
             </button>
           </div>
           <div>
@@ -525,9 +526,9 @@ function HomeTab({
               </span>
               <span className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium backdrop-blur">
                 {weather === "sunny" ? (
-                  <Sun size={12} className="text-[#F0D6AD]" />
+                  <IconBadge icon={Sun} tone="saffron" size="sm" className="!h-7 !w-7 rounded-full" />
                 ) : (
-                  <CloudRain size={12} className="text-blue-200" />
+                  <IconBadge icon={CloudRain} tone="sky" size="sm" className="!h-7 !w-7 rounded-full" />
                 )}
                 {weather === "sunny" ? "24° · Clear" : "19° · Rain"}{" "}
                 <span className="text-white/60">Dehradun</span>
@@ -551,7 +552,7 @@ function HomeTab({
                 Room requests
               </span>
             </span>
-            <BedDouble size={18} className="text-[#435B4D]" />
+            <IconBadge icon={BedDouble} tone="sky" size="sm" />
           </button>
           <button
             onClick={() => setActiveTab("ai")}
@@ -565,7 +566,7 @@ function HomeTab({
                 Ask concierge
               </span>
             </span>
-            <Sparkles size={18} className="text-[#9B7C53]" />
+            <IconBadge icon={Sparkles} tone="violet" size="sm" />
           </button>
         </div>
         <AnimatePresence mode="popLayout">
@@ -603,7 +604,7 @@ function HomeTab({
             >
               <div className="p-5 border-b border-white/10">
                 <div className="flex items-center gap-2 text-amber-400 mb-3">
-                  <CloudRain size={18} />
+                  <IconBadge icon={CloudRain} tone="coral" size="sm" pulse />
                   <span className="text-sm font-medium tracking-wide uppercase">
                     Weather Alert
                   </span>
@@ -629,7 +630,7 @@ function HomeTab({
                         ease: "linear",
                       }}
                     >
-                      <Sparkles size={24} className="text-[#BCA37F]" />
+                      <IconBadge icon={Sparkles} tone="violet" size="md" />
                     </motion.div>
                     <p className="mt-3 text-sm">Updating your itinerary...</p>
                   </div>
@@ -641,12 +642,7 @@ function HomeTab({
                         onClick={() => acceptAlternative(alt)}
                         className="w-full text-left bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-colors group flex items-start gap-4"
                       >
-                        <div className="bg-[#1C1C1C] p-2 rounded-lg group-hover:bg-[#BCA37F] transition-colors shrink-0">
-                          <alt.icon
-                            size={20}
-                            className="text-[#BCA37F] group-hover:text-white transition-colors"
-                          />
-                        </div>
+                        <IconBadge icon={alt.icon} tone={alt.id === "alt_1" ? "sky" : "violet"} size="md" className="shrink-0" />
                         <div>
                           <h4 className="text-white font-medium mb-1">
                             {alt.title}
@@ -677,7 +673,7 @@ function HomeTab({
           <section className="overflow-hidden rounded-2xl bg-[#253C33] text-white shadow-[0_14px_28px_rgba(31,48,40,0.14)]">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <span className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E7C99C]">
-                <Clock size={13} /> Next up
+                <IconBadge icon={Clock} tone="teal" size="sm" className="!h-7 !w-7" /> Next up
               </span>
               <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold">
                 {currentPlan.time}
@@ -789,7 +785,7 @@ function HomeTab({
 
                     {item.aiAdjusted && (
                       <div className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-[#BCA37F] bg-[#BCA37F]/10 px-2 py-1 rounded-md">
-                        <Sparkles size={12} /> Adjusted by AI
+                        <IconBadge icon={Sparkles} tone="violet" size="sm" className="!h-7 !w-7" /> Adjusted by AI
                       </div>
                     )}
                   </div>
@@ -841,6 +837,8 @@ function DiscoverTab({ onRequest }) {
   const [category, setCategory] = useState("All");
   const [selected, setSelected] = useState(null);
   const categories = ["All", "Wellness", "Dining", "Culture"];
+  const categoryIcons = { All: Compass, Wellness: Sparkles, Dining: Utensils, Culture: MapPin };
+  const categoryTones = { All: "teal", Wellness: "violet", Dining: "saffron", Culture: "sky" };
   const filtered = EXPERIENCES.filter(
     (experience) =>
       (category === "All" || experience.category === category) &&
@@ -863,7 +861,7 @@ function DiscoverTab({ onRequest }) {
           </h1>
         </div>
         <span className="mb-1 flex items-center gap-1 text-xs text-[#73766D]">
-          <MapPin size={13} className="text-[#9B7C53]" /> 30.3165° N
+          <IconBadge icon={MapPin} tone="teal" size="sm" className="!h-7 !w-7 rounded-full" /> 30.3165° N
         </span>
       </div>
       <button
@@ -909,15 +907,19 @@ function DiscoverTab({ onRequest }) {
         />
       </label>
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
-        {categories.map((item) => (
-          <button
-            key={item}
-            onClick={() => setCategory(item)}
-            className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap ${category === item ? "bg-[#1C1C1C] text-white" : "bg-white border border-[#E5E0D8] text-[#6B655C]"}`}
-          >
-            {item}
-          </button>
-        ))}
+        {categories.map((item) => {
+          const CategoryIcon = categoryIcons[item];
+          return (
+            <button
+              key={item}
+              onClick={() => setCategory(item)}
+              className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors ${category === item ? "bg-[#1C1C1C] text-white shadow-sm" : "bg-white border border-[#E5E0D8] text-[#4F514B]"}`}
+            >
+              <IconBadge icon={CategoryIcon} tone={categoryTones[item]} size="sm" className="!h-7 !w-7 rounded-full" />
+              {item}
+            </button>
+          );
+        })}
       </div>
       <div className="mb-3 flex items-end justify-between">
         <div>
@@ -1149,7 +1151,7 @@ function AITab({ onRequest }) {
       <div className="pt-12 px-6 pb-4 bg-white border-b border-[#E5E0D8] shadow-sm relative z-10">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-[#1C1C1C] flex items-center justify-center">
-            <Sparkles size={20} className="text-[#BCA37F]" />
+            <IconBadge icon={Sparkles} tone="saffron" size="sm" />
           </div>
           <div>
             <h1 className="font-serif text-xl">Atithi Concierge</h1>
@@ -1212,36 +1214,42 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
   const services = [
     {
       icon: BedDouble,
+      tone: "sky",
       name: "Housekeeping",
       detail: "Fresh towels, turndown & more",
       eta: "~15 min",
     },
     {
       icon: Utensils,
+      tone: "saffron",
       name: "In-Room Dining",
       detail: "Seasonal dishes, delivered warm",
       eta: "~30 min",
     },
     {
       icon: Bath,
+      tone: "violet",
       name: "Spa Booking",
       detail: "Restore with a signature ritual",
       eta: "View times",
     },
     {
       icon: Car,
+      tone: "teal",
       name: "Valet / Transport",
       detail: "Your next ride, taken care of",
       eta: "~8 min",
     },
     {
       icon: Clock,
+      tone: "coral",
       name: "Wake-up Call",
       detail: "A gentle start, right on time",
       eta: "Set time",
     },
     {
       icon: MessageSquare,
+      tone: "emerald",
       name: "Reception",
       detail: "A member of our team, anytime",
       eta: "24 hours",
@@ -1269,7 +1277,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#233D35] text-[#E7C99C]">
-            <Sparkles size={17} />
+            <IconBadge icon={Sparkles} tone="violet" size="sm" className="!h-9 !w-9 rounded-full" />
           </div>
           <div>
             <p className="text-[10px] uppercase tracking-[0.16em] text-[#827D73]">
@@ -1300,7 +1308,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
         <div className="pb-1 text-right">
           <p className="text-xs text-[#77766E]">Dehradun</p>
           <p className="mt-1 flex items-center justify-end gap-1 text-sm font-medium text-[#293C34]">
-            <Sun size={14} className="text-[#B38A53]" /> 24°
+            <IconBadge icon={Sun} tone="saffron" size="sm" className="!h-7 !w-7 rounded-full" /> 24°
           </p>
         </div>
       </div>
@@ -1308,7 +1316,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
       <div className="stay-summary mb-7 flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 text-white">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10">
-            <BedDouble size={19} className="text-[#E7C99C]" />
+            <IconBadge icon={BedDouble} tone="sky" size="sm" />
           </div>
           <div className="min-w-0">
             <p className="text-[10px] uppercase tracking-[0.14em] text-white/60">
@@ -1352,9 +1360,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
             className="service-tile group min-h-[140px] rounded-2xl border border-[#E4DED3] bg-[#FFFEFC] p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-[#B69A70] hover:shadow-[0_12px_24px_rgba(38,51,43,0.08)]"
           >
             <span className="mb-3 flex items-center justify-between">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F1EEE7] text-[#31483E] transition-colors group-hover:bg-[#31483E] group-hover:text-[#E7C99C]">
-                <svc.icon size={18} />
-              </span>
+              <IconBadge icon={svc.icon} tone={svc.tone} size="sm" className="transition-transform group-hover:-translate-y-0.5" />
               <ChevronRight
                 size={15}
                 className="text-[#B7B0A4] transition-transform group-hover:translate-x-0.5"
@@ -1378,7 +1384,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
       >
         <span className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 text-[#E7C99C]">
-            <Sparkles size={18} />
+            <IconBadge icon={Sparkles} tone="violet" size="sm" />
           </span>
           <span>
             <span className="block font-serif text-[17px] text-[#E7C99C]">
@@ -1622,7 +1628,7 @@ function ProfileTab() {
             className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
           >
             <span className="flex items-center gap-3">
-              <Sparkles size={18} className="text-[#8C857B]" />
+              <IconBadge icon={Sparkles} tone="violet" size="sm" />
               <span className="text-sm font-medium">Diet & interests</span>
             </span>
             <span className="flex items-center gap-2 text-xs text-[#8C857B]">
@@ -1648,7 +1654,7 @@ function ProfileTab() {
             className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
           >
             <span className="flex items-center gap-3">
-              <CreditCard size={18} className="text-[#8C857B]" />
+              <IconBadge icon={CreditCard} tone="teal" size="sm" />
               <span className="text-sm font-medium">Payment methods</span>
             </span>
             <span className="flex items-center gap-2 text-xs text-[#8C857B]">
@@ -1734,7 +1740,7 @@ function ProfileToggle({ icon: Icon, label, checked, onChange }) {
       className="w-full flex items-center justify-between p-4 text-left hover:bg-[#F9F8F6]"
     >
       <span className="flex items-center gap-3">
-        <Icon size={18} className="text-[#8C857B]" />
+        <IconBadge icon={Icon} tone={label === "Notifications" ? "coral" : "emerald"} size="sm" />
         <span className="text-sm font-medium">{label}</span>
       </span>
       <span
@@ -1754,10 +1760,9 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
       onClick={onClick}
       className="flex flex-col items-center gap-1 min-w-[64px]"
     >
-      <Icon
-        size={22}
-        className={active ? "text-[#1C1C1C]" : "text-[#A39C93]"}
-      />
+      <motion.div whileTap={{ scale: 0.9 }} animate={active ? { y: [0, -3, 0] } : { y: 0 }} transition={{ duration: 0.28 }}>
+        <IconBadge icon={Icon} tone={active ? "saffron" : "teal"} size="sm" className={active ? "" : "opacity-85"} />
+      </motion.div>
       <span
         className={`text-[10px] font-medium ${active ? "text-[#1C1C1C]" : "text-[#A39C93]"}`}
       >
@@ -1780,22 +1785,23 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
       <div className="w-64 bg-[#1C1C1C] text-white flex flex-col">
         <div className="p-6 border-b border-white/10">
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles size={20} className="text-[#BCA37F]" />
+            <IconBadge icon={Sparkles} tone="saffron" size="sm" />
             <span className="font-serif text-xl tracking-wide">Atithi AI</span>
           </div>
           <p className="text-white/50 text-xs">Hotel Command Center</p>
         </div>
 
         <div className="p-4 space-y-1 flex-1">
-          <SidebarItem icon={LayoutDashboard} label="Overview" active />
-          <SidebarItem icon={User} label="Active Guests" count={124} />
+          <SidebarItem icon={LayoutDashboard} label="Overview" active tone="saffron" />
+          <SidebarItem icon={User} label="Active Guests" count={124} tone="teal" />
           <SidebarItem
             icon={Sparkles}
             label="AI Control Center"
             alert={isConflict}
+            tone="coral"
           />
-          <SidebarItem icon={Bell} label="Service Requests" count={12} />
-          <SidebarItem icon={CalendarDays} label="Bookings" />
+          <SidebarItem icon={Bell} label="Service Requests" count={12} tone="sky" alert={isConflict} />
+          <SidebarItem icon={CalendarDays} label="Bookings" tone="violet" />
         </div>
       </div>
 
@@ -1813,7 +1819,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
 
           <div className="flex gap-4">
             <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-[#E5E0D8] flex items-center gap-3">
-              <Thermometer size={18} className="text-[#8C857B]" />
+              <IconBadge icon={Thermometer} tone="coral" size="sm" pulse={isConflict} />
               <div className="flex flex-col">
                 <span className="text-xs text-[#8C857B] uppercase font-semibold">
                   Live Weather
@@ -1848,7 +1854,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-2 bg-white rounded-2xl shadow-sm border border-[#E5E0D8] p-6">
             <h2 className="text-lg font-serif mb-4 flex items-center gap-2">
-              <User size={18} /> Live Guest Activity
+              <IconBadge icon={User} tone="teal" size="sm" /> Live Guest Activity
             </h2>
             <div className="space-y-4">
               <div
@@ -1876,7 +1882,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
                 {isConflict && (
                   <div className="bg-white p-3 rounded-lg border border-red-100 mt-2">
                     <div className="flex items-center gap-2 text-red-600 mb-1">
-                      <CloudRain size={16} />{" "}
+                      <IconBadge icon={CloudRain} tone="coral" size="sm" pulse />{" "}
                       <span className="text-sm font-semibold">
                         Weather Conflict Detected (4:00 PM)
                       </span>
@@ -1890,7 +1896,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
                 {isResolved && (
                   <div className="bg-white p-3 rounded-lg border border-[#E5E0D8] mt-2">
                     <div className="flex items-center gap-2 text-[#1C1C1C] mb-1">
-                      <Check size={16} className="text-green-600" />{" "}
+                      <IconBadge icon={Check} tone="emerald" size="sm" />{" "}
                       <span className="text-sm font-semibold">
                         Guest accepted AI Alternative
                       </span>
@@ -1918,16 +1924,13 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
   );
 }
 
-function SidebarItem({ icon: Icon, label, active, count, alert }) {
+function SidebarItem({ icon: Icon, label, active, count, alert, tone = "teal" }) {
   return (
     <button
       className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${active ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
     >
       <div className="flex items-center gap-3">
-        <Icon
-          size={18}
-          className={alert ? "text-red-400" : active ? "text-[#BCA37F]" : ""}
-        />
+        <IconBadge icon={Icon} tone={alert ? "coral" : tone} size="sm" pulse={alert} />
         <span className="text-sm font-medium">{label}</span>
       </div>
       {count && (
@@ -1942,12 +1945,15 @@ function SidebarItem({ icon: Icon, label, active, count, alert }) {
   );
 }
 
-function StatCard({ title, value, trend, alert }) {
+function StatCard({ title, value, trend, alert, icon = LayoutDashboard, tone = "teal" }) {
   return (
     <div
       className={`bg-white rounded-2xl p-5 shadow-sm border ${alert ? "border-red-200" : "border-[#E5E0D8]"}`}
     >
-      <h3 className="text-sm font-medium text-[#8C857B] mb-2">{title}</h3>
+      <div className="mb-3 flex items-center gap-3">
+        <IconBadge icon={icon} tone={alert ? "coral" : tone} size="md" pulse={alert} />
+        <h3 className="text-sm font-semibold text-[#555A53]">{title}</h3>
+      </div>
       <div className="flex items-end justify-between">
         <span
           className={`text-3xl font-serif ${alert ? "text-red-600" : "text-[#1C1C1C]"}`}
