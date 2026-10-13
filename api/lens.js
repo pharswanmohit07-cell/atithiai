@@ -1,3 +1,5 @@
+import { isBodyTooLarge, isPlainObject } from "./_shared.js";
+
 export const config = { api: { bodyParser: { sizeLimit: "6mb" } } };
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -96,8 +98,9 @@ function normalize(payload, language, mode, profileDiet) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return send(res, 405, fallback("en", "general"));
-  const body = req.body && typeof req.body === "object" ? req.body : {};
+  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return send(res, 405, { error: "Use POST to analyze an image." }); }
+  if (isBodyTooLarge(req, req.body, Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 16 * 1024)) return send(res, 413, { error: "Image request is too large. Choose a photo under 4 MB." });
+  const body = isPlainObject(req.body) ? req.body : {};
   const rawLanguage = clean(body.targetLanguage, 35);
   const language = baseLanguage(rawLanguage);
   const mode = VALID_MODES.has(body.mode) ? body.mode : "general";
@@ -112,7 +115,7 @@ export default async function handler(req, res) {
   if (imageBase64.length > Math.ceil(MAX_IMAGE_BYTES * 4 / 3) + 8) {
     return send(res, 413, { error: "Image is too large. Choose a photo under 4 MB." });
   }
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return send(res, 200, fallback(language, mode));
 
   const controller = new AbortController();
