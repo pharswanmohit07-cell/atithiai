@@ -1,5 +1,6 @@
 import { scorePlan } from "../src/utils/plan.js";
 import { PLACES as CURATED_PLACES } from "../src/data/places.js";
+const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
 function send(res,status,payload){res.status(status).setHeader("Content-Type","application/json; charset=utf-8");res.end(JSON.stringify(payload));}
 function sanitise(places){return Array.isArray(places)?places.slice(0,15).filter(p=>p&&typeof p.id==="string"&&typeof p.name==="string").map(p=>({id:p.id,name:p.name,category:String(p.category||""),tags:Array.isArray(p.tags)?p.tags.filter(t=>typeof t==="string").slice(0,12):[],dietary:Array.isArray(p.dietary)?p.dietary.filter(t=>typeof t==="string"):[],description:String(p.description||""),location:String(p.location||""),indoor:Boolean(p.indoor),outdoor:Boolean(p.outdoor)})):[];}
 function verify(items,places){const map=new Map(places.map(p=>[p.id,p])),seen=new Set();return (Array.isArray(items)?items:[]).filter(i=>i&&map.has(i.placeId)&&!seen.has(i.placeId)&&seen.add(i.placeId)).slice(0,6).map((i,index)=>{const p=map.get(i.placeId);return {time:String(i.time||["09:00 AM","10:45 AM","12:30 PM","02:30 PM","04:30 PM","07:00 PM"][index]),title:p.name,desc:p.description,placeId:p.id,tags:p.tags||[]};});}
