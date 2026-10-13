@@ -1832,12 +1832,16 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
             value={isConflict ? "1" : "0"}
             trend={isConflict ? "Requires attention" : "All clear"}
             alert={isConflict}
+            icon={CloudRain}
+            tone="coral"
           />
-          <StatCard title="Auto-Resolved by AI" value="48" trend="+12% today" />
+          <StatCard title="Auto-Resolved by AI" value="48" trend="+12% today" icon={Check} tone="emerald" />
           <StatCard
             title="Guest Satisfaction (AI)"
             value="4.9/5"
             trend="Top 5% globally"
+            icon={Sparkles}
+            tone="saffron"
           />
         </div>
 
