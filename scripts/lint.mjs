@@ -5,7 +5,7 @@ import { transform } from "esbuild";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceExtensions = new Set([".js", ".jsx", ".mjs"]);
-const checkedRoots = ["src", "api"];
+const checkedRoots = ["src", "api", "scripts"];
 const rootFiles = ["vite.config.js", "tailwind.config.js"];
 const candidates = [];
 
@@ -88,7 +88,7 @@ const requiredChecks = [
   [appSource.includes('fetch("/api/chat"'), "Concierge chat must call /api/chat."],
   [routerSource.includes('path="/staff-login"') && routerSource.includes('path="/admin"'), "Guest/staff routes must be registered."],
   [routerSource.includes("ProtectedRoute") && routerSource.includes("RoleRoute"), "Protected role guards must be present."],
-  [planSource.includes("places.slice(0,15)") && planSource.includes("verifiedPlan"), "Itinerary generation must whitelist supplied places."],
+  [planSource.includes("places.slice(0,15)") && planSource.includes("function verify("), "Itinerary generation must whitelist supplied places."],
 ];
 for (const [passed, message] of requiredChecks) if (!passed) failures.push(message);
 
