@@ -7,7 +7,7 @@ export const LENS_SAMPLE_CACHE = {
     visiblePrices: [],
     potentialConcerns: ["Confirm whether the fare is per vehicle or per guest.", "Ask which stops, tolls, waiting time and luggage are included."],
     nextStep: "Ask the provider or hotel team to confirm the total price and inclusions.",
-    fairPrice: { verdict: "Can't tell", roughRange: "", explanation: "This example contains no verified comparison prices." },
+    fairPrice: { verdict: "Can't tell", roughRange: "", explanation: "This example is a cached illustration and contains no verified local price information." },
   },
   "sample-menu": {
     id: "sample-menu",
@@ -20,11 +20,11 @@ export const LENS_SAMPLE_CACHE = {
   },
   "sample-service": {
     id: "sample-service",
-    imageType: "service",
-    summary: "This demo service quote illustrates how to request an itemised price before committing. It is not a real service provider quote.",
+    imageType: "other",
+    summary: "This demo notice-sign example illustrates how to read and translate a public notice. It is illustrative and not a real venue notice.",
     visiblePrices: [],
-    potentialConcerns: ["Ask what is included and which conditions can change the total.", "Check cancellation and timing terms with the provider."],
-    nextStep: "Ask hotel staff to verify the provider, final price and conditions before agreeing.",
+    potentialConcerns: ["Confirm that the notice is current with the venue.", "Ask hotel staff to explain any instruction that could affect your plans."],
+    nextStep: "Ask the hotel to confirm the meaning and current relevance of this notice.",
     fairPrice: { verdict: "Can't tell", roughRange: "", explanation: "This example contains no verified comparison prices." },
   },
 };

@@ -26,7 +26,7 @@ function fmtDate(value, destination) {
   const date = new Date(value);
   if (!value || !Number.isFinite(date.getTime())) return "Time not recorded";
   try { return new Intl.DateTimeFormat(destination.locale, { dateStyle: "medium", timeStyle: "short", timeZone: destination.timezone }).format(date); }
-  catch { return date.toLocaleString(); }
+  catch { try { return new Intl.DateTimeFormat(destination.locale, { dateStyle: "medium", timeStyle: "short" }).format(date); } catch { return date.toISOString(); } }
 }
 function fmtDuration(milliseconds) {
   if (!Number.isFinite(milliseconds) || milliseconds < 0) return "—";
