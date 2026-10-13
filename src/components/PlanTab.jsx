@@ -191,10 +191,43 @@ function liveWeatherDisruption(weather, itinerary, destination) {
   };
 }
 
-function makeIntro(destination, itinerary, currencyCode) {
-  if (!itinerary.length) return "Build a day around a few thoughtful stops, with room to pause and explore. All times, costs and travel estimates are approximate.";
-  const names = itinerary.slice(0, 2).map((stop) => stop.title).join(" and ");
-  return "Your " + destination.city + " day is shaped around " + names + ", with a meal and time to wander. Costs use illustrative " + currencyCode + " estimates; travel time is a straight-line approximation, not a route or traffic prediction.";
+function makeIntro(destination, itinerary, currencyCode, language = "en") {
+  const lang = String(language || "en").toLowerCase().split(/[-_]/)[0];
+  const names = itinerary.length ? itinerary.slice(0, 2).map((stop) => stop.title).join(" and ") : "";
+  const copy = {
+    en: names
+      ? ["Your " + destination.city + " day is shaped around " + names + ", with a meal and time to wander.", "Costs use illustrative " + currencyCode + " estimates; travel time is a straight-line approximation, not a route or traffic prediction."]
+      : ["Build a day around a few thoughtful stops, with room to pause and explore.", "All times, costs and travel estimates are approximate."],
+    hi: names
+      ? ["आपका " + destination.city + " का दिन " + names + " के आसपास है, जिसमें भोजन और घूमने का समय भी शामिल है।", "खर्च " + currencyCode + " में अनुमानित है; यात्रा समय सीधी दूरी पर आधारित है, सड़क मार्ग या ट्रैफिक का अनुमान नहीं।"]
+      : ["कुछ सोच-समझकर चुने गए पड़ावों और आराम के समय के साथ अपना दिन बनाएँ।", "समय, खर्च और यात्रा के सभी अनुमान लगभग हैं।"],
+    es: names
+      ? ["Tu día en " + destination.city + " gira en torno a " + names + ", con una comida y tiempo para explorar.", "Los costes son estimaciones en " + currencyCode + "; el tiempo de viaje usa distancia en línea recta, no rutas ni tráfico."]
+      : ["Organiza el día con algunas paradas interesantes y tiempo para descansar.", "Los horarios, costes y tiempos de viaje son aproximados."],
+    fr: names
+      ? ["Votre journée à " + destination.city + " s’organise autour de " + names + ", avec un repas et du temps pour flâner.", "Les coûts sont estimés en " + currencyCode + "; le temps de trajet utilise la distance à vol d’oiseau, pas les routes ni le trafic."]
+      : ["Composez votre journée autour de quelques étapes et gardez du temps pour souffler.", "Les horaires, coûts et durées de trajet sont approximatifs."],
+    de: names
+      ? ["Dein Tag in " + destination.city + " dreht sich um " + names + ", mit einer Mahlzeit und Zeit zum Entdecken.", "Die Kosten sind Schätzungen in " + currencyCode + "; Reisezeiten beruhen auf Luftlinie, nicht auf Straßen oder Verkehr."]
+      : ["Plane einige interessante Stopps und lass dir Zeit zum Entdecken.", "Zeit-, Kosten- und Reiseangaben sind Näherungswerte."],
+    pt: names
+      ? ["O seu dia em " + destination.city + " passa por " + names + ", com uma refeição e tempo para explorar.", "Os custos são estimativas em " + currencyCode + "; o tempo de viagem usa distância em linha reta, não rotas ou trânsito."]
+      : ["Organize o dia com algumas paragens interessantes e tempo para descansar.", "Horários, custos e tempos de viagem são aproximados."],
+    id: names
+      ? ["Hari Anda di " + destination.city + " berpusat pada " + names + ", dengan waktu makan dan kesempatan menjelajah.", "Biaya adalah perkiraan dalam " + currencyCode + "; waktu perjalanan memakai jarak garis lurus, bukan rute atau lalu lintas."]
+      : ["Susun hari dengan beberapa persinggahan menarik dan waktu untuk beristirahat.", "Waktu, biaya, dan perjalanan hanyalah perkiraan."],
+    ja: names
+      ? [destination.city + "での一日は" + names + "を中心に、食事と散策の時間も含めています。", "費用は" + currencyCode + "での概算です。移動時間は直線距離に基づき、実際の道路や交通状況を示しません。"]
+      : ["気になる場所をいくつか選び、休憩や散策の時間も確保しましょう。", "時間、費用、移動時間はすべて概算です。"],
+    zh: names
+      ? ["您在" + destination.city + "的一天将围绕" + names + "安排，并留出用餐和自由探索的时间。", "费用以" + currencyCode + "估算；移动时间按直线距离计算，并非真实路线或交通预测。"]
+      : ["选择几个值得探索的停留点，并留出休息和漫步的时间。", "时间、费用和移动时间均为估算。"],
+    ar: names
+      ? ["تم ترتيب يومك في " + destination.city + " حول " + names + "، مع وقت لتناول الطعام والاستكشاف.", "التكاليف تقديرية بعملة " + currencyCode + "؛ ووقت التنقل مبني على المسافة المستقيمة وليس الطرق أو حركة المرور."]
+      : ["خطط ليوم يضم محطات ممتعة مع وقت للراحة والاستكشاف.", "الأوقات والتكاليف وأزمنة التنقل كلها تقديرية."]
+  };
+  const sentences = copy[lang] || copy.en;
+  return sentences.join(" ");
 }
 
 export default function PlanTab() {
@@ -228,19 +261,6 @@ export default function PlanTab() {
   const pace = ["relaxed", "balanced", "packed"].includes(profile?.pace) ? profile.pace : "balanced";
   const targetCount = STOP_TARGETS[pace];
   const totalCost = useMemo(() => sumCosts(itinerary), [itinerary]);
-  const rankedPlaces = useMemo(() => rankPlaces(destination.places, plannerProfile, {
-    avoidCrowds: profile?.avoidCrowds === true
-  }, { weather, freeMinutes: SLOT_LIMITS[pace] }), [destination.places, plannerProfile, weather, pace]);
-  const rankedExperiences = useMemo(() => rankExperiences(
-    destination.experiences.filter((item) => item.communityLed === true),
-    plannerProfile,
-    { avoidCrowds: profile?.avoidCrowds === true },
-    { weather, freeMinutes: SLOT_LIMITS[pace] }
-  ), [destination.experiences, plannerProfile, weather, pace]);
-  const rankedDishes = useMemo(() => rankDishes(destination.dishes, plannerProfile, {
-    maxSpiceLevel: profile?.spiceTolerance || 2
-  }, { weather, freeMinutes: 60 }), [destination.dishes, plannerProfile, weather]);
-
   const generatePlan = useCallback(() => {
     const maxStops = targetCount;
     const mealIndex = Math.max(1, Math.floor(maxStops / 2) - 1);
@@ -612,7 +632,7 @@ export default function PlanTab() {
     <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-serif text-2xl">Your day, in order</h2><p className="mt-1 text-xs text-muted">{itinerary.length} stops · {niceWord(pace)} pace · one-day estimate</p></div><span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs font-extrabold">{currency(totalCost, destination)} estimated spend</span></div>
       <div className="mt-3 rounded-xl border border-border bg-bg p-3"><div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs font-bold">Running total vs daily budget</span><span className="text-xs font-extrabold">{budget == null ? "No numeric budget set" : currency(totalCost, destination) + " / " + currency(budget, destination)}</span></div>{budget != null && <><div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-2"><div className={"h-full rounded-full " + (totalCost > budget ? "bg-rose-500" : "bg-brand")} style={{ width: Math.min(100, budget > 0 ? (totalCost / budget) * 100 : totalCost > 0 ? 100 : 0) + "%" }}/></div><p className="mt-2 text-[10px] text-muted">{totalCost > budget ? "Estimated costs exceed the budget you entered by " + currency(totalCost - budget, destination) + "." : currency(Math.max(0, budget - totalCost), destination) + " budget remaining."}</p></>}</div>
-      <p className="mt-3 rounded-xl border border-border bg-bg p-3 text-sm leading-relaxed text-muted">{makeIntro(destination, itinerary, destination.currency.code)}</p>
+      <p className="mt-3 rounded-xl border border-border bg-bg p-3 text-sm leading-relaxed text-muted">{makeIntro(destination, itinerary, destination.currency.code, profile?.languages?.[0])}</p>
       {itinerary.length ? <ol className="mt-4 space-y-0">{itinerary.map((stop, index) => {
         const Icon = categoryIcon(stop.category);
         const disruptionAffects = activeDisruption?.affectedStopIds?.includes(stop.id);
