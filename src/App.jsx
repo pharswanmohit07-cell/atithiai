@@ -178,8 +178,7 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
       <motion.div className="welcome-hero-art" style={{ y: reduceMotion ? 0 : heroY }} animate={reduceMotion ? undefined : { scale: [1, 1.08, 1] }} transition={reduceMotion ? undefined : { duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }} aria-hidden="true">
         <img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="eager" fetchPriority="high" decoding="async"/>
       </motion.div>
-      <div className="welcome-hero-overlay" aria-hidden="true"/>
-      <div className="welcome-hero-glow" aria-hidden="true"/>
+      <div className="welcome-hero-overlay" aria-hidden="true"/><div className="welcome-hero-glow" aria-hidden="true"/>
       {!reduceMotion && <div className="welcome-fireflies" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} style={{ "--firefly-index": index }}/>)}</div>}
       <div className="welcome-hero-inner relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-7 px-5 py-7 sm:px-8 sm:py-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-6 lg:px-10 lg:py-12 xl:px-12">
         <div className="min-w-0 max-w-2xl">
@@ -199,16 +198,9 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
     </motion.section>
     <section className="mx-auto mt-7 max-w-6xl rounded-3xl border border-white/10 bg-surface/70 px-4 py-5 shadow-glass backdrop-blur-xl sm:mt-8 sm:px-7 sm:py-6">
       <SectionTitle eyebrow="A little magic, made practical" title="How it works" description="From your preferences to a day that feels like yours."/>
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {steps.map(({ icon: StepIcon, title, description }, index) => <motion.article key={title} initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: reduceMotion ? 0 : index * 0.06 }} className="glass-card rounded-2xl p-4 sm:p-5">
-          <IconBadge icon={StepIcon} tone={index === 0 ? "gold" : index === 1 ? "coral" : "teal"} size="md"/>
-          <h2 className="mt-3 font-serif text-xl">{title}</h2><p className="mt-1 text-sm leading-relaxed text-muted">{description}</p>
-        </motion.article>)}
-      </div>
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">{steps.map(({ icon: StepIcon, title, description }, index) => <motion.article key={title} initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: reduceMotion ? 0 : index * 0.06 }} className="glass-card rounded-2xl p-4 sm:p-5"><IconBadge icon={StepIcon} tone={index === 0 ? "gold" : index === 1 ? "coral" : "teal"} size="md"/><h2 className="mt-3 font-serif text-xl">{title}</h2><p className="mt-1 text-sm leading-relaxed text-muted">{description}</p></motion.article>)}</div>
     </section>
-    <footer className="mx-auto flex max-w-6xl flex-col gap-2 px-2 pb-5 pt-5 text-[10px] leading-relaxed text-muted sm:flex-row sm:items-center sm:justify-between">
-      <p>Built by TeamBTC</p><p><span className="demo-badge">Demo content</span> Place details, stories and spend ranges are AI-assisted examples. Confirm details locally. Only weather is live.</p>
-    </footer>
+    <footer className="mx-auto flex max-w-6xl flex-col gap-2 px-2 pb-5 pt-5 text-[10px] leading-relaxed text-muted sm:flex-row sm:items-center sm:justify-between"><p>Built by TeamBTC</p><p><span className="demo-badge">Demo content</span> Place details, stories and spend ranges are AI-assisted examples. Confirm details locally. Only weather is live.</p></footer>
   </main>;
 }
 function fallbackIntent(text, currencySymbol = "") {
@@ -553,13 +545,11 @@ export default function AtithiAI() {
       <AnimatePresence mode="wait" initial={false}><motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.25 }}><Suspense fallback={<Skeleton label="Loading this section…" lines={3}/>}>
       {activeTab === "home" && <div className="space-y-5">
         <section className="app-home-hero pitch-hero relative overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-8" style={{ "--destination-accent": destination.themeColors.accent }}>
-          <div className="app-home-art" aria-hidden="true"><img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="lazy" decoding="async"/></div>
-          <div className="relative z-10">
+          <div className="app-home-art" aria-hidden="true"><img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="lazy" decoding="async"/></div><div className="relative z-10">
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/75">{destination.city} · {destination.country}</p>
           <h1 className="deck-heading mt-3 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">{destination.greeting}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">A personalised travel companion for hidden places, local stories and experiences that make a destination feel personal.</p>
-          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold">Discover the unexpected <ArrowRight size={16}/></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold text-white">Build my day</button></div>
-          </div>
+          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold">Discover the unexpected <ArrowRight size={16}/></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold text-white">Build my day</button></div></div>
         </section>
         <WeatherPanel destination={destination} weather={weather} loading={weatherLoading} error={weatherError} formatNumber={formatNumber}/>
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="deck-heading font-serif text-2xl">A few places to begin</h2><p className="mt-1 text-xs text-muted">A changing mix of well-known landmarks and quieter corners.</p></div><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">All places <ArrowRight size={14}/></button></div>
@@ -591,7 +581,7 @@ export default function AtithiAI() {
     </div>
 
     <nav aria-label="Main navigation" className="bottom-nav-glass fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-50 rounded-2xl px-1.5 pt-1.5 pb-1.5 sm:inset-x-1/2 sm:w-[min(46rem,calc(100%-2rem))] sm:-translate-x-1/2">
-       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><motion.button key={id} type="button" whileTap={reduceMotionSafeTap} onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<motion.span className="relative z-10" animate={activeTab===id?{y:[0,-2,0]}:{y:0}} transition={{duration:0.28}}><Icon size={18}/></motion.span><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></motion.button>)}</div>
+       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><motion.button key={id} type="button" whileTap={reduceMotionSafeTap} onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<motion.span className="relative z-10" animate={activeTab===id?{y:[0,-2,0]}:{y:0}} transition={{duration:0.28}}><Icon size={18}/></motion.span><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></motion.button>)}</div>
      </nav>
   </main>;
 }
