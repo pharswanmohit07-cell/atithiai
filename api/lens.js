@@ -2,6 +2,9 @@ const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const VALID_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const VALID_VERDICTS = ["Looks fair", "Possibly overpriced", "Can't tell"];
 const VALID_IMAGE_TYPES = ["taxi", "menu", "temple", "other"];
+const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "")
+  ? process.env.GEMINI_MODEL
+  : "gemini-2.5-flash";
 
 function send(res, status, payload) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -77,7 +80,7 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    return send(res, 503, { error: "Price Lens is unavailable because no Gemini vision API key is configured. Try a sample demo result or retry later." });
+    return send(res, 200, { ...fallbackResult(language), sampleId, source: "safe-fallback" });
   }
 
   const controller = new AbortController();
@@ -96,7 +99,7 @@ export default async function handler(req, res) {
     ].join("\n");
 
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + encodeURIComponent(apiKey),
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -138,7 +141,7 @@ export default async function handler(req, res) {
       },
     );
     if (!response.ok) {
-      return send(res, 502, { error: "Price Lens could not analyse this image right now. Ask the driver/shop to confirm an itemised price." });
+      return send(res, 200, { ...fallbackResult(language), sampleId, source: "safe-fallback" });
     }
     const payload = await response.json();
     const responseText = payload?.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text;
@@ -182,11 +185,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     const timedOut = error?.name === "AbortError";
-    return send(res, 502, {
-      error: timedOut
-        ? "Price Lens took too long. Please retry or use a cached sample result."
-        : "Price Lens is temporarily unavailable. No official price conclusion was made.",
-    });
+    return send(res, 200, { ...fallbackResult(language), sampleId, source: "safe-fallback" });
   } finally {
     clearTimeout(timeout);
   }
