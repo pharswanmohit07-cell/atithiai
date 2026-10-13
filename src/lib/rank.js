@@ -47,7 +47,8 @@ function tagsOf(item) {
 function matchesTime(item, time) {
   if (!time) return true;
   const value = normalized(item.bestTime);
-  if (!value || value === "any") return true;
+  if (value === "any") return true;
+  if (!value) return false;
   const aliases = {
     morning: ["morning", "breakfast"],
     afternoon: ["afternoon", "lunch", "snack"],
