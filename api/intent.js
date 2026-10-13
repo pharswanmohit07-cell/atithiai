@@ -106,13 +106,16 @@ function normalizeIntent(parsed, text, languages = []) {
   const input = parsed && typeof parsed === "object" ? parsed : {};
   const filters = input.filters && typeof input.filters === "object" ? input.filters : {};
   const language = languageTag(input.language, text);
-  const filterDiet = filters.diet === null ? null : DIETS.has(filters.diet) ? filters.diet : fallback.filters.diet;
+  const filterDiet = filters.diet === null
+    ? fallback.filters.diet
+    : DIETS.has(filters.diet) ? filters.diet : fallback.filters.diet;
+  const modelCategories = Array.isArray(filters.categories)
+    ? [...new Set(filters.categories.filter((value) => typeof value === "string" && CATEGORIES.has(value)))].slice(0, CATEGORIES.size)
+    : [];
   return {
     intent: INTENTS.has(input.intent) ? input.intent : fallback.intent,
     filters: {
-      categories: Array.isArray(filters.categories)
-        ? [...new Set(filters.categories.filter((value) => typeof value === "string" && CATEGORIES.has(value)))].slice(0, CATEGORIES.size)
-        : fallback.filters.categories,
+      categories: modelCategories.length ? modelCategories : fallback.filters.categories,
       diet: filterDiet,
       maxBudgetLocal: nullableNumber(filters.maxBudgetLocal) ?? fallback.filters.maxBudgetLocal,
       timeOfDay: TIMES.has(filters.timeOfDay) ? filters.timeOfDay : fallback.filters.timeOfDay,
