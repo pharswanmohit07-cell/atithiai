@@ -28,9 +28,10 @@ function knownPlaceNames() {
   return CORRIDOR_WAYPOINTS.map((waypoint) => waypoint.name);
 }
 
-function advisoryIsSafe(reply, currentWaypoint, villages) {
+function advisoryIsSafe(reply, currentWaypoint, villages, disruption) {
   if (typeof reply !== "string" || !reply.trim() || countWords(reply) > 50) return false;
   if (/(road is open|road is closed|confirmed landslide|road closure confirmed|safe to travel|driver has been notified|homestay is booked)/i.test(reply)) return false;
+  if (disruption?.source === "demo" && !/DEMO EVENT/i.test(reply)) return false;
   const permittedNames = [
     currentWaypoint?.name,
     ...(villages || []).map((village) => village.name),
@@ -120,7 +121,7 @@ export default function RouteGuardCard({
       })
       .then((result) => {
         if (!active || controller.signal.aborted) return;
-        if (advisoryIsSafe(result?.reply, currentWaypoint, nearestSafe)) {
+        if (advisoryIsSafe(result?.reply, currentWaypoint, nearestSafe, disruption)) {
           setAdvisory(result.reply.trim());
           setAdvisorySource("assistant");
         }
@@ -182,7 +183,7 @@ export default function RouteGuardCard({
                       {persona?.id === "pilgrim" && <span className="rounded-full bg-surface-2 px-2 py-1 text-[8px] font-semibold text-muted">Lower elevation considered</span>}
                     </div>
                     <p className="mt-2 text-[10px] leading-relaxed text-muted">Approx. {village.elevationM} m · ₹{village.localSpendINR} local spend · Estimated</p>
-                    <p className="mt-1 flex items-start gap-1.5 text-[10px] leading-relaxed text-muted"><Clock3 size={12} className="mt-0.5 shrink-0"/> {village.distanceKm} km straight-line · roughly {village.roughTravelMinutes} min at 25 km/h. Estimated only; not road travel time.</p>
+                    <p className="mt-1 flex items-start gap-1.5 text-[10px] leading-relaxed text-muted"><Clock3 size={12} className="mt-0.5 shrink-0"/> {village.distanceKm} km straight-line · Rough estimate: {village.roughTravelMinutes} min at 25 km/h. Estimated only; not road travel time.</p>
                     <p className="mt-1 text-[9px] text-muted">{village.shortDesc} Not a real or bookable property.</p>
                   </div>
                 </div>

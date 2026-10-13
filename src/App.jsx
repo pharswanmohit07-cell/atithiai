@@ -570,7 +570,7 @@ export default function AtithiAI() {
           routeSegment={routeSegment}
           detourVillage={detourVillage}
           routeActions={routeActions}
-          affectedTravelers={routeGuardDisruption ? 1 : 0}
+          affectedTravelers={disruptions.length > 0 ? 1 : 0}
           reroutesAccepted={reroutesAccepted}
           onRouteReroute={handleRouteReroute}
           onKeepWaiting={handleKeepWaiting}

@@ -5,8 +5,6 @@ import { useTheme } from "../context/ThemeContext.jsx";
 import { CORRIDOR_WAYPOINTS, DEMO_HOMESTAYS } from "../data/corridor.js";
 import "./RouteMap.css";
 
-const WAYPOINT_INDEX = new Map(CORRIDOR_WAYPOINTS.map((waypoint, index) => [waypoint.id, index]));
-
 function waypointIcon(number, isCurrent) {
   return L.divIcon({
     className: "route-guard-div-icon",
