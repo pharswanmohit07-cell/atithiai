@@ -340,7 +340,7 @@ export default function AtithiAI({ mode = "guest" }) {
       <OfflineBanner />
       <Header onSwitch={switchPersona} />
       <div className="mx-auto max-w-3xl space-y-4 px-4 py-5 sm:px-6 sm:py-7">
-        {activeTab === "home" && <HomeView user={user} destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} formatCurrency={formatCurrency} itinerary={itinerary} addItineraryStop={addItineraryStop} buildItinerary={buildItinerary} addRequest={addRequest} preferences={preferences} cachedDemoMode={cachedDemoMode} />}
+        {activeTab === "home" && <HomeView user={user} destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} itinerary={itinerary} buildItinerary={buildItinerary} addRequest={addRequest} preferences={preferences} cachedDemoMode={cachedDemoMode} />}
         {activeTab === "map" && <Suspense fallback={<div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-border bg-surface text-sm text-muted"><LoaderCircle className="mr-2 animate-spin" size={18} />Loading destination map…</div>}><DestinationMap destination={destination} height={420} /></Suspense>}
         {activeTab === "services" && <ServiceView destination={destination} formatCurrency={formatCurrency} addRequest={addRequest} onTab={setActiveTab} />}
         {activeTab === "discover" && <div className="space-y-4">
