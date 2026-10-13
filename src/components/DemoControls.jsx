@@ -8,6 +8,8 @@ export default function DemoControls({
   isRainOverride = false,
   onToggleWeather,
   onSimulateLandslide,
+  onSimulateAscent,
+  selectedWaypoint,
   onClearDemoEvents,
   isOpen,
   setIsOpen,
@@ -29,6 +31,10 @@ export default function DemoControls({
           {isRainOverride ? <Sun size={16}/> : <CloudRain size={16}/>}
           {isRainOverride ? "Reset rain override" : "Simulate rain"}
           <span className="text-[9px] font-normal opacity-80">Demo event</span>
+        </button>
+        <button type="button" onClick={onSimulateAscent} className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3 py-2.5 text-left text-xs font-semibold text-text hover:bg-surface-2">
+          <span className="flex items-center gap-2"><Mountain size={16} className="text-accent-text"/> Simulate ascent · Demo event</span>
+          <span className="rounded-full bg-amber-100 px-2 py-1 text-[8px] font-extrabold uppercase text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">{selectedWaypoint?.name || "Current waypoint"}</span>
         </button>
         <div className="border-t border-border pt-3">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">Route Guard · Demo event</p>
