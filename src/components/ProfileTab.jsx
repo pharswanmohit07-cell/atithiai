@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Globe2, Heart, Languages, SlidersHorizontal, Users } from "lucide-react";
-import { useProfile, PROFILE_DIETS, PROFILE_INTERESTS, PROFILE_LANGUAGES } from "../context/ProfileContext.jsx";
+import { useProfile, PROFILE_DIETS, PROFILE_INTERESTS, PROFILE_LANGUAGES } from "../context/ProfileContext.jsx";\nimport ThemeToggle from "./ui/ThemeToggle.jsx";\nimport IconBadge from "./ui/IconBadge.jsx";
 
 const panel = "rounded-2xl border border-border bg-surface p-4 sm:p-5";
 const INTEREST_DETAILS = {
@@ -99,7 +99,7 @@ function AnimateStep({step,children}) {
 export default function ProfileTab({ destination, destinations, selectDestination, requests, formatDate }) {
   const { profile, updateProfile, toggleInterest, toggleLanguage, restartOnboarding } = useProfile();
   return <section className="space-y-4">
-    <div className="rounded-3xl p-5 text-white sm:p-7" style={{background:"linear-gradient(125deg, #163e4b 0%, #28365c 55%, "+destination.themeColors.accent+" 100%)"}}><p className="text-xs font-bold uppercase tracking-[0.18em] text-white/70">Your traveler profile</p><h1 className="mt-2 font-serif text-4xl">Make it yours.</h1><p className="mt-2 text-sm text-white/80">A few preferences make suggestions more relevant. You stay in control.</p></div>
+    <div className="pitch-hero rounded-3xl p-5 text-white shadow-2xl sm:p-7" style={{"--destination-accent":destination.themeColors.accent}}><div className="flex items-start justify-between gap-3"><div className="flex items-center gap-3"><IconBadge icon={Users} tone="violet"/><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-white/70">Your traveler profile</p><h1 className="deck-heading mt-1 font-display text-4xl">Make it yours.</h1></div></div><ThemeToggle compact/></div><p className="mt-3 text-sm text-white/85">A few preferences make suggestions more relevant. You stay in control.</p></div>
     <section className={panel}><div className="flex items-center gap-2"><Globe2 size={18} className="text-accent-text"/><h2 className="font-serif text-2xl">Destination</h2></div><div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">{destinations.map((item)=><button key={item.id} type="button" onClick={()=>selectDestination(item.id)} aria-pressed={destination.id===item.id} className={"min-h-20 rounded-xl border p-3 text-left "+(destination.id===item.id?"border-current bg-surface-2":"border-border bg-bg")}><span className="block text-[10px] text-muted">{item.country}</span><span className="mt-1 block font-serif text-xl">{item.city}</span></button>)}</div></section>
     <ProfileEditor profile={profile} updateProfile={updateProfile} toggleInterest={toggleInterest} toggleLanguage={toggleLanguage} currencyCode={destination.currency.code}/>
     <div className="flex justify-end"><button type="button" onClick={restartOnboarding} className="min-h-10 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold">Run profile setup again</button></div>
