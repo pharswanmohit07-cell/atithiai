@@ -159,11 +159,11 @@ export default function LensTab({ onRequest }) {
     try { localStorage.setItem(LOCATION_KEY, JSON.stringify(next)); } catch { /* State remains active for the session. */ }
   };
 
-  const analyse = async (selectedImage, selectedMode = mode) => {
+  const analyse = async (selectedImage, selectedMode = mode, selectedLanguage = language) => {
     if (!selectedImage) return;
     if (cachedDemoMode) {
-      setResult(fallbackResult(language, selectedMode));
-      setError(t("imageFailed", language));
+      setResult(fallbackResult(selectedLanguage, selectedMode));
+      setError(t("imageFailed", selectedLanguage));
       return;
     }
     setLoading(true);
@@ -179,7 +179,7 @@ export default function LensTab({ onRequest }) {
         body: JSON.stringify({
           imageBase64: selectedImage.base64,
           mimeType: selectedImage.mimeType,
-          targetLanguage: targetLanguageTag(language),
+          targetLanguage: targetLanguageTag(selectedLanguage),
           mode: selectedMode,
           city: location.city.trim(),
           country: location.country.trim(),
@@ -190,15 +190,15 @@ export default function LensTab({ onRequest }) {
       let payload = null;
       try { payload = await response.json(); } catch { payload = null; }
       if (response.ok && payload && typeof payload.mode === "string") {
-        setResult(normalizeCached(payload, language, selectedMode));
-        if (payload.source === "safe-fallback") setError(t("imageFailed", language));
+        setResult(normalizeCached(payload, selectedLanguage, selectedMode));
+        if (payload.source === "safe-fallback") setError(t("imageFailed", selectedLanguage));
       } else {
-        setResult(fallbackResult(language, selectedMode));
-        setError(typeof payload?.error === "string" ? payload.error : t("imageFailed", language));
+        setResult(fallbackResult(selectedLanguage, selectedMode));
+        setError(typeof payload?.error === "string" ? payload.error : t("imageFailed", selectedLanguage));
       }
     } catch (caught) {
-      setResult(fallbackResult(language, selectedMode));
-      setError(caught?.name === "AbortError" ? t("timedOut", language) : t("imageFailed", language));
+      setResult(fallbackResult(selectedLanguage, selectedMode));
+      setError(caught?.name === "AbortError" ? t("timedOut", selectedLanguage) : t("imageFailed", selectedLanguage));
     } finally {
       window.clearTimeout(timeout);
       setLoading(false);
@@ -269,7 +269,9 @@ export default function LensTab({ onRequest }) {
     setLanguage(next);
     storeLanguagePreference(LANGUAGE_KEY, next);
     setSpeechStatus("");
-    if (sampleId && !image) setResult(getLocalResult(sampleId, next, mode));
+    if (image && !cachedDemoMode) void analyse(image, mode, next);
+    else if (sampleId) setResult(getLocalResult(sampleId, next, mode));
+    else if (result) setResult(fallbackResult(next, mode));
   };
 
   const changeMode = (next) => {
@@ -420,7 +422,7 @@ export default function LensTab({ onRequest }) {
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" onClick={speak} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-bold text-text">{speaking ? <VolumeX size={14} /> : <Volume2 size={14} />}{speaking ? t("stopSpeaking", language) : t("speak", language)}</button>
-          <button type="button" onClick={askHotel} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white"><Send size={14} />{reported ? t("requestSent", language) : t("askHotel", language)}</button>
+          <button type="button" onClick={askHotel} disabled={reported} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white disabled:cursor-default disabled:opacity-70"><Send size={14} />{reported ? t("requestSent", language) : t("askHotel", language)}</button>
         </div>
         {speechStatus && <p role="status" className="mt-2 text-xs leading-relaxed text-muted">{speechStatus}</p>}
         <p className="mt-3 text-[10px] leading-relaxed text-muted">{t("disclaimer", language)}</p>
