@@ -194,10 +194,11 @@ const RescuePass = forwardRef(function RescuePass({
       anchor.click();
 
       try {
-        if (typeof navigator !== "undefined" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+        if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
           const blob = await (await fetch(dataUrl)).blob();
           const file = new File([blob], "rescue-pass.png", { type: "image/png" });
-          if (navigator.canShare({ files: [file] })) {
+          const supportsFileSharing = typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] });
+          if (supportsFileSharing) {
             try {
               await navigator.share({ files: [file], title: "Atithi AI Offline Rescue Pass", text: "Save this image to your gallery; it needs no internet." });
             } catch {
