@@ -506,6 +506,9 @@ export default function AtithiAI() {
   const { destination, destinations, selectDestination, weather, weatherLoading, weatherError, formatCurrency, formatNumber, emergencyNumber } = useDestination();
   const { itinerary, addItineraryStop, addItineraryItem, removeItineraryStop, clearItinerary, requests, addRequest, chatMessages, addChatMessage } = useTravelContext();
   const { profile } = useProfile();
+  const prefersReducedMotion = useReducedMotion();
+  const [reduceEffects] = useReducedEffects();
+  const disableMotion = prefersReducedMotion || reduceEffects;
   const [started, setStarted] = useState(readStarted);
   const [activeTab, setActiveTab] = useState("home");
   const [chatPrefill, setChatPrefill] = useState("");

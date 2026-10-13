@@ -25,11 +25,47 @@ function readStored(key, fallback) {
 function writeStored(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Keep session state if storage is unavailable. */ }
 }
+function safeText(value, maxLength, fallback = "") {
+  return typeof value === "string" ? value.slice(0, maxLength) : fallback;
+}
+function safeFinite(value, fallback = null) {
+  return value !== null && value !== "" && Number.isFinite(Number(value)) ? Number(value) : fallback;
+}
+function safeDate(value) {
+  return typeof value === "string" && Number.isFinite(Date.parse(value)) ? value : new Date().toISOString();
+}
 function readPlan(key) {
   const value = readStored(key, []);
-  return Array.isArray(value)
-    ? value.filter((item) => item && typeof item.id === "string" && ITEM_TYPES.has(item.itemType)).slice(0, 12)
-    : [];
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => item && typeof item === "object" && !Array.isArray(item)
+      && typeof item.id === "string" && ITEM_TYPES.has(item.itemType))
+    .slice(0, 12)
+    .map((item) => ({
+      id: safeText(item.id, 100),
+      itemType: item.itemType,
+      itemId: safeText(item.itemId, 100, safeText(item.placeId, 100, "")) || null,
+      placeId: safeText(item.placeId, 100) || null,
+      locationPlaceId: safeText(item.locationPlaceId, 100) || null,
+      title: safeText(item.title, 200, "Saved stop"),
+      note: safeText(item.note, 1600),
+      bestTime: safeText(item.bestTime, 40, "any"),
+      window: safeText(item.window, 40),
+      durationMin: Math.max(10, Math.min(1440, Math.round(safeFinite(item.durationMin, 45)))),
+      time: safeText(item.time, 40) || null,
+      status: ["Planned", "Done", "Skipped"].includes(item.status) ? item.status : "Planned",
+      estimatedCost: Math.max(0, safeFinite(item.estimatedCost, 0)),
+      lat: safeFinite(item.lat),
+      lon: safeFinite(item.lon),
+      category: safeText(item.category, 60, item.itemType),
+      score: safeFinite(item.score, 0),
+      reasons: Array.isArray(item.reasons)
+        ? item.reasons.filter((reason) => typeof reason === "string").slice(0, 6).map((reason) => reason.slice(0, 120))
+        : [],
+      travelMinutes: Math.max(0, safeFinite(item.travelMinutes, 0)),
+      travelDistanceKm: item.travelDistanceKm == null || item.travelDistanceKm === "" ? null : Math.max(0, safeFinite(item.travelDistanceKm, 0)),
+      whereToEat: safeText(item.whereToEat, 240)
+    }));
 }
 function newId() {
   return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -47,6 +83,70 @@ function resultRefs(items) {
       reasons: Array.isArray(item.reasons) ? item.reasons.filter((reason) => typeof reason === "string").slice(0, 6).map((reason) => reason.slice(0, 120)) : []
     }));
 }
+function readRequests(key, destinationId) {
+  const value = readStored(key, []);
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => item && typeof item === "object" && !Array.isArray(item)
+      && (typeof item.destinationId !== "string" || item.destinationId === destinationId))
+    .slice(0, MAX_REQUESTS)
+    .map((item) => ({
+      id: safeText(item.id, 100, newId()),
+      title: safeText(item.title, 140, "Travel note"),
+      category: safeText(item.category, 60, "Trip idea"),
+      detail: safeText(item.detail, 1600),
+      placeId: safeText(item.placeId, 100) || null,
+      status: safeText(item.status, 60, "Saved to trip notes"),
+      createdAt: safeDate(item.createdAt),
+      destinationId
+    }));
+}
+function readChatMessages(key, destination) {
+  const value = readStored(key, []);
+  const saved = Array.isArray(value)
+    ? value.filter((item) => item && typeof item === "object" && !Array.isArray(item)
+      && typeof item.text === "string")
+      .slice(-MAX_MESSAGES)
+      .map((item) => ({
+        id: safeText(item.id, 100, newId()),
+        role: item.role === "guest" ? "guest" : "assistant",
+        text: safeText(item.text, 2500),
+        createdAt: safeDate(item.createdAt),
+        ...(typeof item.intent === "string" ? { intent: item.intent.slice(0, 40) } : {}),
+        ...(Array.isArray(item.results) ? { results: resultRefs(item.results) } : {})
+      }))
+    : [];
+  return saved.length ? saved : [makeWelcome(destination)];
+}
+function readPlanMeta(key) {
+  const stored = readStored(key, {});
+  const disruption = stored?.activeDisruption;
+  const activeDisruption = disruption && typeof disruption === "object" && !Array.isArray(disruption)
+    && ["rain", "storm", "heat", "closure", "strike"].includes(disruption.type)
+    && Array.isArray(disruption.affectedStopIds)
+    ? {
+        id: safeText(disruption.id, 120, newId()),
+        type: disruption.type,
+        affectedStopIds: disruption.affectedStopIds.filter((id) => typeof id === "string").slice(0, 12),
+        severity: disruption.severity === "high" ? "high" : "moderate",
+        source: disruption.source === "live" ? "live" : "demo",
+        detectedAt: safeDate(disruption.detectedAt)
+      }
+    : null;
+  const changeLog = Array.isArray(stored?.changeLog)
+    ? stored.changeLog
+        .filter((item) => item && typeof item === "object" && !Array.isArray(item) && typeof item.message === "string")
+        .slice(0, 40)
+        .map((item) => ({
+          id: safeText(item.id, 100, newId()),
+          createdAt: safeDate(item.createdAt),
+          message: safeText(item.message, 260),
+          reason: safeText(item.reason, 260),
+          type: safeText(item.type, 40, "update")
+        }))
+    : [];
+  return { activeDisruption, changeLog };
+}
 
 export function TravelProvider({ children }) {
   const { destination } = useDestination();
@@ -56,15 +156,9 @@ export function TravelProvider({ children }) {
   const skipNextPlanWrite = useRef(false);
   const skipNextMetaWrite = useRef(false);
   const [itinerary, setItinerary] = useState(() => readPlan(PLAN_PREFIX + destination.id));
-  const [planMeta, setPlanMeta] = useState(() => {
-    const stored = readStored(PLAN_META_PREFIX + destination.id, {});
-    return { activeDisruption: stored?.activeDisruption && typeof stored.activeDisruption === "object" ? stored.activeDisruption : null, changeLog: Array.isArray(stored?.changeLog) ? stored.changeLog.filter((item) => item && typeof item.message === "string").slice(0, 40) : [] };
-  });
-  const [requests, setRequests] = useState(() => readStored(REQUESTS_PREFIX + destination.id, []));
-  const [chatMessages, setChatMessages] = useState(() => {
-    const saved = readStored(MESSAGES_PREFIX + destination.id, []);
-    return saved.length ? saved : [makeWelcome(destination)];
-  });
+  const [planMeta, setPlanMeta] = useState(() => readPlanMeta(PLAN_META_PREFIX + destination.id));
+  const [requests, setRequests] = useState(() => readRequests(REQUESTS_PREFIX + destination.id, destination.id));
+  const [chatMessages, setChatMessages] = useState(() => readChatMessages(MESSAGES_PREFIX + destination.id, destination));
 
   useEffect(() => {
     if (previousDestinationId.current === destination.id) return;
@@ -75,16 +169,9 @@ export function TravelProvider({ children }) {
     skipNextPlanWrite.current = true;
     skipNextMetaWrite.current = true;
     setItinerary(readPlan(PLAN_PREFIX + destination.id));
-    const savedMeta = readStored(PLAN_META_PREFIX + destination.id, {});
-    setPlanMeta({ activeDisruption: savedMeta?.activeDisruption && typeof savedMeta.activeDisruption === "object" ? savedMeta.activeDisruption : null, changeLog: Array.isArray(savedMeta?.changeLog) ? savedMeta.changeLog.filter((item) => item && typeof item.message === "string").slice(0, 40) : [] });
-    const destinationRequests = readStored(REQUESTS_PREFIX + destination.id, [])
-      .filter((item) => item && item.destinationId === destination.id)
-      .slice(0, MAX_REQUESTS);
-    setRequests(destinationRequests);
-    const savedMessages = readStored(MESSAGES_PREFIX + destination.id, [])
-      .filter((item) => item && typeof item.text === "string")
-      .slice(-MAX_MESSAGES);
-    setChatMessages(savedMessages.length ? savedMessages : [makeWelcome(destination)]);
+    setPlanMeta(readPlanMeta(PLAN_META_PREFIX + destination.id));
+    setRequests(readRequests(REQUESTS_PREFIX + destination.id, destination.id));
+    setChatMessages(readChatMessages(MESSAGES_PREFIX + destination.id, destination));
   }, [destination]);
 
   useEffect(() => {

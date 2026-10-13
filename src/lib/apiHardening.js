@@ -3,7 +3,7 @@ export function isBodyTooLarge(req, body, maxBytes) {
   if (Number.isFinite(declaredLength) && declaredLength > maxBytes) return true;
   try {
     const serialized = typeof body === "string" ? body : JSON.stringify(body ?? {});
-    return Buffer.byteLength(serialized || "", "utf8") > maxBytes;
+    return new TextEncoder().encode(serialized || "").byteLength > maxBytes;
   } catch {
     return true;
   }

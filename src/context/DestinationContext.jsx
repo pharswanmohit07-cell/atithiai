@@ -69,9 +69,10 @@ export function DestinationProvider({ children }) {
     demoFetch("https://api.open-meteo.com/v1/forecast?" + params.toString(), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Weather is unavailable.");
-        return response.json();
+        const source = response.headers.get("X-Atithi-Cache") === "demo" ? "cached-demo" : "live";
+        return response.json().then((payload) => ({ payload, source }));
       })
-      .then((payload) => {
+      .then(({ payload, source }) => {
         const current = payload?.current;
         if (!current || !Number.isFinite(Number(current.temperature_2m))) throw new Error("Weather response was incomplete.");
         const condition = describeWeather(Number(current.weather_code));
@@ -86,7 +87,7 @@ export function DestinationProvider({ children }) {
           condition: condition.label,
           kind: condition.kind,
           observedAt: String(current.time || ""),
-          source: response.headers.get("X-Atithi-Cache") === "demo" ? "cached-demo" : "live"
+          source
         });
       })
       .catch((error) => {

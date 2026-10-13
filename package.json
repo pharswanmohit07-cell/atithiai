@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "npm run lint && vite build",
-    "lint": "node scripts/lint.mjs",
+    "lint": "node scripts/lint.mjs && eslint . --ext .js,.jsx,.mjs",
     "preview": "vite preview",
     "check:images": "node scripts/check-images.mjs"
   },
@@ -29,6 +29,10 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
     "vite": "^5.3.1",
-    "esbuild": "^0.21.5"
+    "esbuild": "^0.21.5",
+    "eslint": "^9.39.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.13.0"
   }
 }
