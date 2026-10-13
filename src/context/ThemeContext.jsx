@@ -72,7 +72,7 @@ export function ThemeProvider({ children }) {
     root.classList.toggle("dark", resolvedTheme === "dark");
     root.style.colorScheme = resolvedTheme;
 
-    const themeColor = resolvedTheme === "dark" ? "#0B1020" : "#F7F5F2";
+    const themeColor = resolvedTheme === "dark" ? "#0B1421" : "#10434F";
     let meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) {
       meta = document.createElement("meta");

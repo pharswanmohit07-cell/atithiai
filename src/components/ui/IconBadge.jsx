@@ -2,33 +2,33 @@ import { motion } from "framer-motion";
 
 const TONES = {
   saffron: {
-    tile: "from-amber-400 via-orange-400 to-yellow-500",
-    glow: "shadow-[0_6px_18px_rgba(245,158,11,0.28)]",
+    tile: "from-amber-700 via-orange-600 to-rose-600",
+    glow: "shadow-[0_7px_22px_rgba(180,83,9,0.3)]",
   },
   teal: {
-    tile: "from-teal-400 via-teal-500 to-cyan-600",
+    tile: "from-teal-600 via-teal-700 to-indigo-800",
     glow: "shadow-[0_6px_18px_rgba(20,184,166,0.25)]",
   },
   coral: {
-    tile: "from-rose-400 via-red-400 to-orange-500",
+    tile: "from-rose-600 via-red-700 to-orange-700",
     glow: "shadow-[0_6px_18px_rgba(244,63,94,0.25)]",
   },
   violet: {
-    tile: "from-violet-400 via-purple-500 to-fuchsia-500",
+    tile: "from-violet-600 via-indigo-700 to-fuchsia-800",
     glow: "shadow-[0_6px_18px_rgba(139,92,246,0.25)]",
   },
   emerald: {
-    tile: "from-emerald-400 via-green-500 to-teal-600",
+    tile: "from-emerald-600 via-teal-700 to-cyan-800",
     glow: "shadow-[0_6px_18px_rgba(16,185,129,0.25)]",
   },
   sky: {
-    tile: "from-sky-400 via-blue-500 to-cyan-500",
+    tile: "from-sky-600 via-blue-700 to-indigo-800",
     glow: "shadow-[0_6px_18px_rgba(14,165,233,0.25)]",
   },
 };
 
 const SIZES = {
-  sm: { tile: "h-9 w-9 rounded-xl", icon: 20 },
+  sm: { tile: "h-9 w-9 rounded-xl", icon: 18 },
   md: { tile: "h-11 w-11 rounded-xl", icon: 24 },
   lg: { tile: "h-14 w-14 rounded-2xl", icon: 28 },
 };
