@@ -11,8 +11,11 @@ export default class ErrorBoundary extends React.Component {
     return { failed: true };
   }
 
-  componentDidCatch(error) {
-    if (import.meta.env.DEV) console.error("Atithi AI render error:", error);
+  componentDidCatch(error, info) {
+    // Keep the real client-side exception visible in production DevTools too.
+    // The recovery screen intentionally remains generic for visitors.
+    console.error("Atithi AI render error:", error);
+    if (info?.componentStack) console.error("Atithi AI component stack:", info.componentStack);
   }
 
   resetDemo = () => {
