@@ -1623,7 +1623,7 @@ function AITab({ onRequest, guest, preferences, weather, weatherObservation, sel
   );
 }
 
-function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint }) {
+function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint, persona }) {
   const [panel, setPanel] = useState("");
   const [hazardType, setHazardType] = useState("Road obstruction");
   const [hazardDetails, setHazardDetails] = useState("");
