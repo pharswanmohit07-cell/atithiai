@@ -1,260 +1,239 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AlertCircle, CheckCircle2, ImagePlus, LoaderCircle, Send, Volume2, VolumeX } from "lucide-react";
+import { AlertCircle, Camera, Check, Languages, LoaderCircle, MessageCircle, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { getSeedLensResult } from "../../data/lensCache.js";
 import { useDestination } from "../../context/DestinationContext.jsx";
-import { LANGUAGE_OPTIONS, readLanguagePreference, storeLanguagePreference, t, targetLanguageTag } from "../../i18n.js";
+import { useProfile } from "../../context/ProfileContext.jsx";
 
-const MAX_BASE64_LENGTH = Math.ceil(2.85 * 1024 * 1024 * 4 / 3) + 8;
 const LANGUAGE_KEY = "atithi-lens-language";
-const SAMPLE_IMAGES = [
-  { id:"sample-menu", src:"/samples/generic-menu.jpg", mode:"menu", key:"sampleMenu" },
-  { id:"sample-taxi", src:"/samples/fare-board.jpg", mode:"price", key:"sampleFare" },
-  { id:"sample-service", src:"/samples/notice-sign.jpg", mode:"general", key:"sampleNotice" }
+const LIST_KEY = "atithi-dish-list-v1";
+const MAX_BYTES = 4 * 1024 * 1024;
+const LANGUAGES = [
+  ["en","English"],["hi","हिन्दी"],["es","Español"],["fr","Français"],["de","Deutsch"],
+  ["pt","Português"],["id","Bahasa Indonesia"],["ja","日本語"],["zh","中文"],["ar","العربية"]
 ];
-
-function friendlyFallback(language, mode) {
-  const message = t("noText", language);
-  const base = { mode, detectedLanguage:"unknown", detectedText:"", translation:message, summary:message, confidence:"low", disclaimer:t("disclaimer",language), source:"safe-fallback" };
-  if (mode === "menu") return { ...base, dishes:[], estimateNotice:t("estimateNotice",language) };
-  if (mode === "price") return { ...base, visiblePrices:[], roughRange:"", rangeLow:null, rangeHigh:null, verdict:"Can't tell", explanation:t("priceBasis",language) };
-  return base;
+const MODES = [["menu","Menu"],["sign","Sign"],["transport","Transport"],["general","Auto"]];
+const SAMPLES = [
+  { id:"sample-menu", title:"Sample menu", src:"/samples/sample-menu.jpg", mode:"menu" },
+  { id:"sample-sign", title:"Sample sign", src:"/samples/sample-sign.jpg", mode:"sign" },
+  { id:"sample-transport", title:"Sample transport", src:"/samples/sample-transport.jpg", mode:"transport" }
+];
+function preferredLanguage() {
+  try {
+    const saved = localStorage.getItem(LANGUAGE_KEY);
+    if (LANGUAGES.some(([code]) => code === saved)) return saved;
+  } catch { /* Use the browser language if storage is unavailable. */ }
+  const base = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase().split("-")[0];
+  return LANGUAGES.some(([code]) => code === base) ? base : "en";
 }
-function readLocation(destination) {
-  return { city:destination.city, country:destination.country, currency:destination.currency.code };
+function localize(language, english, hindi) { return language === "hi" ? hindi : english; }
+function safeResult(value, mode) {
+  const result = value && typeof value === "object" ? value : {};
+  const output = {
+    whatIsThis: typeof result.whatIsThis === "string" ? result.whatIsThis : "No clear interpretation is available.",
+    detectedLanguage: typeof result.detectedLanguage === "string" ? result.detectedLanguage : "unknown",
+    translation: typeof result.translation === "string" ? result.translation : null,
+    explanation: typeof result.explanation === "string" ? result.explanation.split(/\s+/).slice(0,69).join(" ") : "Context may be incomplete. Verify important details locally.",
+    tips: Array.isArray(result.tips) ? result.tips.filter((item) => typeof item === "string").slice(0,3) : [],
+    confidence: ["low","medium","high"].includes(result.confidence) ? result.confidence : "low"
+  };
+  if (mode === "menu") output.dishes = Array.isArray(result.dishes) ? result.dishes.slice(0,12) : [];
+  if (mode === "transport") {
+    const transport = result.transport || {};
+    output.transport = {
+      summary: typeof transport.summary === "string" ? transport.summary : output.whatIsThis,
+      priceNote: typeof transport.priceNote === "string" ? transport.priceNote : null,
+      verdict: ["Looks fair","Possibly overpriced","Can't tell"].includes(transport.verdict) ? transport.verdict : "Can't tell"
+    };
+  }
+  return output;
 }
 async function resizeImage(file) {
+  if (file.size > 18 * 1024 * 1024) throw new Error("Choose an image smaller than 18 MB before resizing.");
   const url = URL.createObjectURL(file);
   try {
     const image = await new Promise((resolve,reject) => {
       const element = new Image();
       element.onload = () => resolve(element);
-      element.onerror = () => reject(new Error("The image could not be opened."));
+      element.onerror = () => reject(new Error("This image could not be opened. Try another photo."));
       element.src = url;
     });
-    const scale = Math.min(1, 1400 / Math.max(image.naturalWidth,image.naturalHeight));
+    const scale = Math.min(1,1024 / Math.max(image.naturalWidth,image.naturalHeight));
     const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.width = Math.max(1,Math.round(image.naturalWidth*scale));
+    canvas.height = Math.max(1,Math.round(image.naturalHeight*scale));
     const context = canvas.getContext("2d");
-    if (!context) throw new Error("Image conversion is unavailable in this browser.");
+    if (!context) throw new Error("Image conversion is not available in this browser.");
     context.drawImage(image,0,0,canvas.width,canvas.height);
-    let dataUrl = canvas.toDataURL("image/jpeg",0.78);
-    if (dataUrl.length > MAX_BASE64_LENGTH * 0.99) dataUrl = canvas.toDataURL("image/jpeg",0.58);
+    let dataUrl = canvas.toDataURL("image/jpeg",0.82);
+    if (dataUrl.length > MAX_BYTES * 4 / 3 + 100) dataUrl = canvas.toDataURL("image/jpeg",0.62);
     const base64 = dataUrl.slice(dataUrl.indexOf(",")+1);
-    if (!base64 || base64.length > MAX_BASE64_LENGTH) throw new Error("This image is still too large after resizing. Choose a smaller image.");
-    return { dataUrl, base64, mimeType:"image/jpeg" };
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+    if (!base64 || base64.length > MAX_BYTES * 4 / 3 + 100) throw new Error("This photo is still over 4 MB after resizing. Choose a simpler image.");
+    return { dataUrl, base64 };
+  } finally { URL.revokeObjectURL(url); }
 }
-function normalizeResult(result, language, mode) {
-  if (!result) return friendlyFallback(language,mode);
-  const normalized = {
-    ...result, mode,
-    detectedLanguage:result.detectedLanguage || "unknown",
-    detectedText:result.detectedText || "",
-    translation:result.translation || result.summary || t("noText",language),
-    summary:result.summary || result.translation || t("noText",language),
-    disclaimer:result.disclaimer || t("disclaimer",language)
-  };
-  if (mode === "menu" && !Array.isArray(normalized.dishes)) normalized.dishes = [];
-  if (mode === "price") {
-    normalized.visiblePrices = Array.isArray(normalized.visiblePrices) ? normalized.visiblePrices : [];
-    normalized.verdict = normalized.verdict || result.fairPrice?.verdict || "Can't tell";
-    normalized.roughRange = normalized.roughRange || result.fairPrice?.roughRange || "";
-    normalized.explanation = normalized.explanation || result.fairPrice?.explanation || t("priceBasis",language);
-  }
-  return normalized;
-}
-function formatRange(result, currency, locale) {
-  if (result?.roughRange) return result.roughRange;
-  if (!Number.isFinite(result?.rangeLow)) return "";
-  const high = Number.isFinite(result.rangeHigh) ? result.rangeHigh : result.rangeLow;
+function cachedSample(id, language) {
   try {
-    const format = new Intl.NumberFormat(locale,{style:"currency",currency,maximumFractionDigits:["IDR","JPY","KRW","VND","CLP"].includes(currency)?0:2});
-    return high === result.rangeLow ? format.format(high) : format.format(result.rangeLow)+" – "+format.format(high);
-  } catch { return result.rangeLow+"–"+high+" "+currency; }
+    const saved = JSON.parse(localStorage.getItem("atithi-lens-cache:"+id+":"+language) || "null");
+    if (saved && saved.result) return safeResult(saved.result, saved.mode);
+  } catch { /* Use the built-in sample if storage is unavailable or invalid. */ }
+  return safeResult(getSeedLensResult(id), SAMPLES.find((sample) => sample.id === id)?.mode || "general");
 }
-function localVerdict(verdict,language) {
-  if (verdict==="Looks fair") return t("fair",language);
-  if (verdict==="Possibly overpriced") return t("overpriced",language);
-  return t("cannotTell",language);
+function saveSample(id, language, mode, result) {
+  if (!id) return;
+  try { localStorage.setItem("atithi-lens-cache:"+id+":"+language, JSON.stringify({ mode, result, savedAt:Date.now() })); } catch { /* A successful scan still works without local storage. */ }
 }
-
+function formatPriceNote(note, destination) {
+  if (!note) return null;
+  // Keep model wording, but normalize any standalone numeric amount only when it is clearly marked with the destination currency.
+  const currency = destination?.currency?.code;
+  if (!currency) return note;
+  try { new Intl.NumberFormat(destination.locale,{style:"currency",currency}).format(0); } catch { return note; }
+  return note;
+}
 export default function LensTab({ onRequest }) {
-  const { destination, formatCurrency } = useDestination();
-  const inputRef = useRef(null);
-  const [language,setLanguage] = useState(()=>readLanguagePreference(LANGUAGE_KEY,true));
+  const { destination } = useDestination();
+  const { profile } = useProfile();
+  const fileRef = useRef(null);
+  const requestRef = useRef(0);
+  const [language,setLanguage] = useState(preferredLanguage);
   const [mode,setMode] = useState("general");
-  const [location,setLocation] = useState(()=>readLocation(destination));
   const [image,setImage] = useState(null);
   const [result,setResult] = useState(null);
   const [loading,setLoading] = useState(false);
   const [error,setError] = useState("");
-  const [saved,setSaved] = useState(false);
+  const [cachedDemo,setCachedDemo] = useState(false);
   const [sampleId,setSampleId] = useState(null);
   const [speaking,setSpeaking] = useState(false);
   const [speechMessage,setSpeechMessage] = useState("");
-
-  useEffect(()=>{setLocation(readLocation(destination));setImage(null);setResult(null);setError("");setSampleId(null);setSaved(false);},[destination.id]);
-
-  const analyse = async (selectedImage,selectedMode=mode,selectedLanguage=language) => {
-    if(!selectedImage)return;
-    setLoading(true);setError("");setSpeechMessage("");
-    const controller=new AbortController();
-    const timeout=window.setTimeout(()=>controller.abort(),15000);
+  const [savedDishes,setSavedDishes] = useState(() => {
+    try { const value=JSON.parse(localStorage.getItem(LIST_KEY)||"[]"); return Array.isArray(value)?value:[]; } catch { return []; }
+  });
+  useEffect(() => () => {
+    requestRef.current += 1;
+    if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+  }, []);
+  useEffect(() => {
+    setImage(null);setResult(null);setError("");setSampleId(null);setCachedDemo(false);
+  }, [destination.id]);
+  const saveDish = (dish) => {
+    const item = { ...dish, destinationId:destination.id, destination:destination.city, savedAt:new Date().toISOString() };
+    setSavedDishes((current) => {
+      const next = current.some((entry) => entry.name === item.name && entry.destinationId === item.destinationId) ? current : [...current,item];
+      try { localStorage.setItem(LIST_KEY,JSON.stringify(next.slice(-100))); } catch { /* Keep the current session list. */ }
+      return next;
+    });
+    onRequest?.({ title:"Dish saved to my list", category:"Food list", detail: dish.name+" — "+dish.explanation+" ("+destination.city+")" });
+  };
+  const analyse = async (prepared, selectedMode=mode, selectedLanguage=language, selectedSample=sampleId) => {
+    if (!prepared?.base64) return;
+    const requestId = ++requestRef.current;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(),6000);
+    setLoading(true);setError("");setCachedDemo(false);setSpeechMessage("");
     try {
-      const response=await fetch("/api/lens",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        signal:controller.signal,
+      const response = await fetch("/api/lens",{
+        method:"POST",headers:{"Content-Type":"application/json"},signal:controller.signal,
         body:JSON.stringify({
-          imageBase64:selectedImage.base64,
-          mimeType:selectedImage.mimeType,
-          targetLanguage:targetLanguageTag(selectedLanguage),
-          mode:selectedMode,
-          city:location.city.trim(),
-          country:location.country.trim(),
-          currency:location.currency.trim().toUpperCase(),
-          locale:destination.locale
+          imageBase64:prepared.base64,targetLanguage:selectedLanguage,mode:selectedMode,
+          city:destination.city,country:destination.country,currency:destination.currency.code,
+          profileDiet:profile?.diet || "none",locale:destination.locale
         })
       });
-      let payload=null;
-      try{payload=await response.json();}catch{payload=null;}
-      if(response.ok&&payload&&payload.mode){
-        setResult(normalizeResult(payload,selectedLanguage,selectedMode));
-        if(payload.source==="safe-fallback")setError(t("imageFailed",selectedLanguage));
-      }else{
-        setResult(friendlyFallback(selectedLanguage,selectedMode));
-        setError(payload?.error||t("imageFailed",selectedLanguage));
+      let payload = null;
+      try { payload = await response.json(); } catch { payload = null; }
+      if (!response.ok || !payload || typeof payload.whatIsThis !== "string") throw new Error(payload?.error || "Lens could not read this image. Please retry.");
+      if (requestId !== requestRef.current) return;
+      const normalized = safeResult(payload,selectedMode);
+      setResult(normalized);
+      if (selectedSample) saveSample(selectedSample,selectedLanguage,selectedMode,normalized);
+    } catch (caught) {
+      if (requestId !== requestRef.current) return;
+      if (selectedSample) {
+        setResult(cachedSample(selectedSample,selectedLanguage));
+        setCachedDemo(true);
+        setError("");
+      } else {
+        setError(caught?.name === "AbortError" ? "This scan took more than 6 seconds. Please retry or use a sample." : (caught instanceof Error ? caught.message : "Lens is temporarily unavailable."));
       }
-    }catch(caught){
-      setResult(friendlyFallback(selectedLanguage,selectedMode));
-      setError(caught?.name==="AbortError"?t("timedOut",selectedLanguage):t("imageFailed",selectedLanguage));
-    }finally{window.clearTimeout(timeout);setLoading(false);}
-  };
-
-  const useFile = async (file,sample=null,sampleMode=mode) => {
-    if(!file)return;
-    if(!["image/jpeg","image/png","image/webp"].includes(file.type)){
-      setError(t("chooseSupportedImage",language));return;
+    } finally {
+      window.clearTimeout(timeout);
+      if (requestId === requestRef.current) setLoading(false);
     }
-    setError("");setResult(null);setSaved(false);setSpeechMessage("");setSampleId(sample);
-    try{
-      const prepared=await resizeImage(file);
+  };
+  const useFile = async (file, selectedSample=null, selectedMode=mode) => {
+    if (!file) return;
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) { setError("Choose a JPEG, PNG, or WebP image."); return; }
+    setError("");setResult(null);setCachedDemo(false);setSampleId(selectedSample);
+    try {
+      const prepared = await resizeImage(file);
       setImage(prepared);
-      await analyse(prepared,sampleMode,language);
-    }catch(caught){
-      setImage(null);setResult(friendlyFallback(language,sampleMode));
-      setError(caught instanceof Error?caught.message:t("imageFailed",language));
+      await analyse(prepared,selectedMode,language,selectedSample);
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not prepare this image."); }
+  };
+  const chooseSample = async (sample) => {
+    setMode(sample.mode);setSampleId(sample.id);setError("");setResult(null);setImage(null);setCachedDemo(false);
+    try {
+      const response = await fetch(sample.src,{cache:"no-store"});
+      if (!response.ok) throw new Error("Sample image has not been added yet.");
+      const blob = await response.blob();
+      if (!blob.size) throw new Error("Sample image is empty.");
+      await useFile(new File([blob],sample.id+".jpg",{type:blob.type || "image/jpeg"}),sample.id,sample.mode);
+    } catch {
+      setResult(cachedSample(sample.id,language));setCachedDemo(true);setError("");
     }
   };
-
-  const chooseFile=(event)=>{
-    const file=event.target.files?.[0];
-    event.target.value="";
-    setSampleId(null);
-    void useFile(file);
+  const changeLanguage = (next) => {
+    setLanguage(next);
+    try { localStorage.setItem(LANGUAGE_KEY,next); } catch { /* Selection remains active for this session. */ }
+    setSpeechMessage("");
+    if (sampleId && !image) { setResult(cachedSample(sampleId,next));setCachedDemo(true); }
+    else if (image) void analyse(image,mode,next,sampleId);
   };
-
-  const chooseSample=async(sample)=>{
-    setMode(sample.mode);
-    setLoading(true);setError("");setResult(null);setImage(null);setSaved(false);setSampleId(sample.id);
-    try{
-      const response=await fetch(sample.src,{cache:"no-store"});
-      if(!response.ok)throw new Error("sample-not-installed");
-      const blob=await response.blob();
-      const file=new File([blob],sample.src.split("/").pop(),{type:blob.type||"image/jpeg"});
-      await useFile(file,sample.id,sample.mode);
-    }catch{
-      const cached=getSeedLensResult(sample.id,language);
-      setResult(normalizeResult(cached,language,sample.mode));
-      setError(t("sampleUnavailable",language));
-    }finally{setLoading(false);}
-  };
-
-  const changeLanguage=(next)=>{
-    setLanguage(next);storeLanguagePreference(LANGUAGE_KEY,next);setSpeechMessage("");
-    if(image)void analyse(image,mode,next);
-    else if(sampleId)setResult(normalizeResult(getSeedLensResult(sampleId,next),next,mode));
-  };
-  const changeMode=(next)=>{
-    setMode(next);setSaved(false);setSpeechMessage("");
-    if(image)void analyse(image,next,language);
-    else if(sampleId){
-      const sample=SAMPLE_IMAGES.find((item)=>item.id===sampleId);
-      if(sample&&sample.mode===next)setResult(normalizeResult(getSeedLensResult(sampleId,language),language,next));
-      else setResult(friendlyFallback(language,next));
-    }else if(result)setResult(friendlyFallback(language,next));
-  };
-  const speak=()=>{
-    const content=result?.translation||result?.summary||"";
-    if(!content||!("speechSynthesis" in window)||typeof SpeechSynthesisUtterance==="undefined"){
-      setSpeechMessage(t("voiceUnavailable",language));return;
+  const speak = () => {
+    const textToRead = [result?.whatIsThis,result?.translation,result?.explanation].filter(Boolean).join(". ");
+    if (!textToRead || !("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") {
+      setSpeechMessage("Read aloud is unavailable on this device. The text remains available above.");return;
     }
-    if(speaking){window.speechSynthesis.cancel();setSpeaking(false);setSpeechMessage("");return;}
-    const voices=window.speechSynthesis.getVoices();
-    const target=targetLanguageTag(language).toLowerCase();
-    const voice=voices.find((item)=>item.lang?.toLowerCase()===target)
-      ||voices.find((item)=>item.lang?.toLowerCase().split("-")[0]===language);
-    if(!voice){setSpeechMessage(t("voiceUnavailable",language));return;}
-    const utterance=new SpeechSynthesisUtterance(content);
-    utterance.lang=voice.lang||target;
-    utterance.voice=voice;
-    utterance.onend=()=>setSpeaking(false);
-    utterance.onerror=()=>{setSpeaking(false);setSpeechMessage(t("voiceUnavailable",language));};
+    if (speaking) { window.speechSynthesis.cancel();setSpeaking(false);return; }
+    const target = language.toLowerCase();
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find((item) => item.lang?.toLowerCase() === target)
+      || voices.find((item) => item.lang?.toLowerCase().split("-")[0] === target);
+    if (!voice) { setSpeechMessage("No matching voice is installed for this language. You can still read the translation above.");return; }
+    const utterance = new SpeechSynthesisUtterance(textToRead);
+    utterance.voice = voice;utterance.lang = voice.lang || target;
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => { setSpeaking(false);setSpeechMessage("Speech playback is unavailable. The text remains available above."); };
     window.speechSynthesis.cancel();window.speechSynthesis.speak(utterance);setSpeaking(true);setSpeechMessage("");
   };
-  const saveNote=()=>{
-    if(!result||saved)return;
-    const detail=[
-      "Lens mode: "+mode,
-      "Place: "+[location.city,location.country].filter(Boolean).join(", "),
-      "Currency context: "+location.currency,
-      "Detected language: "+(result.detectedLanguage||"unknown"),
-      "Visible text: "+(result.detectedText||"No clear text could be read."),
-      "Translation: "+(result.translation||result.summary||"No translation available."),
-      mode==="price"?"Visible prices: "+(result.visiblePrices||[]).join("; ")+" · Impression: "+(result.verdict||"Can't tell")+(formatRange(result,location.currency,destination.locale)?" · Range: "+formatRange(result,location.currency,destination.locale):""):"",
-      "AI estimate; verify locally. The app has not verified a business, tariff or exchange rate."
-    ].filter(Boolean).join("\n");
-    onRequest?.({title:"Atithi Lens note",category:"Image translation",detail});
-    setSaved(true);
+  const askAtithi = () => {
+    const prompt = "Help me understand this while travelling in "+destination.city+", "+destination.country+". Mode: "+mode+". What Lens identified: "+(result?.whatIsThis||"unclear")+". Translation: "+(result?.translation||"not available")+". Context: "+(result?.explanation||"not available")+". Please explain what I should do or ask locally, and be clear about uncertainty.";
+    window.dispatchEvent(new CustomEvent("atithi:open-chat",{detail:{prompt}}));
   };
-
-  const dishes=Array.isArray(result?.dishes)?result.dishes:[];
-  const prices=Array.isArray(result?.visiblePrices)?result.visiblePrices:[];
-  const range=formatRange(result,location.currency,destination.locale);
-  return <section className="space-y-4">
-    <div><div className="flex items-center gap-2"><ImagePlus size={19} className="text-accent-text"/><h2 className="font-serif text-2xl">{t("lensTitle",language)}</h2></div><p className="mt-1 text-xs leading-relaxed text-muted">{t("lensIntro",language)}</p></div>
-    <div className="grid grid-cols-1 gap-3 rounded-xl border border-border bg-bg p-3 sm:grid-cols-3">
-      <label className="block text-xs font-bold">{t("city",language)}<input value={location.city} maxLength={100} onChange={(event)=>setLocation({...location,city:event.target.value})} className="mt-1 min-h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm font-normal"/></label>
-      <label className="block text-xs font-bold">{t("country",language)}<input value={location.country} maxLength={100} onChange={(event)=>setLocation({...location,country:event.target.value})} className="mt-1 min-h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm font-normal"/></label>
-      <label className="block text-xs font-bold">{t("currency",language)}<input value={location.currency} maxLength={3} onChange={(event)=>setLocation({...location,currency:event.target.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,3)})} pattern="[A-Za-z]{3}" className="mt-1 min-h-10 w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm font-normal uppercase"/></label>
+  const retry = () => image ? void analyse(image,mode,language,sampleId) : sampleId ? void chooseSample(SAMPLES.find((item)=>item.id===sampleId)) : setError("Choose a photo or sample to try again.");
+  const dishes = Array.isArray(result?.dishes) ? result.dishes : [];
+  const transport = result?.transport;
+  return <section className="space-y-4" aria-labelledby="lens-title">
+    <header className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand"><Languages size={20}/></span><div className="min-w-0 flex-1"><h2 id="lens-title" className="font-serif text-2xl">Atithi Lens</h2><p className="mt-1 text-xs leading-relaxed text-muted">Travel help when the world gets unfamiliar. Understand a menu, sign, or local transport detail without losing context.</p></div></header>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <label className="text-xs font-bold">Translate into<select value={language} onChange={(event)=>changeLanguage(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm">{LANGUAGES.map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
+      <div><span className="block text-xs font-bold">What are you looking at?</span><div className="mt-1 grid grid-cols-4 rounded-xl border border-border bg-bg p-1" role="group" aria-label="Lens mode">{MODES.map(([value,label])=><button key={value} type="button" aria-pressed={mode===value} onClick={()=>{setMode(value);setResult(null);setError("");setCachedDemo(false);}} className={"min-h-9 rounded-lg px-1 text-[10px] font-bold sm:text-xs "+(mode===value?"bg-brand text-white":"text-muted hover:bg-surface-2")}>{label}</button>)}</div></div>
     </div>
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <label className="flex items-center gap-2 text-xs font-bold">{t("targetLanguage",language)}<select value={language} onChange={(event)=>changeLanguage(event.target.value)} className="min-h-10 rounded-lg border border-border bg-bg px-3 py-2 text-sm">{LANGUAGE_OPTIONS.map((item)=><option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
-      <div className="inline-flex rounded-xl border border-border bg-bg p-1" role="group" aria-label="Lens mode">{[["general","scan"],["menu","menu"],["price","price"]].map(([value,key])=><button key={value} type="button" aria-pressed={mode===value} onClick={()=>changeMode(value)} className={"min-h-9 rounded-lg px-3 py-1.5 text-xs font-bold "+(mode===value?"bg-brand text-white":"text-muted hover:bg-surface-2")}>{t(key,language)}</button>)}</div>
-    </div>
-    <div className="rounded-xl border border-border bg-surface p-3"><h3 className="text-xs font-bold">{t("samplePhotos",language)}</h3><div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">{SAMPLE_IMAGES.map((sample)=><button key={sample.id} type="button" onClick={()=>void chooseSample(sample)} className="rounded-xl border border-border bg-bg p-3 text-left hover:bg-surface-2"><img src={sample.src} alt={t(sample.key,language)} onError={(event)=>{event.currentTarget.hidden=true;}} className="mb-2 h-20 w-full rounded-lg object-cover"/><span className="block text-sm font-bold">{t(sample.key,language)}</span><span className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-accent-text">{t("samplePhotos",language)} <CheckCircle2 size={12}/></span></button>)}</div></div>
-    <div className="rounded-xl border border-border bg-bg p-3"><label htmlFor="lens-image" className="block text-xs font-bold">{t("uploadPhoto",language)}</label><p className="mt-1 text-xs text-muted">{t("photoHelp",language)}</p><input id="lens-image" ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseFile} className="mt-3 block w-full text-xs text-muted file:mr-3 file:min-h-10 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-2 file:text-xs file:font-bold file:text-white"/>{image&&<img src={image.dataUrl} alt="Selected image preview" className="mt-3 max-h-48 max-w-full rounded-lg border border-border object-contain"/>}</div>
-    {loading&&<p role="status" className="inline-flex items-center gap-2 text-sm text-muted"><LoaderCircle size={15} className="animate-spin"/>{t("reading",language)}</p>}
-    {error&&<p role="status" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"><AlertCircle size={14} className="mr-1 inline"/>{error}</p>}
-    {result&&<article className="rounded-2xl border border-border bg-surface p-4">
-      <div className="flex flex-wrap items-center gap-2"><span className="rounded-full border border-border px-2.5 py-1 text-[9px] font-bold uppercase text-muted">{result.source==="ai-estimate"?"AI estimate":"Cached / fallback"}</span><span className="rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold">{niceConfidence(result.confidence)}</span></div>
-      {result.detectedLanguage&&result.detectedLanguage!=="unknown"&&<p className="mt-3 text-[10px] text-muted">{t("detectedLanguage",language)}: {result.detectedLanguage}</p>}
-      <h3 className="mt-3 text-sm font-bold">{t("originalText",language)}</h3><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted">{result.detectedText||result.summary||t("noText",language)}</p>
-      <h3 className="mt-3 text-sm font-bold">{t("translation",language)}</h3><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{result.translation||result.summary||t("noText",language)}</p>
-      {result.summary&&result.summary!==result.translation&&<><h3 className="mt-3 text-sm font-bold">{t("imageSummary",language)}</h3><p className="mt-1 text-sm leading-relaxed text-muted">{result.summary}</p></>}
-      {mode==="menu"&&<div className="mt-3"><h3 className="text-sm font-bold">{t("dishDetails",language)}</h3><p className="mt-1 text-[10px] font-bold text-accent-text">{result.estimateNotice||t("estimateNotice",language)}</p>{dishes.length?<div className="mt-2 space-y-2">{dishes.map((dish,index)=><div key={dish.name+"-"+index} className="rounded-xl border border-border bg-bg p-3"><h4 className="text-sm font-bold">{dish.name}</h4><p className="mt-1 text-xs text-muted">{dish.explanation}</p><p className="mt-2 text-xs"><strong>{t("dietGuess",language)}:</strong> <span className="text-muted">{dish.dietGuess}</span></p><p className="mt-1 text-xs"><strong>{t("spiceGuess",language)}:</strong> <span className="text-muted">{dish.spiceGuess}</span></p><p className="mt-2 text-[10px] text-muted">{t("estimateNotice",language)}</p></div>)}</div>:<p className="mt-2 text-xs text-muted">{t("noText",language)}</p>}</div>}
-      {mode==="price"&&<div className="mt-3 rounded-xl border border-border bg-bg p-3"><h3 className="text-sm font-bold">{t("priceRange",language)}</h3><p className="mt-1 text-lg font-bold">{range||"—"}</p>{prices.length>0&&<><h4 className="mt-3 text-xs font-bold">{t("visiblePrices",language)}</h4><ul className="mt-1 list-disc space-y-1 pl-5 text-xs text-muted">{prices.map((item,index)=><li key={index}>{item}</li>)}</ul></>}<p className="mt-3 inline-flex rounded-full bg-surface-2 px-2.5 py-1 text-xs font-bold">{t("verdict",language)}: {localVerdict(result.verdict||"Can't tell",language)}</p><p className="mt-2 text-xs leading-relaxed text-muted">{result.explanation||t("priceBasis",language)}</p><p className="mt-2 text-[10px] leading-relaxed text-muted">{t("priceBasis",language)}</p></div>}
-      <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={speak} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-bold">{speaking?<VolumeX size={14}/>:<Volume2 size={14} />}{speaking?t("stopSpeaking",language):t("speak",language)}</button><button type="button" onClick={saveNote} disabled={saved} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-70"><Send size={14}/>{saved?t("requestSaved",language):t("askLocal",language)}</button></div>
-      {speechMessage&&<p role="status" className="mt-2 text-xs leading-relaxed text-muted">{speechMessage}</p>}
-      <p className="mt-3 text-[10px] leading-relaxed text-muted">{t("disclaimer",language)}</p>
+    <div className="rounded-2xl border border-border bg-bg p-3"><div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-xs font-bold">Try a sample</h3><span className="text-[10px] text-muted">Demo examples</span></div><div className="grid grid-cols-3 gap-2">{SAMPLES.map((sample)=><button type="button" key={sample.id} onClick={()=>void chooseSample(sample)} disabled={loading} className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface text-left transition hover:border-brand disabled:opacity-60"><img src={sample.src} alt={sample.title} onError={(event)=>{event.currentTarget.style.display="none";}} className="h-16 w-full object-cover"/><span className="block px-2 py-2 text-[10px] font-bold leading-tight">{sample.title}</span></button>)}</div></div>
+    <div className="rounded-2xl border border-dashed border-border bg-surface p-4"><input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={(event)=>{const file=event.target.files?.[0];event.target.value="";setSampleId(null);void useFile(file,null,mode);}} className="sr-only"/><button type="button" onClick={()=>fileRef.current?.click()} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white"><Camera size={17}/>Take a photo or choose an image</button><p className="mt-2 text-center text-[10px] text-muted">JPEG, PNG or WebP · up to 4 MB after downscaling to 1024 px</p>{image&&<img src={image.dataUrl} alt="Preview of selected image" className="mx-auto mt-3 max-h-64 max-w-full rounded-xl border border-border object-contain"/>}</div>
+    {loading&&<div role="status" aria-live="polite" className="animate-pulse space-y-3 rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-2 text-sm font-bold"><LoaderCircle size={16} className="animate-spin"/>Reading visible details…</div><div className="h-3 w-2/3 rounded bg-surface-2"/><div className="h-3 w-full rounded bg-surface-2"/><div className="h-3 w-5/6 rounded bg-surface-2"/></div>}
+    {error&&<div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"><AlertCircle size={15} className="mr-2 inline"/>{error}<button type="button" onClick={retry} className="ml-2 inline-flex items-center gap-1 font-bold underline"><RotateCcw size={12}/>Retry</button></div>}
+    {result&&<article className="space-y-4 rounded-2xl border border-border bg-surface p-4">
+      <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-brand/10 px-3 py-1 text-[10px] font-bold text-brand">{cachedDemo?"Cached demo result":"Lens result"}</span><span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] font-bold">Confidence: {result.confidence}</span></div>
+      <div><h3 className="text-xs font-bold uppercase tracking-wide text-muted">What this appears to be</h3><p className="mt-1 text-sm leading-relaxed">{result.whatIsThis}</p>{result.detectedLanguage&&<p className="mt-1 text-[10px] text-muted">Detected language: {result.detectedLanguage}</p>}</div>
+      {result.translation&&<div className="rounded-xl border border-border bg-bg p-3"><h3 className="text-xs font-bold uppercase tracking-wide text-muted">Translation</h3><p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{result.translation}</p></div>}
+      <div><h3 className="text-xs font-bold uppercase tracking-wide text-muted">Context that matters</h3><p className="mt-1 text-sm leading-relaxed text-muted">{result.explanation}</p></div>
+      {mode==="menu"&&<div><h3 className="text-sm font-bold">Dish notes</h3>{dishes.length?<div className="mt-2 space-y-2">{dishes.map((dish,index)=><div key={dish.name+"-"+index} className="rounded-xl border border-border bg-bg p-3"><div className="flex items-start justify-between gap-2"><h4 className="text-sm font-bold">{dish.name}</h4><button type="button" onClick={()=>saveDish(dish)} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-[10px] font-bold"><Check size={12}/>Add dish to my list</button></div><p className="mt-2 text-xs leading-relaxed text-muted">{dish.explanation}</p><p className="mt-2 text-[10px]"><strong>Diet:</strong> {dish.dietGuess||"Unclear — ask staff"}</p><p className="mt-1 text-[10px]"><strong>Spice:</strong> {dish.spiceGuess||"Unclear"}</p></div>)}</div>:<p className="mt-2 text-xs text-muted">No dishes could be identified with confidence.</p>}{savedDishes.length>0&&<p className="mt-2 text-[10px] text-muted">{savedDishes.length} dish{savedDishes.length===1?"":"es"} in your saved list.</p>}</div>}
+      {mode==="transport"&&transport&&<div className="rounded-xl border border-border bg-bg p-3"><h3 className="text-sm font-bold">Transport details</h3><p className="mt-1 text-sm leading-relaxed">{transport.summary}</p>{formatPriceNote(transport.priceNote,destination)&&<p className="mt-2 text-xs text-muted">{formatPriceNote(transport.priceNote,destination)}</p>}<p className="mt-3 inline-flex rounded-full bg-brand/10 px-3 py-1.5 text-xs font-bold">{transport.verdict}</p><p className="mt-2 text-[10px] text-muted">No official rate is asserted.</p></div>}
+      {result.tips.length>0&&<div><h3 className="text-xs font-bold uppercase tracking-wide text-muted">Practical tips</h3><div className="mt-2 flex flex-wrap gap-2">{result.tips.map((tip,index)=><span key={index} className="rounded-full border border-border bg-bg px-3 py-2 text-xs leading-relaxed">{tip}</span>)}</div></div>}
+      <div className="flex flex-wrap gap-2"><button type="button" onClick={speak} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">{speaking?<VolumeX size={15}/>:<Volume2 size={15}/>}Read aloud</button><button type="button" onClick={askAtithi} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white"><MessageCircle size={15}/>Ask Atithi about this</button><button type="button" onClick={retry} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold"><RotateCcw size={15}/>Retry</button></div>
+      {speechMessage&&<p role="status" className="text-xs text-muted">{speechMessage}</p>}
+      <p className="border-t border-border pt-3 text-[10px] leading-relaxed text-muted">AI estimate. Verify locally.</p>
     </article>}
   </section>;
-}
-function niceConfidence(value) {
-  if (value==="high") return "High confidence";
-  if (value==="medium") return "Medium confidence";
-  return "Low confidence";
 }
