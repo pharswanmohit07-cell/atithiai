@@ -191,7 +191,7 @@ function fallbackIntent(text, currencySymbol = "") {
   else if (/\bhalal\b/.test(value)) diet = "halal";
   else if (/gluten[- ]?(free|aware)/.test(value)) diet = "gluten-aware";
   else if (/\bnon[- ]?veg(etarian)?\b/.test(value)) diet = "non-veg";
-  const budgetMatch = value.match(new RegExp("(?:under|below|less than|max|up to|budget of)\\\\s*(?:" + (currencySymbol ? String(currencySymbol) + "\\\\s*" : "") + ")?([\\\\d][\\\\d,.]*)", "i"));
+  const budgetMatch = value.match(new RegExp("(?:under|below|less than|max|up to|budget of)\\s*(?:" + (currencySymbol ? String(currencySymbol) + "\\s*" : "") + ")?([\\d][\\d,.]*)", "i"));
   let maxBudgetLocal = null;
   if (budgetMatch) {
     const amount = Number(budgetMatch[1].replace(/,(?=\d{3}(?:\D|$))/g, "").replace(",", "."));
