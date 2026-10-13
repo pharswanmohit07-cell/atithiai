@@ -141,7 +141,7 @@ export default async function handler(req, res) {
         // The prompt defines mode-specific fields; normalize() validates the returned JSON shape.
         generationConfig: {
           responseMimeType: "application/json",
-          thinkingConfig: { thinkingLevel: "low" }
+          thinkingConfig: { thinkingLevel: "LOW" }
         }
       })
     });

@@ -101,7 +101,7 @@ export default async function handler(req, res) {
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { advisory: { type: "STRING" } }, required: ["advisory"] }, maxOutputTokens: 180, thinkingConfig: { thinkingLevel: "low" } }
+          generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { advisory: { type: "STRING" } }, required: ["advisory"] }, maxOutputTokens: 180, thinkingConfig: { thinkingLevel: "LOW" } }
         })
       }
     );

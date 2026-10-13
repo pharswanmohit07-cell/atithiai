@@ -189,7 +189,7 @@ export default async function handler(req, res) {
             responseMimeType: "application/json",
             responseSchema: intentSchema(),
             maxOutputTokens: 600,
-            thinkingConfig: { thinkingLevel: "low" }
+            thinkingConfig: { thinkingLevel: "LOW" }
           }
         })
       }

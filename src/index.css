@@ -112,7 +112,7 @@ h1, h2, h3, h4, .font-serif, .font-display { font-family: "Barlow Condensed", sa
 }
 .dark .demo-badge { border-color: #a16207; background: rgb(120 53 15 / 0.38); color: #fde68a; }
 .leaflet-container { z-index: 0; color: var(--text); font-family: "Barlow", sans-serif; background: var(--surface-2); }
-.leaflet-tile-pane .atithi-dark-tiles .leaflet-tile {
+.leaflet-tile-pane .leaflet-tile.atithi-dark-tiles {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.7);
 }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { border: 1px solid var(--border); background: var(--surface); color: var(--text); }

@@ -76,6 +76,7 @@ const lens = await readSource("api/lens.js");
 const planTab = await readSource("src/components/PlanTab.jsx");
 const demoControls = await readSource("src/components/DemoControls.jsx");
 const planApi = await readSource("api/plan.js");
+const map = await readSource("src/components/DestinationMap.jsx");
 
 const expectedTabs = ["home", "discover", "plan", "lens", "chat", "profile"];
 const checks = [
@@ -91,6 +92,8 @@ const checks = [
   [app.includes('/api/intent') && app.includes("rankPlaces") && app.includes("rankDishes") && app.includes("rankExperiences"), "Chat must parse intent and use deterministic ranking."],
   [intent.includes('req.method !== "POST"') && intent.includes('responseMimeType: "application/json"') && intent.includes("6500") && intent.includes("extractIntentFallback"), "Intent API must be POST-only, JSON mode, timed and have a friendly fallback."],
   [chat.includes("rankedItems") && chat.includes("wordCount(reply) > 70") && chat.includes("GEMINI_API_KEY") && chat.includes("const NO_RESULTS"), "Chat phrasing must be restricted to ranked items, under 70 words and safe when no items match."],
+  [[chat, intent, lens, planApi].every((source) => source.includes('thinkingLevel: "LOW"') && !source.includes('thinkingLevel: "low"')), "Gemini REST thinkingLevel values must use the uppercase enum."],
+  [map.includes('const MAP_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"') && !map.includes("cartocdn.com") && map.includes("no API key required"), "The destination map must use keyless OpenStreetMap tiles with visible attribution."],
   [rankSource.includes("export function rankPlaces") && rankSource.includes("export function rankDishes") && rankSource.includes("export function rankExperiences") && rankSource.includes("reasons"), "All three pure ranking functions must return explainable reasons."],
   [lens.includes("MAX_IMAGE_BYTES") && lens.includes("safeJsonParse") && lens.includes("safe-fallback"), "Lens must preserve its image bound, safe parsing and fallback."],
   [app.includes('<PlanTab/>') && app.includes('removeItineraryStop={removeItineraryStop}'), "Plan tab must use the adaptive itinerary component and expose stop removal from Discover."],

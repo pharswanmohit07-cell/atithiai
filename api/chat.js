@@ -147,7 +147,7 @@ export default async function handler(req, res) {
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 320, thinkingConfig: { thinkingLevel: "low" } }
+          generationConfig: { maxOutputTokens: 320, thinkingConfig: { thinkingLevel: "LOW" } }
         })
       }
     );
