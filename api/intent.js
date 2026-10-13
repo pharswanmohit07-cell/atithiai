@@ -38,7 +38,6 @@ function nullableText(value, max = 100) {
   if (value === null || value === undefined || value === "") return null;
   return typeof value === "string" ? value.trim().slice(0, max) || null : null;
 }
-function escapeRegExp(value) { return String(value || "").split("").map((character) => "\\^$.*+?()[]{}|/".includes(character) ? "\\" + character : character).join(""); }
 function languageTag(value, message) {
   const input = cleanText(value, 45).replace(/_/g, "-");
   if (input && input.toLowerCase() !== "auto") {
@@ -74,7 +73,7 @@ export function extractIntentFallback(text, languages = [], currencySymbol = "")
   else if (/gluten[- ]?(free|aware)|sin gluten|sans gluten|glutenfrei|ग्लूटेन/i.test(value)) diet = "gluten-aware";
   else if (/\bnon[- ]?veg(etarian)?\b|meat eater|carnivor|मांसाहारी/i.test(value)) diet = "non-veg";
 
-  const symbol = escapeRegExp(currencySymbol);
+  const symbol = cleanText(currencySymbol, 8);
   const budgetMatch = value.match(new RegExp("(?:under|below|less than|max(?:imum)?|budget of|up to|menor de|menos de|moins de|unter|bis zu|以内|के अंदर)\\s*(?:" + (symbol ? symbol + "\\s*" : "") + ")?([\\d][\\d.,]*)", "i"));
   let maxBudgetLocal = null;
   if (budgetMatch) {
