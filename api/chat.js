@@ -81,6 +81,23 @@ function disruptionNote(context) {
   return ` Trip Guardian note: ${alerts.join("; ")}. Confirm local road and weather advice before setting out.${suggestion}`;
 }
 
+function shouldShowPlaces(message) {
+  return /where|place|destination|visit|explore|recommend|suggest|crowd|quiet|offbeat|trip|travel|route|what can i see|what to do|map|nearby/i.test(message);
+}
+
+function safePlaceAction(rawAction, message, context) {
+  const requested = rawAction?.type === "show_places" || shouldShowPlaces(message);
+  if (!requested) return { type: "none", placeIds: [] };
+  const allowedIds = new Set(context.lowCrowdPlaces.map((place) => place.id));
+  const requestedIds = Array.isArray(rawAction?.placeIds)
+    ? rawAction.placeIds.filter((id) => allowedIds.has(id))
+    : [];
+  const placeIds = [...new Set(requestedIds.length
+    ? requestedIds
+    : context.lowCrowdPlaces.map((place) => place.id))].slice(0, 5);
+  return { type: "show_places", placeIds };
+}
+
 function friendlyFallback(message, context = {}) {
   const name = context.guest.name ? context.guest.name.split(" ")[0] : "there";
   const diet = context.preferences.dietaryPreference !== "No preference"
@@ -116,14 +133,16 @@ export default async function handler(req, res) {
   const context = safeContext(req.body?.context);
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const fallback = friendlyFallback(message, context);
-  if (!apiKey) return send(res, 200, { reply: fallback, source: "friendly-fallback" });
+  const fallbackAction = safePlaceAction(null, message, context);
+  if (!apiKey) return send(res, 200, { reply: fallback, action: fallbackAction, source: "friendly-fallback" });
+  const allowedPlaceIds = context.lowCrowdPlaces.map((place) => place.id);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 14500);
   try {
     const prompt = [
       "You are Atithi AI, the AI trip guardian for the Himalayas. Keep travellers safer when plans break and redirect them from overcrowded hotspots toward low-crowd local alternatives. Hotel requests are secondary but must still be answered directly.",
-      "Reply in 1 to 4 warm, concise sentences and return JSON only with a single string property named reply.",
+      "Reply in 1 to 4 warm, concise sentences. Return JSON with properties reply and action. If the user asks where to go, for destination suggestions, a map, nearby places, crowd avoidance or a trip plan, set action.type to show_places and placeIds to up to five exact IDs from context.lowCrowdPlaces. Otherwise use action.type none and an empty placeIds array.",
       "Mention active disruptions in context when present, and distinguish demo events from live/weather-linked signals. Do not describe estimated crowd scores or spending as live measurements.",
       "Never claim a road is open or closed, that a landslide is verified, or that a driver/hotel action was completed unless context confirms it. Recommend checking current local authority/weather guidance before travel where relevant.",
       "Suggest destinations ONLY by the exact names present in context.lowCrowdPlaces. Do not invent places, roads, distances, route details, or alternatives. If no supplied destination is a fit, say you don't have a verified suggestion in the current list.",
@@ -143,8 +162,18 @@ export default async function handler(req, res) {
             responseMimeType: "application/json",
             responseSchema: {
               type: "OBJECT",
-              properties: { reply: { type: "STRING" } },
-              required: ["reply"],
+              properties: {
+                reply: { type: "STRING" },
+                action: {
+                  type: "OBJECT",
+                  properties: {
+                    type: { type: "STRING", enum: ["none", "show_places"] },
+                    placeIds: { type: "ARRAY", items: allowedPlaceIds.length ? { type: "STRING", enum: allowedPlaceIds } : { type: "STRING" } },
+                  },
+                  required: ["type", "placeIds"],
+                },
+              },
+              required: ["reply", "action"],
             },
           },
         }),
@@ -155,9 +184,10 @@ export default async function handler(req, res) {
     const responseText = data?.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text;
     const parsed = JSON.parse(responseText || "{}");
     if (typeof parsed.reply !== "string" || !parsed.reply.trim()) throw new Error("Missing reply");
-    return send(res, 200, { reply: parsed.reply.trim().slice(0, 1600), source: "gemini" });
+    const action = safePlaceAction(parsed.action, message, context);
+    return send(res, 200, { reply: parsed.reply.trim().slice(0, 1600), action, source: "gemini" });
   } catch {
-    return send(res, 200, { reply: fallback, source: "friendly-fallback" });
+    return send(res, 200, { reply: fallback, action: fallbackAction, source: "friendly-fallback" });
   } finally {
     clearTimeout(timeout);
   }
