@@ -180,7 +180,7 @@ export default function DiscoverTab({
     return [...currentTimeMatches, ...fallbackMatches.filter((dish) => !existing.has(dish.id))].slice(0, 3);
   }, [destination.dishes, tasteProfile, tasteFilters, sharedContext, currentPart]);
 
-  const itineraryIds = useMemo(() => new Set(itinerary.flatMap((item) => [item.id, item.placeId, item.itemId].filter(Boolean)), [itinerary]);
+  const itineraryIds = useMemo(() => new Set(itinerary.flatMap((item) => [item.id, item.placeId, item.itemId].filter(Boolean))), [itinerary]);
   const hasPlanItem = (item, type) => itineraryIds.has(type === "experience" || type === "dish" ? type + "-" + item.id : item.id) || itineraryIds.has(item.id);
   const toggleSavedExperience = (id) => {
     setSavedExperiences((current) => {
