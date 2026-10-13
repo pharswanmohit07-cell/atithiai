@@ -18,6 +18,12 @@ function includesParty(experience, partyType) {
 function isRain(weatherKind) {
   return /rain|drizzle|shower|storm|wet/i.test(String(weatherKind || ""));
 }
+export function getFreeTimeMinutes(checkOut = "11:00", departureTime = "15:00") {
+  const pattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+  if (!pattern.test(String(checkOut)) || !pattern.test(String(departureTime))) return 240;
+  const minutes = (value) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+  return Math.max(0, minutes(departureTime) - minutes(checkOut));
+}
 export function rankExperiences(experiences = [], options = {}) {
   const { partyType = "Family", freeTimeMinutes = 240, weatherKind = "unknown", lowCrowdPreference = false } = options;
   const rainy = isRain(weatherKind);
