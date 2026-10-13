@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import { useAppContext } from "./context/AppContext.jsx";
 import { PLACES, getCrowd, getCrowdLevel } from "./data/places.js";
+import { CORRIDOR_WAYPOINTS, DEMO_HOMESTAYS } from "./data/corridor.js";
+import { CORRIDOR_ITINERARY } from "./data/guest.js";
 import DemoControls from "./components/DemoControls.jsx";
 import {
   ActionsTakenLog,
@@ -49,15 +51,20 @@ import {
   X,
   LogOut,
   Share2,
+  ShieldAlert,
+  PhoneCall,
+  House,
+  ScanLine,
+  Camera,
 } from "lucide-react";
 
-const SUNNY_ITINERARY = [
-  { id: 1, time: "09:00 AM", title: "Forest Research Institute", desc: "Explore the forestry museum and landmark campus architecture.", location: "FRI · Dehradun", icon: MapPin, type: "activity", status: "completed", placeId: "forest-research-institute" },
-  { id: 2, time: "11:00 AM", title: "Robber's Cave (Gucchupani)", desc: "A stream-cut gorge in the foothills; check conditions before setting out.", location: "Gucchupani · Dehradun", host: "Local guide", duration: "2 hours", pickup: "Hotel lobby · 10:40 AM", icon: Compass, type: "activity", status: "current", placeId: "robbers-cave", isVulnerableToWeather: true },
-  { id: 3, time: "02:00 PM", title: "Tapkeshwar Temple", desc: "A cave-side shrine beside a seasonal stream.", location: "Garhi Cantt · Dehradun", icon: Compass, type: "activity", status: "upcoming", placeId: "tapkeshwar-temple", isVulnerableToWeather: true },
-  { id: 4, time: "04:00 PM", title: "Malsi Deer Park", desc: "A green stop in the Shivalik foothills on the Mussoorie road.", location: "Malsi · Dehradun", icon: MapPin, type: "activity", status: "upcoming", placeId: "malsi-deer-park", isVulnerableToWeather: true },
-  { id: 5, time: "07:00 PM", title: "Paltan Bazaar", desc: "Browse local shops and regional snacks in the city's central market.", location: "Central Dehradun", icon: Compass, type: "activity", status: "upcoming", placeId: "paltan-bazaar" },
-];
+const SUNNY_ITINERARY = CORRIDOR_ITINERARY.map((item, index) => ({
+  ...item,
+  icon: index === 0 ? MapPin : Compass,
+  type: "corridor-stop",
+  status: index === 0 ? "current" : "upcoming",
+  isVulnerableToWeather: true,
+}));
 
 const AI_ALTERNATIVES = [
   {
@@ -173,8 +180,31 @@ function getDistanceKm(first, second) {
   return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 function rankGuardianAlternatives(item, disruption, itinerary) {
-  const original = PLACES.find((place) => place.id === item?.placeId);
-  if (!original || !disruption) return [];
+  if (!item || !disruption) return [];
+  const originalPlace = PLACES.find((place) => place.id === item.placeId);
+  const originalWaypoint = CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === item.waypointId);
+  const original = originalPlace || originalWaypoint;
+  if (!original) return [];
+
+  if (originalWaypoint) {
+    const currentIndex = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === originalWaypoint.id);
+    return CORRIDOR_WAYPOINTS
+      .filter((waypoint, index) => index < currentIndex && !disruption.affectedPlaceIds.includes(waypoint.id))
+      .map((waypoint) => ({
+        ...waypoint,
+        id: waypoint.id,
+        shortDesc: `Pause at this earlier corridor checkpoint until current local road and weather advice confirms whether onward travel is appropriate. ${waypoint.desc}`,
+        category: "corridor-checkpoint",
+        tags: ["low-crowd"],
+        baseCrowd: 35,
+        travelMinutes: null,
+        localSpendINR: 0,
+        isCorridorWaypoint: true,
+      }))
+      .sort((first, second) => getDistanceKm(original, first) - getDistanceKm(original, second))
+      .slice(0, 2);
+  }
+
   const flags = getVisitFlags();
   const alreadyPlanned = new Set(itinerary.filter((candidate) => candidate.id !== item.id).map((candidate) => candidate.placeId).filter(Boolean));
   return PLACES.filter((place) => place.id !== original.id && !disruption.affectedPlaceIds.includes(place.id) && !alreadyPlanned.has(place.id))
@@ -197,35 +227,21 @@ function rankGuardianAlternatives(item, disruption, itinerary) {
     .sort((first, second) => second.guardianScore - first.guardianScore).slice(0, 2);
 }
 
-const INITIAL_REQUESTS = [
-  {
-    id: 1,
-    title: "Fresh towels",
-    category: "Housekeeping",
-    detail: "2 bath towels",
-    status: "On the way",
-    time: "Today, 10:18 AM",
-  },
-  {
-    id: 2,
-    title: "Breakfast for two",
-    category: "In-Room Dining",
-    detail: "Vegetarian continental",
-    status: "Completed",
-    time: "Today, 8:42 AM",
-  },
-];
+const INITIAL_REQUESTS = [];
 
 // --- MAIN APP ---
 export default function AtithiAI() {
   const { user, logout } = useAuth();
-  const { preferences, savePreferences } = useAppContext();
+  const {
+    preferences, savePreferences, persona, clearPersona, updateHealthTags,
+    selectedWaypoint, selectedWaypointId, setSelectedWaypointId,
+    weather, weatherSource, weatherObservation, weatherLoading, weatherError,
+    manualRainOverride, toggleManualRainOverride,
+  } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
   const isDemoMode = new URLSearchParams(location.search).get("demo") === "1";
   const [appMode, setAppMode] = useState(location.pathname === "/admin" ? "admin" : "guest");
-  const [weather, setWeather] = useState("sunny");
-  const [weatherSource, setWeatherSource] = useState("live");
   const [disruptions, setDisruptions] = useState([]);
   const [actionsLog, setActionsLog] = useState([]);
   const [crowdSelectionIds, setCrowdSelectionIds] = useState([]);
@@ -235,10 +251,7 @@ export default function AtithiAI() {
   const [activeGuestTab, setActiveGuestTab] = useState("services");
   const [isDemoControlsOpen, setIsDemoControlsOpen] = useState(true);
   const [requests, setRequests] = useState(() =>
-    INITIAL_REQUESTS.map((request) => ({
-      ...request,
-      detail: `${request.detail} · Requested for Room ${user?.room || "—"}`,
-    })),
+    INITIAL_REQUESTS,
   );
 
   useEffect(() => {
@@ -275,7 +288,7 @@ export default function AtithiAI() {
     if (weather === "rainy") {
       setDisruptions((current) => current.some((item) => item.type === "rain") ? current : [...current, {
         id: "weather-rain", type: "rain", title: "Rain changes the mountain plan",
-        affectedPlaceIds: ["robbers-cave", "sahastradhara", "kempty-falls", "george-everest", "tapkeshwar-temple"],
+        affectedPlaceIds: ["rudraprayag", "guptkashi", "sonprayag", "gaurikund", "kedarnath", "robbers-cave", "sahastradhara"],
         severity: "moderate", source: weatherSource,
       }]);
       setActionsLog((current) => current.some((action) => action.id === "weather-rain-alert") ? current : [{
@@ -293,12 +306,12 @@ export default function AtithiAI() {
     const definitions = {
       landslide: {
         title: "Demo landslide alert · hillside route at risk",
-        affectedPlaceIds: ["george-everest", "kimadi-ridge", "sainji-corn-village", "kempty-falls", "robbers-cave"],
+        affectedPlaceIds: ["rudraprayag", "guptkashi", "sonprayag", "gaurikund", "kedarnath", "kimadi-ridge", "sainji-corn-village"],
         severity: "high",
       },
       roadblock: {
         title: "Demo roadblock · Mussoorie approach disrupted",
-        affectedPlaceIds: ["mussoorie-mall-road", "kempty-falls", "lal-tibba", "george-everest", "robbers-cave"],
+        affectedPlaceIds: ["devprayag", "srinagar-garhwal", "rudraprayag", "guptkashi", "sonprayag", "gaurikund", "mussoorie-mall-road", "kempty-falls"],
         severity: "high",
       },
     };
@@ -342,17 +355,26 @@ export default function AtithiAI() {
 
   const acceptGuardianAlternative = (itineraryItem, place, disruption) => {
     setItinerary((current) => current.map((item) => item.id === itineraryItem.id ? {
-      ...item, title: place.name, desc: place.shortDesc, location: place.name,
-      placeId: place.id, icon: place.category === "market" ? Compass : MapPin,
-      isVulnerableToWeather: Boolean(place.outdoor), aiAdjusted: true, guardianAdjusted: true,
+      ...item,
+      title: place.isCorridorWaypoint ? `Pause at ${place.name}` : place.name,
+      desc: place.shortDesc,
+      location: place.name,
+      placeId: place.isCorridorWaypoint ? undefined : place.id,
+      waypointId: place.isCorridorWaypoint ? place.id : undefined,
+      lat: place.lat,
+      lon: place.lon,
+      elevationM: place.elevationM,
+      icon: place.category === "market" ? Compass : MapPin,
+      isVulnerableToWeather: place.isCorridorWaypoint ? false : Boolean(place.outdoor),
+      aiAdjusted: true, guardianAdjusted: true,
     } : item));
     addRequest({
-      title: `Notify driver: pickup moved to ${place.name}`, category: "Trip Guardian",
-      detail: `Accepted alternative for ${itineraryItem.title}; estimated ${place.travelMinutes} min from Dehradun.`,
+      title: `Notify transport lead: review onward plan at ${place.name}`, category: "Trip Guardian",
+      detail: `Accepted safety checkpoint for ${itineraryItem.title}; check current local road and weather advisories before moving.`,
     });
     addRequest({
-      title: "Hotel: adjust lunch/checkout timing", category: "Trip Guardian",
-      detail: `Guest itinerary changed after ${disruption.type} disruption near ${itineraryItem.title}.`,
+      title: "Local support: review onward timing", category: "Trip Guardian",
+      detail: `Itinerary timing requires a review after the ${disruption.type} disruption near ${itineraryItem.title}.`,
     });
     setCrowdSelectionIds((current) => current.includes(place.id) ? current : [...current, place.id]);
     const now = Date.now();
@@ -364,10 +386,12 @@ export default function AtithiAI() {
     ]);
   };
 
-  const handleLogout = () => {
+  const handleSwitchPersona = () => {
     logout();
-    navigate("/login", { replace: true });
+    clearPersona();
+    navigate("/", { replace: true });
   };
+  const handleLogout = handleSwitchPersona;
 
   const addRequest = (request) => {
     setRequests((current) => [
@@ -375,9 +399,9 @@ export default function AtithiAI() {
         id: Date.now(),
         title: request.title,
         category: request.category,
-        detail: String(request.detail || "Guest request").includes("Requested for Room")
+        detail: String(request.detail || "Safety report").includes("Corridor:")
           ? request.detail
-          : `${request.detail || "Guest request"} · Requested for Room ${user?.room || "—"}`,
+          : `${request.detail || "Safety report"} · Corridor: ${selectedWaypoint?.name || "Selected route"}`,
         status: "Received",
         time: "Today, just now",
       },
@@ -419,8 +443,12 @@ export default function AtithiAI() {
   };
 
   const keepOriginal = () => { setShowAIIntervention(false); };
-  const affectedStop = itinerary.find((item) => item.placeId && disruptions.some((event) => event.affectedPlaceIds.includes(item.placeId)));
-  const guardianDisruption = affectedStop ? disruptions.find((event) => event.affectedPlaceIds.includes(affectedStop.placeId)) : null;
+  const affectedStop = itinerary.find((item) => {
+    const stopId = item.waypointId || item.placeId;
+    return stopId && disruptions.some((event) => event.affectedPlaceIds.includes(stopId));
+  });
+  const affectedStopId = affectedStop?.waypointId || affectedStop?.placeId;
+  const guardianDisruption = affectedStopId ? disruptions.find((event) => event.affectedPlaceIds.includes(affectedStopId)) : null;
   const guardianAlternatives = rankGuardianAlternatives(affectedStop, guardianDisruption, itinerary);
   const flags = getVisitFlags();
   const lowCrowdContext = PLACES.map((place) => ({
@@ -488,11 +516,8 @@ export default function AtithiAI() {
           weather={weather}
           isOpen={isDemoControlsOpen}
           setIsOpen={setIsDemoControlsOpen}
-          onToggleWeather={() => {
-            setWeatherSource("demo");
-            if (weather === "sunny") setWeather("rainy");
-            else { setWeather("sunny"); setDisruptions((current) => current.filter((item) => item.type !== "rain")); }
-          }}
+          isRainOverride={manualRainOverride}
+          onToggleWeather={toggleManualRainOverride}
           onDemoEvent={simulateDisruption}
         />
       )}
