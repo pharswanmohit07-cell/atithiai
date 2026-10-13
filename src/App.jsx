@@ -3,7 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import { useAppContext } from "./context/AppContext.jsx";
-import { PLACES } from "./data/places.js";
+import { PLACES, getCrowd, getCrowdLevel } from "./data/places.js";
+import DemoControls from "./components/DemoControls.jsx";
+import {
+  ActionsTakenLog,
+  BeatCrowdsPanel,
+  DestinationOverview,
+  GuardianCard,
+  SustainableImpactCard,
+} from "./components/DisruptionGuardian.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import {
@@ -40,56 +48,11 @@ import {
 } from "lucide-react";
 
 const SUNNY_ITINERARY = [
-  {
-    id: 1,
-    time: "09:00 AM",
-    title: "In-Room Breakfast",
-    desc: "Vegetarian Continental, Green Tea",
-    icon: Coffee,
-    type: "dining",
-    status: "completed",
-  },
-  {
-    id: 2,
-    time: "11:00 AM",
-    title: "Private City Tour",
-    desc: "Heritage sites and local markets",
-    location: "Old Town · Dehradun",
-    host: "Arjun Mehta · Local guide",
-    duration: "2.5 hours",
-    pickup: "Hotel lobby · 10:50 AM",
-    icon: Compass,
-    type: "activity",
-    status: "current",
-  },
-  {
-    id: 3,
-    time: "02:00 PM",
-    title: "Light Lunch at The Courtyard",
-    desc: "Reserved table by the fountain",
-    icon: Utensils,
-    type: "dining",
-    status: "upcoming",
-  },
-  {
-    id: 4,
-    time: "04:00 PM",
-    title: "Botanical Garden Walk",
-    desc: "Outdoor guided nature walk",
-    icon: MapPin,
-    type: "activity",
-    status: "upcoming",
-    isVulnerableToWeather: true,
-  },
-  {
-    id: 5,
-    time: "07:30 PM",
-    title: "Dinner at Saffron",
-    desc: "Chef's special vegetarian tasting menu",
-    icon: Utensils,
-    type: "dining",
-    status: "upcoming",
-  },
+  { id: 1, time: "09:00 AM", title: "Forest Research Institute", desc: "Explore the forestry museum and landmark campus architecture.", location: "FRI · Dehradun", icon: MapPin, type: "activity", status: "completed", placeId: "forest-research-institute" },
+  { id: 2, time: "11:00 AM", title: "Robber's Cave (Gucchupani)", desc: "A stream-cut gorge in the foothills; check conditions before setting out.", location: "Gucchupani · Dehradun", host: "Local guide", duration: "2 hours", pickup: "Hotel lobby · 10:40 AM", icon: Compass, type: "activity", status: "current", placeId: "robbers-cave", isVulnerableToWeather: true },
+  { id: 3, time: "02:00 PM", title: "Tapkeshwar Temple", desc: "A cave-side shrine beside a seasonal stream.", location: "Garhi Cantt · Dehradun", icon: Compass, type: "activity", status: "upcoming", placeId: "tapkeshwar-temple", isVulnerableToWeather: true },
+  { id: 4, time: "04:00 PM", title: "Malsi Deer Park", desc: "A green stop in the Shivalik foothills on the Mussoorie road.", location: "Malsi · Dehradun", icon: MapPin, type: "activity", status: "upcoming", placeId: "malsi-deer-park", isVulnerableToWeather: true },
+  { id: 5, time: "07:00 PM", title: "Paltan Bazaar", desc: "Browse local shops and regional snacks in the city's central market.", location: "Central Dehradun", icon: Compass, type: "activity", status: "upcoming", placeId: "paltan-bazaar" },
 ];
 
 const AI_ALTERNATIVES = [
@@ -164,6 +127,42 @@ const EXPERIENCES = [
   },
 ];
 
+function getVisitFlags() {
+  const day = new Date().getDay();
+  return { isWeekend: day === 0 || day === 6, isHoliday: false };
+}
+function getDistanceKm(first, second) {
+  const radians = (value) => value * Math.PI / 180;
+  const lat = radians(second.lat - first.lat);
+  const lon = radians(second.lon - first.lon);
+  const h = Math.sin(lat / 2) ** 2 + Math.cos(radians(first.lat)) * Math.cos(radians(second.lat)) * Math.sin(lon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+function rankGuardianAlternatives(item, disruption, itinerary) {
+  const original = PLACES.find((place) => place.id === item?.placeId);
+  if (!original || !disruption) return [];
+  const flags = getVisitFlags();
+  const alreadyPlanned = new Set(itinerary.filter((candidate) => candidate.id !== item.id).map((candidate) => candidate.placeId).filter(Boolean));
+  return PLACES.filter((place) => place.id !== original.id && !disruption.affectedPlaceIds.includes(place.id) && !alreadyPlanned.has(place.id))
+    .map((place) => {
+      const crowd = getCrowd(place, flags);
+      const distance = getDistanceKm(original, place);
+      let score = (100 - crowd) * 0.45 - Math.min(distance, 100) * 0.35;
+      if (place.tags.includes("low-crowd")) score += 18;
+      if (place.tags.includes("eco-friendly") || place.tags.includes("local-artisan")) score += 5;
+      if (disruption.type === "rain") {
+        if (place.indoor || place.tags.includes("indoor") || place.tags.includes("rain-friendly")) score += 35;
+        if (place.outdoor) score -= 18;
+      }
+      if (disruption.type === "landslide" || disruption.type === "roadblock") {
+        if (distance <= 15) score += 12;
+        if (place.tags.includes("low-crowd")) score += 7;
+      }
+      return { ...place, crowdScore: crowd, distanceKm: distance, guardianScore: score };
+    })
+    .sort((first, second) => second.guardianScore - first.guardianScore).slice(0, 2);
+}
+
 const INITIAL_REQUESTS = [
   {
     id: 1,
@@ -192,6 +191,10 @@ export default function AtithiAI() {
   const isDemoMode = new URLSearchParams(location.search).get("demo") === "1";
   const [appMode, setAppMode] = useState(location.pathname === "/admin" ? "admin" : "guest");
   const [weather, setWeather] = useState("sunny");
+  const [weatherSource, setWeatherSource] = useState("live");
+  const [disruptions, setDisruptions] = useState([]);
+  const [actionsLog, setActionsLog] = useState([]);
+  const [crowdSelectionIds, setCrowdSelectionIds] = useState([]);
   const [itinerary, setItinerary] = useState(SUNNY_ITINERARY);
   const [showAIIntervention, setShowAIIntervention] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
@@ -235,7 +238,97 @@ export default function AtithiAI() {
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("atithi:weather", { detail: weather }));
-  }, [weather]);
+    if (weather === "rainy") {
+      setDisruptions((current) => current.some((item) => item.type === "rain") ? current : [...current, {
+        id: "weather-rain", type: "rain", title: "Rain changes the mountain plan",
+        affectedPlaceIds: ["robbers-cave", "sahastradhara", "kempty-falls", "george-everest", "tapkeshwar-temple"],
+        severity: "moderate", source: weatherSource,
+      }]);
+      setActionsLog((current) => current.some((action) => action.id === "weather-rain-alert") ? current : [{
+        id: "weather-rain-alert",
+        title: "Weather-linked disruption flagged",
+        detail: "Outdoor stops were checked against the current weather state. Crowd and travel estimates remain illustrative.",
+        time: "Just now", source: weatherSource, kind: "alert",
+      }, ...current]);
+    } else {
+      setDisruptions((current) => current.filter((item) => item.type !== "rain"));
+    }
+  }, [weather, weatherSource]);
+
+  const simulateDisruption = (type) => {
+    const definitions = {
+      landslide: {
+        title: "Demo landslide alert · hillside route at risk",
+        affectedPlaceIds: ["george-everest", "kimadi-ridge", "sainji-corn-village", "kempty-falls", "jabarkhet-nature-reserve"],
+        severity: "high",
+      },
+      roadblock: {
+        title: "Demo roadblock · Mussoorie approach disrupted",
+        affectedPlaceIds: ["mussoorie-mall-road", "kempty-falls", "lal-tibba", "george-everest", "jabarkhet-nature-reserve"],
+        severity: "high",
+      },
+    };
+    const definition = definitions[type];
+    if (!definition) return;
+    const disruption = { id: `demo-${type}-${Date.now()}`, type, ...definition, source: "demo" };
+    setDisruptions((current) => [...current.filter((item) => item.type !== type), disruption]);
+    setActionsLog((current) => [{
+      id: `log-${disruption.id}`, title: disruption.title,
+      detail: `Guardian is checking ${definition.affectedPlaceIds.length} affected destinations and ranking alternatives.`,
+      time: "Just now", source: "demo", kind: "alert",
+    }, ...current]);
+  };
+
+  const addPlaceToItinerary = (place, redirectedFrom = null) => {
+    setItinerary((current) => {
+      if (current.some((item) => item.placeId === place.id)) return current;
+      return [...current, {
+        id: `discover-${place.id}-${Date.now()}`,
+        time: current.length >= 6 ? "Later today" : ["09:00 AM", "11:00 AM", "02:00 PM", "04:00 PM", "07:00 PM", "Later today"][current.length],
+        title: place.name, desc: place.shortDesc, location: place.name,
+        icon: place.category === "market" ? Compass : MapPin, type: "activity",
+        status: "upcoming", placeId: place.id, isVulnerableToWeather: Boolean(place.outdoor),
+      }];
+    });
+    setCrowdSelectionIds((current) => current.includes(place.id) ? current : [...current, place.id]);
+    if (redirectedFrom) {
+      setActionsLog((current) => [{
+        id: `crowd-redirect-${Date.now()}`, title: `Beat the crowds: ${place.name} added`,
+        detail: `Suggested instead of high-crowd ${redirectedFrom.name}; ₹${place.localSpendINR} local spend · estimated.`,
+        time: "Just now", source: "guardian", kind: "redirection", localSpendINR: place.localSpendINR,
+      }, ...current]);
+    } else {
+      setActionsLog((current) => [{
+        id: `place-add-${Date.now()}`, title: `${place.name} added to your day`,
+        detail: `₹${place.localSpendINR} local spend · estimated.`, time: "Just now",
+        source: "guardian", kind: "selection",
+      }, ...current]);
+    }
+  };
+
+  const acceptGuardianAlternative = (itineraryItem, place, disruption) => {
+    setItinerary((current) => current.map((item) => item.id === itineraryItem.id ? {
+      ...item, title: place.name, desc: place.shortDesc, location: place.name,
+      placeId: place.id, icon: place.category === "market" ? Compass : MapPin,
+      isVulnerableToWeather: Boolean(place.outdoor), aiAdjusted: true, guardianAdjusted: true,
+    } : item));
+    addRequest({
+      title: `Notify driver: pickup moved to ${place.name}`, category: "Trip Guardian",
+      detail: `Accepted alternative for ${itineraryItem.title}; estimated ${place.travelMinutes} min from Dehradun.`,
+    });
+    addRequest({
+      title: "Hotel: adjust lunch/checkout timing", category: "Trip Guardian",
+      detail: `Guest itinerary changed after ${disruption.type} disruption near ${itineraryItem.title}.`,
+    });
+    setCrowdSelectionIds((current) => current.includes(place.id) ? current : [...current, place.id]);
+    const now = Date.now();
+    setActionsLog((current) => [
+      { id: `hotel-action-${now}`, title: "Hotel timing adjustment requested", detail: "Staff request created to review lunch / checkout timing.", time: "Just now", source: disruption.source, kind: "staff-action" },
+      { id: `driver-action-${now+1}`, title: `Driver notification requested · ${place.name}`, detail: "Staff request created to move the pickup point.", time: "Just now", source: disruption.source, kind: "staff-action" },
+      { id: `redirect-${now+2}`, title: `Itinerary rerouted: ${itineraryItem.title} → ${place.name}`, detail: `${disruption.title}. ₹${place.localSpendINR} local spend at the alternative · estimated.`, time: "Just now", source: disruption.source, kind: "redirection", localSpendINR: place.localSpendINR },
+      ...current,
+    ]);
+  };
 
   const handleLogout = () => {
     logout();
@@ -291,15 +384,35 @@ export default function AtithiAI() {
     }, 1200);
   };
 
-  const keepOriginal = () => {
-    setShowAIIntervention(false);
-  };
+  const keepOriginal = () => { setShowAIIntervention(false); };
+  const affectedStop = itinerary.find((item) => item.placeId && disruptions.some((event) => event.affectedPlaceIds.includes(item.placeId)));
+  const guardianDisruption = affectedStop ? disruptions.find((event) => event.affectedPlaceIds.includes(affectedStop.placeId)) : null;
+  const guardianAlternatives = rankGuardianAlternatives(affectedStop, guardianDisruption, itinerary);
+  const flags = getVisitFlags();
+  const lowCrowdContext = PLACES.map((place) => ({
+    id: place.id, name: place.name, category: place.category, tags: place.tags,
+    lat: place.lat, lon: place.lon, travelMinutes: place.travelMinutes,
+    localSpendINR: place.localSpendINR, crowdEstimate: getCrowd(place, flags), shortDesc: place.shortDesc,
+  })).sort((first, second) => first.crowdEstimate - second.crowdEstimate).slice(0, 5);
+  const redirectionsCount = actionsLog.filter((action) => action.kind === "redirection").length;
+  const localSpendRedirected = actionsLog.filter((action) => action.kind === "redirection").reduce((sum, action) => sum + Number(action.localSpendINR || 0), 0);
+  const isWeekend = flags.isWeekend;
 
   return (
     <div className="min-h-screen bg-bg text-text font-sans selection:bg-accent selection:text-text">
       {appMode === "guest" ? (
         <GuestApp
           guest={user}
+          disruptions={disruptions}
+          lowCrowdPlaces={lowCrowdContext}
+          actionsLog={actionsLog}
+          crowdSelectionIds={crowdSelectionIds}
+          isWeekend={isWeekend}
+          guardianDisruption={guardianDisruption}
+          affectedStop={affectedStop}
+          guardianAlternatives={guardianAlternatives}
+          onAcceptGuardianAlternative={acceptGuardianAlternative}
+          onAddPlaceToItinerary={addPlaceToItinerary}
           preferences={preferences}
           onSavePreferences={savePreferences}
           onOpenOnboarding={() => window.dispatchEvent(new Event("atithi:reopen-onboarding"))}
@@ -317,6 +430,14 @@ export default function AtithiAI() {
         />
       ) : (
         <AdminDashboard
+          disruptions={disruptions}
+          actionsLog={actionsLog}
+          redirectionsCount={redirectionsCount}
+          localSpendRedirected={localSpendRedirected}
+          guardianDisruption={guardianDisruption}
+          affectedStop={affectedStop}
+          guardianAlternatives={guardianAlternatives}
+          onAcceptGuardianAlternative={acceptGuardianAlternative}
           weather={weather}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
@@ -326,69 +447,20 @@ export default function AtithiAI() {
         />
       )}
 
-      {isDemoMode && !isDemoControlsOpen && (
-        <button
-          onClick={() => setIsDemoControlsOpen(true)}
-          className="fixed bottom-4 right-4 z-50 rounded-full bg-brand text-white px-3 py-2 text-xs font-medium shadow-lg md:hidden"
-        >
-          Controls
-        </button>
-      )}
-
       {isDemoMode && (
-      <div
-        className={`fixed bottom-4 right-4 z-50 flex flex-col gap-3 bg-surface/90 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-border transition-all duration-300 md:bottom-6 md:right-6 ${
-          isDemoControlsOpen
-            ? "translate-x-0 opacity-100"
-            : "translate-x-[130%] opacity-0 pointer-events-none md:translate-x-0 md:opacity-100 md:pointer-events-auto"
-        }`}
-      >
-        <button
-          type="button"
-          aria-label="Close demo controls"
-          onClick={() => setIsDemoControlsOpen(false)}
-          className="absolute -top-2.5 -right-2.5 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-surface text-text shadow-sm md:hidden"
-        >
-          <X size={14} />
-        </button>
-
-        <p className="text-xs font-semibold tracking-wider text-muted uppercase mb-1">
-          Demo Controls
-        </p>
-
-        <div className="flex bg-surface-2 rounded-lg p-1">
-          <button
-            onClick={() => setAppMode("guest")}
-            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "guest" ? "bg-surface shadow-sm text-text" : "text-muted hover:text-text"}`}
-          >
-            Guest App
-          </button>
-          <button
-            onClick={() => setAppMode("admin")}
-            className={`flex-1 text-sm px-4 py-2 rounded-md font-medium transition-all ${appMode === "admin" ? "bg-surface shadow-sm text-text" : "text-muted hover:text-text"}`}
-          >
-            Admin
-          </button>
-        </div>
-
-        <button
-          onClick={() => {
+        <DemoControls
+          appMode={appMode}
+          setAppMode={setAppMode}
+          weather={weather}
+          isOpen={isDemoControlsOpen}
+          setIsOpen={setIsDemoControlsOpen}
+          onToggleWeather={() => {
+            setWeatherSource("demo");
             if (weather === "sunny") setWeather("rainy");
-            else {
-              setWeather("sunny");
-              setItinerary(SUNNY_ITINERARY);
-            }
+            else { setWeather("sunny"); setDisruptions((current) => current.filter((item) => item.type !== "rain")); }
           }}
-          className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-medium transition-all ${
-            weather === "sunny"
-              ? "bg-brand text-white hover:bg-brand/90"
-              : "bg-sky-600 text-white hover:bg-blue-700"
-          }`}
-        >
-          {weather === "sunny" ? <CloudRain size={16} /> : <Sun size={16} />}
-          {weather === "sunny" ? "Trigger Rain (4:00 PM)" : "Reset Weather"}
-        </button>
-      </div>
+          onDemoEvent={simulateDisruption}
+        />
       )}
     </div>
   );
@@ -435,7 +507,7 @@ function GuestApp(props) {
                 exit="exit"
                 className="h-full"
               >
-                <DiscoverTab onRequest={props.addRequest} />
+                <DiscoverTab onRequest={props.addRequest} onAddPlace={props.onAddPlaceToItinerary} crowdSelectionIds={props.crowdSelectionIds} isWeekend={props.isWeekend} />
               </motion.div>
             )}
             {activeTab === "ai" && (
@@ -447,7 +519,7 @@ function GuestApp(props) {
                 exit="exit"
                 className="h-full"
               >
-                <AITab onRequest={props.addRequest} guest={props.guest} preferences={props.preferences} weather={props.weather} />
+                <AITab onRequest={props.addRequest} guest={props.guest} preferences={props.preferences} weather={props.weather} disruptions={props.disruptions} lowCrowdPlaces={props.lowCrowdPlaces} />
               </motion.div>
             )}
             {activeTab === "services" && (
@@ -529,9 +601,9 @@ function GuestApp(props) {
 // --- TAB COMPONENTS ---
 
 function HomeTab({
-  guest,
-  preferences,
-  weather,
+  guest, preferences, weather,
+  disruptions = [], actionsLog = [], guardianDisruption, affectedStop,
+  guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
   itinerary,
   showAIIntervention,
   isResolving,
@@ -575,7 +647,7 @@ function HomeTab({
           </div>
           <div>
             <p className="mb-1 text-sm font-medium text-[#F0D6AD]">
-              A slower kind of morning
+              A safer way through the Himalayas
             </p>
             <h1 className="max-w-[290px] font-serif text-[42px] leading-[0.93]">
               Good morning,
@@ -647,8 +719,8 @@ function HomeTab({
                 <div>
                   <p className="text-text leading-relaxed">
                     {weather === "sunny"
-                      ? "We've planned a relaxed morning followed by your city tour. Your plans are looking perfect for today's weather."
-                      : "I've updated your schedule for the rain. Enjoy a cozy afternoon indoors."}
+                      ? "Atithi is watching for route changes and helping you discover quieter local places."
+                      : "Weather has shifted. Check the Guardian suggestions before leaving for an outdoor stop."}
                   </p>
                 </div>
               </div>
@@ -656,8 +728,13 @@ function HomeTab({
           )}
         </AnimatePresence>
 
+        {guardianDisruption && affectedStop && (
+          <GuardianCard disruption={guardianDisruption} itineraryItem={affectedStop} alternatives={guardianAlternatives} onAccept={onAcceptGuardianAlternative} />
+        )}
+        <ActionsTakenLog actions={actionsLog} compact />
+
         <AnimatePresence>
-          {showAIIntervention && (
+          {showAIIntervention && disruptions.length === 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0, y: 20 }}
               animate={{ opacity: 1, height: "auto", y: 0 }}
@@ -743,7 +820,7 @@ function HomeTab({
             </div>
             <div className="p-4">
               <p className="text-[10px] uppercase tracking-wide text-white/55">
-                Your morning, thoughtfully planned
+                Your route, watched by Atithi
               </p>
               <h2 className="mt-1 font-serif text-[25px] leading-tight">
                 {currentPlan.title}
@@ -788,7 +865,7 @@ function HomeTab({
 
         <div>
           <div className="flex justify-between items-end mb-6">
-            <h2 className="font-serif text-2xl text-text">Today's Stay</h2>
+            <h2 className="font-serif text-2xl text-text">Today's route</h2>
             <span className="text-sm font-medium text-muted">
               October 5, 2026
             </span>
@@ -859,7 +936,7 @@ function HomeTab({
 
         <div className="pt-4 border-t border-border">
           <h2 className="font-serif text-2xl text-text mb-4">
-            Tonight's Dining
+            Local food & rest
           </h2>
           <div className="bg-surface rounded-2xl p-5 shadow-sm border border-border">
             <div className="w-full h-32 rounded-xl bg-[url('https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center mb-4" />
@@ -894,7 +971,7 @@ function HomeTab({
   );
 }
 
-function DiscoverTab({ onRequest }) {
+function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend = false }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [selected, setSelected] = useState(null);
@@ -983,6 +1060,8 @@ function DiscoverTab({ onRequest }) {
           );
         })}
       </div>
+      <BeatCrowdsPanel search={search} onAddPlace={onAddPlace} isWeekend={isWeekend} selectedPlaceIds={crowdSelectionIds} />
+      <SustainableImpactCard placeIds={crowdSelectionIds} />
       <div className="mb-3 flex items-end justify-between">
         <div>
           <p className="text-[10px] uppercase tracking-[0.15em] text-accent-text">
@@ -1128,7 +1207,7 @@ function DiscoverTab({ onRequest }) {
   );
 }
 
-function AITab({ onRequest, guest, preferences, weather }) {
+function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCrowdPlaces = [] }) {
   const [messages, setMessages] = useState([
     {
       from: "concierge",
@@ -1205,7 +1284,10 @@ function AITab({ onRequest, guest, preferences, weather }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
-          context: { guest: { name: guest?.name, room: guest?.room, stayId: guest?.stayId }, preferences, weather },
+          context: {
+            guest: { name: guest?.name, room: guest?.room, stayId: guest?.stayId },
+            preferences, weather, disruptions, lowCrowdPlaces,
+          },
         }),
       });
       if (response.ok) {
@@ -1858,7 +1940,11 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
 
 // --- ADMIN DASHBOARD ---
 // Keeping the Admin Dashboard intact for the Demo controller
-function AdminDashboard({ weather, itinerary, showAIIntervention, staffUser, onLogout }) {
+function AdminDashboard({
+  weather, itinerary, showAIIntervention, staffUser, onLogout,
+  disruptions = [], actionsLog = [], redirectionsCount = 0, localSpendRedirected = 0,
+  guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative,
+}) {
   const isConflict =
     weather === "rainy" && itinerary.some((i) => i.isVulnerableToWeather);
   const isResolved = weather === "rainy" && itinerary.some((i) => i.aiAdjusted);
@@ -1897,7 +1983,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention, staffUser, onL
               AI Operations Dashboard
             </h1>
             <p className="text-muted">
-              Real-time guest personalization overview
+              Regional trip safety · crowd-aware redirections
             </p>
           </div>
 
@@ -1938,6 +2024,10 @@ function AdminDashboard({ weather, itinerary, showAIIntervention, staffUser, onL
           />
         </div>
 
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <DestinationOverview redirectionsCount={redirectionsCount} localSpendRedirected={localSpendRedirected} actions={actionsLog} />
+          {guardianDisruption && affectedStop && <GuardianCard disruption={guardianDisruption} itineraryItem={affectedStop} alternatives={guardianAlternatives} onAccept={onAcceptGuardianAlternative} />}
+        </div>
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
             <h2 className="text-lg font-serif mb-4 flex items-center gap-2">
