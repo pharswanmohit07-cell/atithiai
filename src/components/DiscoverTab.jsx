@@ -192,6 +192,12 @@ export default function DiscoverTab({
   const addToPlan = (item, type = "place") => {
     if (typeof addItineraryItem === "function") addItineraryItem(item, type);
   };
+  const togglePlanItem = (item, type = "place") => {
+    if (hasPlanItem(item, type)) {
+      const stopId = (type === "place" ? "place-" : type + "-") + item.id;
+      removeItineraryStop?.(stopId);
+    } else addToPlan(item, type);
+  };
   const showPlaceOnMap = (placeId) => {
     setMapVisible(true);
     if (typeof onShowOnMap === "function") onShowOnMap(placeId);
@@ -285,7 +291,7 @@ export default function DiscoverTab({
             <div className="mt-2 flex flex-wrap gap-1.5"><Badge>{niceWord(place.crowdLevel)} · Estimated crowd</Badge>{place.rainFriendly && <Badge>Rain-friendly</Badge>}{place.indoor && <Badge>Indoor</Badge>}<Badge><Clock3 className="mr-1 inline" size={11}/>{niceWord(place.bestTime)}</Badge></div>
             <details className="mt-3 rounded-xl border border-border bg-bg p-3"><summary className="cursor-pointer text-xs font-extrabold">Local story</summary><p className="mt-2 text-sm leading-relaxed text-muted">{story(place)}</p></details>
             {reasonChips(place)}
-            <div className="mt-auto flex flex-wrap gap-2 pt-4"><button type="button" onClick={() => addToPlan(place, "place")} disabled={inPlan} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{inPlan ? <Check size={14}/> : <Plus size={14}/>} {inPlan ? "Added to plan" : "Add to plan"}</button><button type="button" onClick={() => showPlaceOnMap(place.id)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold"><MapPin size={14}/>Show on map</button></div>
+            <div className="mt-auto flex flex-wrap gap-2 pt-4"><button type="button" onClick={() => togglePlanItem(place, "place")} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{inPlan ? <Check size={14}/> : <Plus size={14}/>} {inPlan ? "Remove from plan" : "Add to plan"}</button><button type="button" onClick={() => showPlaceOnMap(place.id)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold"><MapPin size={14}/>Show on map</button></div>
             <p className="mt-3 text-[10px] text-muted">Demo content · Story and crowd level are estimates.</p>
           </article>;
         })}
@@ -320,7 +326,7 @@ export default function DiscoverTab({
           <p className="mt-2 text-xs text-muted">Suits: {(experience.suitsWho || []).map(niceWord).join(", ") || "Varied travel styles"}</p>
           <p className="mt-3 text-sm font-extrabold">{money(experience.priceLocal, destination)} <span className="text-[10px] font-normal text-muted">· illustrative local-currency price</span></p>
           {reasonChips(experience)}
-          <div className="mt-auto flex flex-wrap gap-2 pt-4"><SavedExperience saved={saved} onSave={() => toggleSavedExperience(experience.id)}/><button type="button" onClick={() => addToPlan(experience, "experience")} disabled={inPlan} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{inPlan ? <Check size={14}/> : <Plus size={14}/>} {inPlan ? "Added to plan" : "Add to plan"}</button></div>
+          <div className="mt-auto flex flex-wrap gap-2 pt-4"><SavedExperience saved={saved} onSave={() => toggleSavedExperience(experience.id)}/><button type="button" onClick={() => togglePlanItem(experience, "experience")} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{inPlan ? <Check size={14}/> : <Plus size={14}/>} {inPlan ? "Remove from plan" : "Add to plan"}</button></div>
           <button type="button" disabled={requested} onClick={() => saveExperienceRequest(experience)} className="mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold disabled:opacity-60">{requested ? <Check size={14}/> : <Send size={14}/>} {requested ? "Request saved (demo)" : "Request via host (demo)"}</button>
         </article>;
       })}</div>
@@ -338,7 +344,7 @@ export default function DiscoverTab({
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><p className="text-[10px] leading-relaxed text-muted">Dietary tags are estimates. Confirm ingredients with the restaurant, including allergens and preparation.</p><button type="button" onClick={() => { setEatNow(true); setTasteTime("now"); }} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-extrabold text-white"><Sparkles size={14}/>What should I eat now?</button></div>
       </div>
       {eatNow && <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex items-start justify-between gap-2"><div><h3 className="font-serif text-2xl">Three ideas for right now</h3><p className="mt-1 text-xs text-muted">Matched to your diet, spice preference, current destination time and live weather when available. If fewer than three items fit the exact time, the remaining suggestions relax time only.</p></div><button type="button" onClick={() => setEatNow(false)} aria-label="Dismiss eat now ideas" className="rounded-lg border border-border p-2"><X size={15}/></button></div>
-        {nowDishes.length ? <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">{nowDishes.map((dish) => <DishCard key={dish.id} dish={dish} destination={destination} ranked={dish} formatCurrency={money} onAdd={() => addToPlan(dish,"dish")} inPlan={isInPlan(dish,"dish")} showOnMap={() => showPlaceOnMap(destination.places.find((place) => ["market","cafe"].includes(place.category))?.id || destination.places[0]?.id)}/>)}</div> : <p className="mt-3 text-sm text-muted">No dish fits every current filter. Try “Any time” or allow a higher spice level or spend.</p>}
+        {nowDishes.length ? <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">{nowDishes.map((dish) => <DishCard key={dish.id} dish={dish} destination={destination} ranked={dish} formatCurrency={money} onAdd={() => togglePlanItem(dish,"dish")} inPlan={isInPlan(dish,"dish")} showOnMap={() => showPlaceOnMap(destination.places.find((place) => ["market","cafe"].includes(place.category))?.id || destination.places[0]?.id)}/>)}</div> : <p className="mt-3 text-sm text-muted">No dish fits every current filter. Try “Any time” or allow a higher spice level or spend.</p>}
       </section>}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{rankedDishes.map((dish) => <DishCard key={dish.id} dish={dish} destination={destination} ranked={dish} formatCurrency={money} onAdd={() => addToPlan(dish,"dish")} inPlan={isInPlan(dish,"dish")} showOnMap={() => showPlaceOnMap(destination.places.find((place) => ["market","cafe"].includes(place.category))?.id || destination.places[0]?.id)}/>)}</div>
       {!rankedDishes.length && <p className="rounded-2xl border border-dashed border-border bg-surface p-6 text-sm text-muted">No dishes match every filter. Try a broader diet selection, a higher maximum spice or more budget.</p>}
@@ -364,7 +370,7 @@ function DishCard({ dish, destination, ranked, formatCurrency, onAdd, inPlan, sh
     <p className="mt-2 text-sm font-extrabold">{range}</p>
     {reasonChips(ranked)}
     <p className="mt-3 rounded-lg border border-border bg-bg p-2 text-[10px] leading-relaxed text-muted">Confirm ingredients with the restaurant. Recipes and preparation vary; no allergen-safety claim is made.</p>
-    <div className="mt-auto flex flex-wrap gap-2 pt-4"><button type="button" onClick={onAdd} disabled={inPlan} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{inPlan ? <Check size={14}/> : <Plus size={14}/>} {inPlan ? "Added to plan" : "Add to plan"}</button><a href={mapHref} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold" aria-label={"Open a map near " + dish.whereToEat}>{<ExternalLink size={14}/>}Map area</a><button type="button" onClick={showOnMap} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold"><MapPin size={14}/>In-app map</button></div>
+    <div className="mt-auto flex flex-wrap gap-2 pt-4"><button type="button" onClick={onAdd} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{inPlan ? <Check size={14}/> : <Plus size={14}/>} {inPlan ? "Remove from plan" : "Add to plan"}</button><a href={mapHref} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold" aria-label={"Open a map near " + dish.whereToEat}>{<ExternalLink size={14}/>}Map area</a><button type="button" onClick={showOnMap} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold"><MapPin size={14}/>In-app map</button></div>
     <p className="mt-3 text-[10px] text-muted">Demo content · Estimated local price range.</p>
   </article>;
 }

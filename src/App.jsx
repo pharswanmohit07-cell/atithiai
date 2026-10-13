@@ -9,6 +9,7 @@ import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
 import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
 import DiscoverTab from "./components/DiscoverTab.jsx";
+import PlanTab from "./components/PlanTab.jsx";
 import { useDestination } from "./context/DestinationContext.jsx";
 import { useTravelContext } from "./context/TravelContext.jsx";
 import { useProfile } from "./context/ProfileContext.jsx";
@@ -418,24 +419,7 @@ export default function AtithiAI() {
         : profile.dailyBudget.amount
     }
   }), [profile, destination.currency.code]);
-  const buildPlan = () => {
-    const freeMinutes = profile.pace === "relaxed" ? 180 : profile.pace === "packed" ? 600 : 360;
-    const selected = [];
-    const maxStops = Math.min(5, Math.max(0, 12 - itinerary.length));
-    const used = new Set(planIds);
-    let remainingMinutes = freeMinutes;
-    while (selected.length < maxStops && remainingMinutes > 0) {
-      const next = rankPlaces(destination.places, rankProfile, {}, {
-        weather, timeOfDay: destinationDaypart(destination.timezone), freeMinutes: remainingMinutes, budget: rankProfile.dailyBudget.amount
-      }).find((place) => !used.has(place.id));
-      if (!next) break;
-      selected.push(next);
-      used.add(next.id);
-      remainingMinutes = Math.max(0, remainingMinutes - (Number(next.durationMin) || 45));
-    }
-    selected.forEach(addItineraryStop);
-    setActiveTab("plan");
-  };
+  const buildPlan = () => setActiveTab("plan");
   const showOnMap = (placeId) => {
     if (!destination.places.some((place) => place.id === placeId)) return;
     setMapFocusId(placeId);
@@ -482,22 +466,13 @@ export default function AtithiAI() {
         itinerary={itinerary}
         requests={requests}
         addItineraryItem={addItineraryItem}
+        removeItineraryStop={removeItineraryStop}
         addRequest={addRequest}
         onShowOnMap={showOnMap}
         focusPlaceId={mapFocusId}
       />}
 
-      {activeTab === "plan" && <section className="space-y-4"><div className="rounded-3xl p-5 text-white sm:p-7" style={{background:"linear-gradient(125deg, #163e4b 0%, #28365c 55%, "+destination.themeColors.accent+" 100%)"}}><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Your personal plan</p><h1 className="mt-2 font-serif text-4xl">A day with space to wander.</h1><p className="mt-2 text-sm text-white/80">Choose places yourself or use a simple pack-based suggestion. Nothing is booked.</p><div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-slate-900"><Sparkles size={16}/>Suggest places</button><button type="button" onClick={clearItinerary} disabled={!itinerary.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/30 px-4 py-2 text-sm font-bold disabled:opacity-50"><X size={15}/>Clear plan</button></div></div>
-          {itinerary.length ? <ol className="space-y-3">{itinerary.map((stop,index)=>{const kind=stop.itemType||"place";const collection=kind==="place"?destination.places:kind==="experience"?destination.experiences:destination.dishes;const item=collection.find((entry)=>entry.id===(stop.itemId||stop.placeId));if(!item)return null;const title=kind==="experience"?item.title:item.name;const note=item.localStory||item.description||stop.note||"";const bestTime=item.bestTime||stop.bestTime||"any";const duration=Number(item.durationMin)||Number(stop.durationMin)||0;const category=item.category||(kind==="dish"?"food":kind);const uniqueId=stop.id||kind+"-"+item.id;return <li key={uniqueId} className="flex gap-3 rounded-2xl border border-border bg-surface p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="font-serif text-xl">{title}</h2><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">{niceWord(bestTime)}</span><span className="rounded-full border border-border px-2 py-1 text-[9px] capitalize text-muted">{kind}</span></div><p className="mt-1 text-sm leading-relaxed text-muted">{note}</p>{duration>0&&<p className="mt-2 text-[10px] text-muted">{formatNumber(duration,destination.locale)} min · {niceWord(category)}</p>}{stop.reasons?.length>0&&<div className="mt-2 flex flex-wrap gap-1">{stop.reasons.slice(0,4).map((reason,reasonIndex)=><span key={reason+reasonIndex} className="rounded-full border border-border px-2 py-1 text-[9px] text-muted">{reason}</span>)}</div>}</div><button type="button" onClick={()=>removeItineraryStop(uniqueId)} aria-label={"Remove "+title} className="min-h-9 min-w-9 rounded-lg border border-border px-2"><X size={15}/></button></li>})}</ol> : <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center"><CalendarDays size={28} className="mx-auto text-muted"/><h2 className="mt-3 font-serif text-2xl">Your plan starts with curiosity.</h2><p className="mt-2 text-sm text-muted">Add places from Discover or ask for suggestions tailored to your interests and pace.</p><button type="button" onClick={()=>setActiveTab("discover")} className="mt-4 min-h-11 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white">Find places</button></div>}
-          <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-serif text-2xl">My requests</h2><span className="rounded-full border border-border px-2.5 py-1 text-[10px] font-bold">Demo only</span></div>
-            <p className="mt-1 text-xs text-muted">Experience requests are saved locally for your reference. No host is contacted and no booking is created.</p>
-            {requests.filter((request) => request.category === "Experience request (demo)").length
-              ? <div className="mt-3 space-y-2">{requests.filter((request) => request.category === "Experience request (demo)").map((request) => <article key={request.id} className="rounded-xl border border-border bg-bg p-3"><div className="flex flex-wrap items-start justify-between gap-2"><h3 className="text-sm font-bold">{request.title}</h3><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">Demo only</span></div><p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-muted">{request.detail}</p><time className="mt-2 block text-[10px] text-muted">{formatDate(request.createdAt, destination.locale, destination.timezone)}</time></article>)}</div>
-              : <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">No experience requests saved yet. You can save a demo request from Local Experiences.</p>}
-          </section>
-          <DemoNote>Suggested times of day are approximate preferences, not opening-hour information or reservations.</DemoNote>
-        </section>}
+      {activeTab === "plan" && <PlanTab/>}
 
       {activeTab === "lens" && <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><LensTab onRequest={(request)=>addRequest({title:request.title,category:request.category,detail:request.detail})}/></section>}
       {activeTab === "chat" && <ChatView key={destination.id} destination={destination} weather={weather} profile={rankProfile} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest} addItineraryItem={addItineraryItem} onShowOnMap={showOnMap}/>}

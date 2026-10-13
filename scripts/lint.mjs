@@ -73,6 +73,9 @@ const chat = await readSource("api/chat.js");
 const intent = await readSource("api/intent.js");
 const rankSource = await readSource("src/lib/rank.js");
 const lens = await readSource("api/lens.js");
+const planTab = await readSource("src/components/PlanTab.jsx");
+const demoControls = await readSource("src/components/DemoControls.jsx");
+const planApi = await readSource("api/plan.js");
 
 const expectedTabs = ["home", "discover", "plan", "lens", "chat", "profile"];
 const checks = [
@@ -89,7 +92,13 @@ const checks = [
   [intent.includes('req.method !== "POST"') && intent.includes('responseMimeType: "application/json"') && intent.includes("8000") && intent.includes("extractIntentFallback"), "Intent API must be POST-only, JSON mode, timed and have a friendly fallback."],
   [chat.includes("rankedItems") && chat.includes("wordCount(reply) > 70") && chat.includes("GEMINI_API_KEY") && chat.includes("const NO_RESULTS"), "Chat phrasing must be restricted to ranked items, under 70 words and safe when no items match."],
   [rankSource.includes("export function rankPlaces") && rankSource.includes("export function rankDishes") && rankSource.includes("export function rankExperiences") && rankSource.includes("reasons"), "All three pure ranking functions must return explainable reasons."],
-  [lens.includes("MAX_IMAGE_BYTES") && lens.includes("safeJsonParse") && lens.includes("safe-fallback"), "Lens must preserve its image bound, safe parsing and fallback."]
+  [lens.includes("MAX_IMAGE_BYTES") && lens.includes("safeJsonParse") && lens.includes("safe-fallback"), "Lens must preserve its image bound, safe parsing and fallback."],
+  [app.includes('<PlanTab/>') && app.includes('removeItineraryStop={removeItineraryStop}'), "Plan tab must use the adaptive itinerary component and expose stop removal from Discover."],
+  [planTab.includes("rankPlaces") && planTab.includes("rankDishes") && planTab.includes("rankExperiences") && planTab.includes("STOP_TARGETS") && planTab.includes("scheduleStops"), "Plan generation must use all deterministic rankers and pace-aware scheduling."],
+  [planTab.includes('"Planned", "Done", "Skipped"') && planTab.includes("Share my day") && planTab.includes("Reset plan") && planTab.includes("rough estimate"), "Plan UI must have statuses, sharing, reset and labeled rough travel estimates."],
+  [travelContext.includes("PLAN_PREFIX") && travelContext.includes("PLAN_META_PREFIX") && travelContext.includes("JSON.parse") && travelContext.includes("setActiveDisruption"), "Plan and disruption state must persist safely in the traveler context."],
+  [demoControls.includes("Alt+R") && demoControls.includes("Simulate closure") && demoControls.includes("Simulate transport strike") && demoControls.includes("DEMO EVENT"), "Disruption simulations must be behind the demo query flag and tagged as demo."],
+  [planTab.includes("api/plan") && planTab.includes("3000") && planTab.includes("split(/\\s+/") && planApi.includes('req.method !== "POST"') && planApi.includes("responseMimeType: \"application/json\"") && planApi.includes("2500"), "Plan advisory must be POST-only, limited to 45 words and use a short timeout with fallback."]
 ];
 for (const [passed, message] of checks) if (!passed) failures.push(message);
 

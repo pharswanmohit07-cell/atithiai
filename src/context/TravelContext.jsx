@@ -4,6 +4,8 @@ import { useDestination } from "./DestinationContext.jsx";
 const TravelContext = createContext(null);
 const REQUESTS_PREFIX = "atithi-traveler-requests:";
 const MESSAGES_PREFIX = "atithi-traveler-chat:";
+const PLAN_PREFIX = "atithi-traveler-plan:";
+const PLAN_META_PREFIX = "atithi-plan-meta:";
 const MAX_REQUESTS = 60;
 const MAX_MESSAGES = 80;
 const ITEM_TYPES = new Set(["place", "experience", "dish"]);
@@ -43,7 +45,15 @@ function resultRefs(items) {
 export function TravelProvider({ children }) {
   const { destination } = useDestination();
   const previousDestinationId = useRef(destination.id);
-  const [itinerary, setItinerary] = useState([]);
+  const planDestinationRef = useRef(destination.id);
+  const planMetaDestinationRef = useRef(destination.id);
+  const skipNextPlanWrite = useRef(false);
+  const skipNextMetaWrite = useRef(false);
+  const [itinerary, setItinerary] = useState(() => readStored(PLAN_PREFIX + destination.id, []).filter((item) => item && typeof item.id === "string" && typeof item.itemType === "string"));
+  const [planMeta, setPlanMeta] = useState(() => {
+    const stored = readStored(PLAN_META_PREFIX + destination.id, {});
+    return { activeDisruption: stored?.activeDisruption && typeof stored.activeDisruption === "object" ? stored.activeDisruption : null, changeLog: Array.isArray(stored?.changeLog) ? stored.changeLog.filter((item) => item && typeof item.message === "string").slice(0, 40) : [] };
+  });
   const [requests, setRequests] = useState(() => readStored(REQUESTS_PREFIX + destination.id, []));
   const [chatMessages, setChatMessages] = useState(() => {
     const saved = readStored(MESSAGES_PREFIX + destination.id, []);
@@ -54,7 +64,13 @@ export function TravelProvider({ children }) {
     if (previousDestinationId.current === destination.id) return;
     previousDestinationId.current = destination.id;
     // A new destination always gets a fresh active plan; its own prior notes and chat may be restored.
-    setItinerary([]);
+    planDestinationRef.current = destination.id;
+    planMetaDestinationRef.current = destination.id;
+    skipNextPlanWrite.current = true;
+    skipNextMetaWrite.current = true;
+    setItinerary(readStored(PLAN_PREFIX + destination.id, []).filter((item) => item && typeof item.id === "string" && typeof item.itemType === "string").slice(0, 12));
+    const savedMeta = readStored(PLAN_META_PREFIX + destination.id, {});
+    setPlanMeta({ activeDisruption: savedMeta?.activeDisruption && typeof savedMeta.activeDisruption === "object" ? savedMeta.activeDisruption : null, changeLog: Array.isArray(savedMeta?.changeLog) ? savedMeta.changeLog.filter((item) => item && typeof item.message === "string").slice(0, 40) : [] });
     const destinationRequests = readStored(REQUESTS_PREFIX + destination.id, [])
       .filter((item) => item && item.destinationId === destination.id)
       .slice(0, MAX_REQUESTS);
@@ -64,6 +80,27 @@ export function TravelProvider({ children }) {
       .slice(-MAX_MESSAGES);
     setChatMessages(savedMessages.length ? savedMessages : [makeWelcome(destination)]);
   }, [destination]);
+
+  useEffect(() => {
+    if (skipNextPlanWrite.current) { skipNextPlanWrite.current = false; return; }
+    if (planDestinationRef.current === destination.id) writeStored(PLAN_PREFIX + destination.id, itinerary.slice(0, 12));
+  }, [itinerary, destination.id]);
+
+  useEffect(() => {
+    if (skipNextMetaWrite.current) { skipNextMetaWrite.current = false; return; }
+    if (planMetaDestinationRef.current === destination.id) writeStored(PLAN_META_PREFIX + destination.id, planMeta);
+  }, [planMeta, destination.id]);
+
+  const setActiveDisruption = useCallback((disruption) => {
+    setPlanMeta((current) => ({ ...current, activeDisruption: disruption && typeof disruption === "object" ? disruption : null }));
+  }, []);
+  const addPlanLog = useCallback((entry) => {
+    const item = { id: newId(), createdAt: new Date().toISOString(), message: String(entry?.message || "").trim().slice(0, 260), reason: String(entry?.reason || "").trim().slice(0, 260), type: String(entry?.type || "update").slice(0, 40) };
+    if (!item.message) return null;
+    setPlanMeta((current) => ({ ...current, changeLog: [item, ...current.changeLog].slice(0, 40) }));
+    return item;
+  }, []);
+  const clearPlanLog = useCallback(() => setPlanMeta((current) => ({ ...current, changeLog: [] })), []);
 
   const addRequest = useCallback((input = {}) => {
     const item = {
@@ -118,6 +155,11 @@ export function TravelProvider({ children }) {
       note: item.localStory || item.description || "",
       bestTime: item.bestTime || "any",
       durationMin: Number(item.durationMin) || null,
+      time: null,
+      status: "Planned",
+      estimatedCost: itemType === "experience" ? (Number(item.priceLocal) || 0) : itemType === "dish" ? (Array.isArray(item.priceRangeLocal) ? (Number(item.priceRangeLocal[0]) + Number(item.priceRangeLocal[1])) / 2 : 0) : (Number(item.avgSpendLocal) || 0),
+      lat: Number.isFinite(Number(item.lat)) ? Number(item.lat) : null,
+      lon: Number.isFinite(Number(item.lon)) ? Number(item.lon) : null,
       category: item.category || (itemType === "dish" ? "food" : "experience"),
       score: Number.isFinite(Number(sourceItem.score)) ? Number(sourceItem.score) : 0,
       reasons: Array.isArray(sourceItem.reasons) ? sourceItem.reasons.slice(0, 6) : []
@@ -134,6 +176,7 @@ export function TravelProvider({ children }) {
 
   const value = {
     itinerary, setItinerary, addItineraryItem, addItineraryStop, removeItineraryStop, clearItinerary,
+    activeDisruption: planMeta.activeDisruption, setActiveDisruption, changeLog: planMeta.changeLog, addPlanLog, clearPlanLog,
     requests, addRequest, chatMessages, addChatMessage
   };
   return <TravelContext.Provider value={value}>{children}</TravelContext.Provider>;
