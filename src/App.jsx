@@ -1555,532 +1555,162 @@ function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCr
   );
 }
 
-function ServicesTab({ requests, onRequest, setActiveTab, room }) {
-  const services = [
-    {
-      icon: BedDouble,
-      tone: "sky",
-      name: "Housekeeping",
-      detail: "Fresh towels, turndown & more",
-      eta: "~15 min",
-    },
-    {
-      icon: Utensils,
-      tone: "saffron",
-      name: "In-Room Dining",
-      detail: "Seasonal dishes, delivered warm",
-      eta: "~30 min",
-    },
-    {
-      icon: Bath,
-      tone: "violet",
-      name: "Spa Booking",
-      detail: "Restore with a signature ritual",
-      eta: "View times",
-    },
-    {
-      icon: Car,
-      tone: "teal",
-      name: "Valet / Transport",
-      detail: "Your next ride, taken care of",
-      eta: "~8 min",
-    },
-    {
-      icon: Clock,
-      tone: "coral",
-      name: "Wake-up Call",
-      detail: "A gentle start, right on time",
-      eta: "Set time",
-    },
-    {
-      icon: MessageSquare,
-      tone: "emerald",
-      name: "Reception",
-      detail: "A member of our team, anytime",
-      eta: "24 hours",
-    },
-  ];
-  const [selectedService, setSelectedService] = useState(null);
-  const [confirmation, setConfirmation] = useState("");
-  const sendRequest = (event) => {
+function ServicesTab({ requests = [], onRequest, setActiveTab, selectedWaypoint }) {
+  const [panel, setPanel] = useState("");
+  const [hazardType, setHazardType] = useState("Road obstruction");
+  const [hazardDetails, setHazardDetails] = useState("");
+  const [lensImage, setLensImage] = useState(null);
+  const [lensResult, setLensResult] = useState(null);
+  const [lensError, setLensError] = useState("");
+  const [lensLoading, setLensLoading] = useState(false);
+
+  const submitHazard = (event) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
     onRequest({
-      title:
-        selectedService === "Wake-up Call"
-          ? `Wake-up call · ${form.get("time")}`
-          : selectedService,
-      category: selectedService,
-      detail: `${form.get("detail") || `Requested for Room ${room || "—"}`} · ${form.get("time")}`,
+      title: `Hazard report · ${hazardType}`,
+      category: "Trip safety",
+      detail: `Corridor: ${selectedWaypoint?.name || "Selected route"}; issue: ${hazardType}; details: ${hazardDetails.trim() || "No additional description supplied."}`,
     });
-    setConfirmation(`${selectedService} request sent`);
-    setSelectedService(null);
-    window.setTimeout(() => setConfirmation(""), 2500);
+    setHazardDetails("");
+    setPanel("");
   };
+
+  const selectLensImage = (event) => {
+    const file = event.target.files?.[0];
+    setLensImage(null);
+    setLensResult(null);
+    setLensError("");
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setLensError("Choose a JPEG, PNG or WebP image.");
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setLensError("Please choose an image under 3 MB so it can be sent securely for analysis.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      const base64 = dataUrl.includes(",") ? dataUrl.slice(dataUrl.indexOf(",") + 1) : "";
+      if (!base64) {
+        setLensError("The image could not be read. Please try another photo.");
+        return;
+      }
+      setLensImage({ dataUrl, base64, mimeType: file.type, name: file.name });
+    };
+    reader.onerror = () => setLensError("The image could not be read. Please try another photo.");
+    reader.readAsDataURL(file);
+  };
+
+  const analyzePrice = async () => {
+    if (!lensImage) return;
+    setLensLoading(true);
+    setLensError("");
+    setLensResult(null);
+    try {
+      const response = await fetch("/api/lens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: lensImage.base64,
+          mimeType: lensImage.mimeType,
+          waypoint: selectedWaypoint?.name || "Himalayan corridor",
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Price Lens could not analyse this image.");
+      setLensResult(result);
+    } catch (error) {
+      setLensError(error instanceof Error ? error.message : "Price Lens is unavailable. Keep the displayed price and ask for an itemised quote.");
+    } finally {
+      setLensLoading(false);
+    }
+  };
+
+  const actionCards = [
+    { name: "Report a hazard", detail: "Flag a road issue, unsafe condition or suspected scam.", icon: ShieldAlert, tone: "coral", onClick: () => setPanel("hazard") },
+    { name: "Emergency (112)", detail: "Call India’s unified emergency response number.", icon: PhoneCall, tone: "coral", href: "tel:112" },
+    { name: "Find homestay", detail: "Explore clearly labelled demo village ideas; no bookings.", icon: House, tone: "emerald", onClick: () => setActiveTab("discover") },
+    { name: "Scan a price (Lens)", detail: "Read visible prices and spot questions to clarify.", icon: ScanLine, tone: "violet", onClick: () => setPanel("lens") },
+  ];
+
   return (
-    <div className="services-page px-5 pt-8 pb-8 sm:px-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-[#E7C99C]">
-            <IconBadge icon={Sparkles} tone="violet" size="sm" className="!h-9 !w-9 rounded-full" />
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted">
-              The Aranya House
-            </p>
-            <p className="text-xs font-semibold text-text">
-              Guest services
-            </p>
-          </div>
-        </div>
-        <span className="flex items-center gap-1.5 rounded-full border border-border bg-surface/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#73927D]" />
-          Here for you
-        </span>
+    <div className="services-page min-h-full px-5 pb-8 pt-8 sm:px-6">
+      <div className="mb-6">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-text">Travel safety · Local support</p>
+        <h1 className="mt-2 font-serif text-[34px] leading-none text-text">Help along the way.</h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted">Report concerns, reach emergency services or review a price before deciding. Atithi does not verify a property or guarantee a price is fair.</p>
+      </div>
+      <div className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent-text">Current corridor focus</p>
+        <h2 className="mt-1 font-serif text-xl text-text">{selectedWaypoint?.name || "Rudraprayag"}</h2>
+        <p className="mt-1 text-xs text-muted">Approx. {selectedWaypoint?.elevationM ?? 895} m elevation · planning coordinates are approximate</p>
       </div>
 
-      <div className="mb-5 flex items-end justify-between gap-2">
-        <div>
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-accent-text">
-            Monday · October 5
-          </p>
-          <h1 className="font-serif text-[34px] leading-none text-text">
-            Make yourself
-            <br />
-            at home.
-          </h1>
-        </div>
-        <div className="pb-1 text-right">
-          <p className="text-xs text-muted">Dehradun</p>
-          <p className="mt-1 flex items-center justify-end gap-1 text-sm font-medium text-text">
-            <IconBadge icon={Sun} tone="saffron" size="sm" className="!h-7 !w-7 rounded-full" /> 24°
-          </p>
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {actionCards.map((action) => {
+          const Icon = action.icon;
+          const card = (
+            <>
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-2 text-accent-text"><Icon size={20}/></span>
+              <h2 className="mt-4 text-sm font-bold text-text">{action.name}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-muted">{action.detail}</p>
+              <span className="mt-4 inline-flex items-center gap-1 text-[10px] font-bold text-accent-text">{action.name === "Emergency (112)" ? "Call 112" : action.name === "Find homestay" ? "See demo villages" : "Open tool"} <ChevronRight size={13}/></span>
+            </>
+          );
+          const classes = "flex min-h-[170px] flex-col rounded-2xl border border-border bg-surface p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-accent hover:shadow-md";
+          return action.href
+            ? <a key={action.name} href={action.href} className={classes}>{card}</a>
+            : <button key={action.name} type="button" onClick={action.onClick} className={classes}>{card}</button>;
+        })}
       </div>
 
-      <div className="stay-summary mb-7 flex items-center justify-between gap-3 rounded-2xl px-4 py-3.5 text-white">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface/10">
-            <IconBadge icon={BedDouble} tone="sky" size="sm" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-white/60">
-              Your room
-            </p>
-            <p className="truncate text-sm font-semibold">
-              402{" "}
-              <span className="font-normal text-white/60">· Luxury Suite</span>
-            </p>
-          </div>
-        </div>
-        <div className="h-8 w-px bg-surface/15" />
-        <div className="shrink-0 text-right">
-          <p className="text-[10px] uppercase tracking-[0.12em] text-white/60">
-            Check out
-          </p>
-          <p className="text-sm font-semibold">
-            Oct 7 <span className="font-normal text-white/60">· 2 nights</span>
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-3 flex items-end justify-between">
-        <div>
-          <h2 className="font-serif text-[23px] leading-tight text-text">
-            At your service
-          </h2>
-          <p className="mt-1 text-xs text-muted">
-            A few thoughtful touches, whenever you need.
-          </p>
-        </div>
-        <span className="pb-1 text-[10px] uppercase tracking-[0.12em] text-accent-text">
-          01 — 06
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-2.5">
-        {services.map((svc) => (
-          <button
-            key={svc.name}
-            onClick={() => setSelectedService(svc.name)}
-            className="service-tile group min-h-[140px] rounded-2xl border border-border bg-surface p-3.5 text-left transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_12px_24px_rgba(38,51,43,0.08)]"
-          >
-            <span className="mb-3 flex items-center justify-between">
-              <IconBadge icon={svc.icon} tone={svc.tone} size="sm" className="transition-transform group-hover:-translate-y-0.5" />
-              <ChevronRight
-                size={15}
-                className="text-muted transition-transform group-hover:translate-x-0.5"
-              />
-            </span>
-            <span className="block text-[13px] font-semibold leading-tight text-text">
-              {svc.name}
-            </span>
-            <span className="mt-1 block min-h-8 text-[10px] leading-[1.45] text-muted">
-              {svc.detail}
-            </span>
-            <span className="mt-1 inline-flex rounded-full bg-surface-2 px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-accent-text">
-              {svc.eta}
-            </span>
-          </button>
-        ))}
-      </div>
-      <button
-        onClick={() => setActiveTab("ai")}
-        className="concierge-banner mt-5 flex w-full items-center justify-between rounded-2xl p-4.5 text-left text-white transition-transform hover:-translate-y-0.5"
-      >
-        <span className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-surface/5 text-[#E7C99C]">
-            <IconBadge icon={Sparkles} tone="violet" size="sm" />
-          </span>
-          <span>
-            <span className="block font-serif text-[17px] text-[#E7C99C]">
-              A little extra?
-            </span>
-            <span className="mt-0.5 block text-[10px] text-white/65">
-              Your personal concierge is one message away.
-            </span>
-          </span>
-        </span>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface/10">
-          <ChevronRight size={17} className="text-[#E7C99C]" />
-        </span>
-      </button>
       <section className="mt-7">
-        <div className="mb-3 flex items-end justify-between">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-accent-text">
-              In good hands
-            </p>
-            <h2 className="mt-0.5 font-serif text-[23px] leading-tight text-text">
-              Your requests
-            </h2>
-          </div>
-          <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-semibold text-muted">
-            {
-              requests.filter((request) => request.status !== "Completed")
-                .length
-            }{" "}
-            open · {requests.length} total
-          </span>
-        </div>
-        <div className="space-y-2">
-          {requests.map((request) => (
-            <div
-              key={request.id}
-              className="request-row rounded-xl border border-border bg-surface/90 px-3.5 py-3"
-            >
-              <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-muted">
-                  {request.status === "Completed" ? (
-                    <IconBadge icon={Check} tone="emerald" size="sm" className="!h-7 !w-7 rounded-lg" />
-                  ) : (
-                    <IconBadge icon={Clock} tone="saffron" size="sm" className="!h-7 !w-7 rounded-lg" pulse={request.status === "Received"} />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex justify-between gap-2">
-                    <span className="truncate text-xs font-semibold text-text">
-                      {request.title}
-                    </span>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-semibold ${request.status === "Completed" ? "bg-surface-2 text-muted" : "bg-surface-2 text-accent-text"}`}
-                    >
-                      {request.status}
-                    </span>
-                  </div>
-                  <p className="mt-1 truncate text-[10px] text-muted">
-                    {request.category} · {request.detail}
-                  </p>
-                  <p className="mt-1.5 text-[9px] uppercase tracking-wide text-muted">
-                    {request.time}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="mb-3"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent-text">Trip Guardian log</p><h2 className="mt-1 font-serif text-2xl text-text">Your safety reports</h2></div>
+        <div className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+          {requests.length ? (
+            <div className="space-y-3">{requests.slice(0, 5).map((request) => (
+              <article key={request.id} className="border-t border-border pt-3 first:border-0 first:pt-0">
+                <div className="flex items-start justify-between gap-2"><h3 className="text-sm font-semibold text-text">{request.title}</h3><span className="shrink-0 rounded-full bg-surface-2 px-2 py-1 text-[9px] text-muted">{request.status || "Received"}</span></div>
+                <p className="mt-1 text-xs leading-relaxed text-muted">{request.detail}</p>
+                <p className="mt-1 text-[10px] text-muted">{request.category} · {request.time || "Just now"}</p>
+              </article>
+            ))}</div>
+          ) : <p className="text-xs leading-relaxed text-muted">No reports have been submitted in this session. Use Report a hazard to log a route concern or suspected overpricing.</p>}
         </div>
       </section>
-      {confirmation && (
-        <p
-          role="status"
-          className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[80] bg-brand text-white text-sm px-4 py-3 rounded-xl shadow-lg"
-        >
-          {confirmation}
-        </p>
-      )}
-      {selectedService && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/45 p-5 flex items-center justify-center"
-          onClick={() => setSelectedService(null)}
-        >
-          <form
-            role="dialog"
-            aria-modal="true"
-            onSubmit={sendRequest}
-            onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-sm bg-bg rounded-2xl p-5 shadow-2xl"
-          >
-            <div className="flex justify-between">
-              <div>
-                <p className="text-xs uppercase text-accent-text">Room 402</p>
-                <h2 className="font-serif text-2xl">{selectedService}</h2>
-              </div>
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={() => setSelectedService(null)}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <label className="block mt-4 text-xs font-semibold text-muted">
-              DETAILS
-              <input
-                name="detail"
-                placeholder="What should the team prepare?"
-                className="w-full mt-2 p-3 rounded-xl border border-border bg-surface text-sm font-normal"
-              />
-            </label>
-            {selectedService === "Wake-up Call" ? (
-              <label className="block mt-4 text-xs font-semibold text-muted">
-                CALL TIME
-                <input
-                  name="time"
-                  type="time"
-                  defaultValue="07:00"
-                  required
-                  className="w-full mt-2 p-3 rounded-xl border border-border bg-surface text-sm font-normal"
-                />
-              </label>
-            ) : (
-              <label className="block mt-4 text-xs font-semibold text-muted">
-                WHEN
-                <select
-                  name="time"
-                  className="w-full mt-2 p-3 rounded-xl border border-border bg-surface text-sm font-normal"
-                >
-                  <option>As soon as possible</option>
-                  <option>In 30 minutes</option>
-                  <option>At 6:00 PM</option>
-                  <option>Tomorrow morning</option>
-                </select>
-              </label>
-            )}
-            <button
-              type="submit"
-              className="w-full mt-5 bg-brand text-white py-3 rounded-xl text-sm font-medium"
-            >
-              Send request
-            </button>
-          </form>
-        </div>
-      )}
-    </div>
-  );
-}
 
-function ProfileTab({ guest, preferences, onSavePreferences, onOpenOnboarding, onLogout }) {
-  const diet = preferences?.dietaryPreference || "No preference";
-  const [autoAdjust, setAutoAdjust] = useState(true);
-  const [notifications, setNotifications] = useState(true);
-  const [openPanel, setOpenPanel] = useState("");
-  return (
-    <div className="profile-page px-5 pt-8 pb-8 sm:px-6">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-text">
-            Your private stay
-          </p>
-          <h1 className="font-serif text-[34px] leading-none text-text">
-            The guest book.
-          </h1>
-        </div>
-        <ThemeToggle compact />
-      </div>
-      <div className="profile-pass relative mb-5 overflow-hidden rounded-2xl p-5 text-white shadow-lg">
-        <div className="relative flex items-start justify-between">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/60">
-              Atithi · Private guest
-            </p>
-            <div className="mt-5 flex items-center gap-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-surface/5 font-serif text-2xl text-[#E7C99C]">
-                {guest?.name?.trim()?.[0]?.toUpperCase() || "G"}
-              </div>
-              <div>
-                <h2 className="font-serif text-[25px] leading-none">
-                  {guest?.name || "Guest"}
-                </h2>
-                <p className="mt-1.5 text-[10px] text-white/65">Room {guest?.room || "—"}</p>
-              </div>
-            </div>
-          </div>
-          <span className="flex items-center gap-1 rounded-full border border-[#E7C99C]/35 bg-surface/5 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#E7C99C]">
-            <ShieldCheck size={12} /> Signature
-          </span>
-        </div>
-        <div className="relative mt-5 flex items-center justify-between border-t border-white/15 pt-3">
-          <span className="text-[9px] uppercase tracking-[0.16em] text-white/55">
-            Guest since · 2022
-          </span>
-          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#E7C99C]">
-            No. {String(guest?.room || "—").padStart(5, "0")} · Dehradun
-          </span>
-        </div>
-      </div>
-      <section className="mb-6 rounded-2xl border border-border bg-surface p-4 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-accent-text">
-              October 3 – 7, 2026
-            </p>
-            <h2 className="mt-0.5 font-serif text-[20px] text-text">
-              Your stay
-            </h2>
-          </div>
-          <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[9px] font-semibold text-muted">
-            In residence
-          </span>
-        </div>
-        <div className="grid grid-cols-3 divide-x divide-[#E8E3D9]">
-          <div className="pr-2">
-            <p className="text-[9px] uppercase tracking-wide text-muted">
-              Room
-            </p>
-            <p className="mt-1 text-xs font-semibold text-text">
-              {guest?.room || "—"} Suite
-            </p>
-          </div>
-          <div className="px-3">
-            <p className="text-[9px] uppercase tracking-wide text-muted">
-              Guests
-            </p>
-            <p className="mt-1 text-xs font-semibold text-text">
-              2 adults
-            </p>
-          </div>
-          <div className="pl-3">
-            <p className="text-[9px] uppercase tracking-wide text-muted">
-              Nights
-            </p>
-            <p className="mt-1 text-xs font-semibold text-text">
-              4 nights
-            </p>
-          </div>
-        </div>
-      </section>
-      <section className="mb-6">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
-          AI Personalization
-        </h3>
-        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-          <button
-            onClick={() => setOpenPanel("preferences")}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-2"
-          >
-            <span className="flex items-center gap-3">
-              <IconBadge icon={Sparkles} tone="violet" size="sm" />
-              <span className="text-sm font-medium">Diet & interests</span>
-            </span>
-            <span className="flex items-center gap-2 text-xs text-muted">
-              {diet} <ChevronRight size={16} />
-            </span>
-          </button>
-          <div className="border-t border-border" />
-          <ProfileToggle
-            icon={Settings}
-            label="Auto-adjust plans"
-            checked={autoAdjust}
-            onChange={() => setAutoAdjust((value) => !value)}
-          />
-        </div>
-      </section>
-      <button type="button" onClick={onOpenOnboarding} className="mb-6 flex w-full items-center justify-between rounded-2xl border border-border bg-surface p-4 text-left shadow-sm hover:bg-surface-2">
-        <span><span className="block text-sm font-semibold">Personalize my day</span><span className="mt-1 block text-xs text-muted">Update interests, travel style, pace and diet</span></span>
-        <Sparkles size={18} className="text-accent-text" />
-      </button>
-      <section>
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
-          Account Settings
-        </h3>
-        <div className="bg-surface rounded-2xl border border-border overflow-hidden">
-          <button
-            onClick={() => setOpenPanel("payment")}
-            className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-2"
-          >
-            <span className="flex items-center gap-3">
-              <IconBadge icon={CreditCard} tone="teal" size="sm" />
-              <span className="text-sm font-medium">Payment methods</span>
-            </span>
-            <span className="flex items-center gap-2 text-xs text-muted">
-              •••• 2048 <ChevronRight size={16} />
-            </span>
-          </button>
-          <div className="border-t border-border" />
-          <ProfileToggle
-            icon={Bell}
-            label="Notifications"
-            checked={notifications}
-            onChange={() => setNotifications((value) => !value)}
-          />
-        </div>
-      </section>
-      <button type="button" onClick={onLogout} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-text hover:bg-surface-2">
-        <LogOut size={16} /> Log out
-      </button>
-      {openPanel && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/45 p-5 flex items-center justify-center"
-          onClick={() => setOpenPanel("")}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            className="w-full max-w-sm bg-bg rounded-2xl p-5 shadow-2xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex justify-between items-start">
-              <h2 className="font-serif text-2xl">
-                {openPanel === "preferences"
-                  ? "Your preferences"
-                  : "Payment methods"}
-              </h2>
-              <button aria-label="Close" onClick={() => setOpenPanel("")}>
-                <X size={18} />
-              </button>
-            </div>
-            {openPanel === "preferences" ? (
-              <>
-                <label className="block mt-5 text-xs font-semibold text-muted">
-                  DIET
-                  <select
-                    value={diet}
-                    onChange={(event) => onSavePreferences({ ...preferences, dietaryPreference: event.target.value })}
-                    className="block w-full mt-2 rounded-xl border border-border bg-surface px-3 py-3 text-sm font-normal"
-                  >
-                    <option>Vegetarian</option>
-                    <option>Vegan</option>
-                    <option>No preference</option>
-                    <option>Gluten-free</option>
-                  </select>
-                </label>
-                <p className="text-xs text-muted mt-4">
-                  Interests: {(preferences?.interests || []).map((interest) => interest[0]?.toUpperCase() + interest.slice(1)).join(" · ") || "Not set"}
-                </p>
-              </>
+      {panel && (
+        <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/55 p-0 sm:items-center sm:p-5" onClick={(event) => { if (event.target === event.currentTarget) setPanel(""); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="safety-tool-title" className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-border bg-bg p-5 text-text shadow-2xl sm:rounded-3xl">
+            <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Atithi AI · Safety tool</p><h2 id="safety-tool-title" className="mt-1 font-serif text-2xl">{panel === "hazard" ? "Report a hazard" : "Price Lens"}</h2></div><button type="button" aria-label="Close" onClick={() => setPanel("")} className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-surface"><X size={17}/></button></div>
+            {panel === "hazard" ? (
+              <form onSubmit={submitHazard} className="mt-5 space-y-4">
+                <p className="text-xs leading-relaxed text-muted">This creates a demo report in the local Trip Guardian log; it does not dispatch emergency help. Call 112 for an immediate emergency.</p>
+                <label className="block text-xs font-semibold text-muted">Issue type<select value={hazardType} onChange={(event) => setHazardType(event.target.value)} className="mt-2 block w-full rounded-xl border border-border bg-surface px-3 py-3 text-sm text-text"><option>Road obstruction</option><option>Flooding or landslide concern</option><option>Suspected overpricing or scam</option><option>Unsafe travel condition</option><option>Other local concern</option></select></label>
+                <label className="block text-xs font-semibold text-muted">What did you notice?<textarea value={hazardDetails} onChange={(event) => setHazardDetails(event.target.value)} maxLength={600} rows={4} placeholder="Describe the visible issue and where it is…" className="mt-2 block w-full resize-y rounded-xl border border-border bg-surface px-3 py-3 text-sm text-text placeholder:text-muted"/></label>
+                <p className="text-[10px] text-muted">Current corridor: {selectedWaypoint?.name || "Rudraprayag"}. Do not use this demo form for urgent help.</p>
+                <button type="submit" className="w-full rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white">Submit demo safety report</button>
+              </form>
             ) : (
-              <div className="mt-5 rounded-xl bg-surface p-4 border border-border">
-                <p className="font-medium text-sm">Visa ending in 2048</p>
-                <p className="text-xs text-muted mt-1">
-                  Primary payment method · Expires 08/28
-                </p>
+              <div className="mt-5 space-y-4">
+                <p className="text-xs leading-relaxed text-muted">Choose a photo of a printed menu, fare board or quotation. Lens can read visible text and suggest questions; it cannot verify a live market rate or prove fraud.</p>
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface p-5 text-center">
+                  {lensImage ? <img src={lensImage.dataUrl} alt="Selected price image preview" className="max-h-52 rounded-xl object-contain"/> : <><Camera size={25} className="text-accent-text"/><span className="mt-2 text-sm font-semibold">Take a photo or choose an image</span><span className="mt-1 text-[10px] text-muted">JPEG, PNG or WebP · up to 3 MB</span></>}
+                  <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={selectLensImage} className="mt-3 block w-full text-xs text-muted"/>
+                </label>
+                {lensError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{lensError}</p>}
+                <button type="button" disabled={!lensImage || lensLoading} onClick={analyzePrice} className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{lensLoading ? "Reading visible prices…" : "Analyse price image"}</button>
+                {lensResult && <div className="space-y-3 rounded-2xl border border-border bg-surface p-4">
+                  <div><p className="text-[10px] font-bold uppercase tracking-wide text-accent-text">What Lens can see</p><p className="mt-1 text-sm leading-relaxed text-text">{lensResult.summary}</p></div>
+                  {Array.isArray(lensResult.visiblePrices) && lensResult.visiblePrices.length > 0 && <div><p className="text-xs font-semibold text-text">Visible prices</p><ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-muted">{lensResult.visiblePrices.map((price,index)=><li key={index}>{price}</li>)}</ul></div>}
+                  {Array.isArray(lensResult.potentialConcerns) && lensResult.potentialConcerns.length > 0 && <div><p className="text-xs font-semibold text-text">Questions to clarify</p><ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-muted">{lensResult.potentialConcerns.map((issue,index)=><li key={index}>{issue}</li>)}</ul></div>}
+                  <p className="text-xs font-medium leading-relaxed text-text">Next step: {lensResult.nextStep}</p>
+                  <p className="border-t border-border pt-2 text-[10px] text-muted">Image interpretation only. No live price database was checked; this is not a fraud finding.</p>
+                </div>}
               </div>
             )}
-            <button
-              onClick={() => setOpenPanel("")}
-              className="w-full mt-5 bg-brand text-white py-3 rounded-xl text-sm font-medium"
-            >
-              Done
-            </button>
           </section>
         </div>
       )}
@@ -2088,26 +1718,50 @@ function ProfileTab({ guest, preferences, onSavePreferences, onOpenOnboarding, o
   );
 }
 
-function ProfileToggle({ icon: Icon, label, checked, onChange }) {
+function ProfileTab({ guest, persona, onUpdateHealthTags, onSwitchPersona }) {
+  const healthTags = Array.isArray(persona?.healthTags) && persona.healthTags.length ? persona.healthTags : ["none"];
+  const conditions = ["BP", "heart", "asthma", "none"];
+  const toggleHealthTag = (tag) => {
+    if (tag === "none") {
+      onUpdateHealthTags(["none"]);
+      return;
+    }
+    const next = healthTags.filter((item) => item !== "none");
+    onUpdateHealthTags(next.includes(tag) ? next.filter((item) => item !== tag) : [...next, tag]);
+  };
+
   return (
-    <button
-      type="button"
-      aria-pressed={checked}
-      onClick={onChange}
-      className="w-full flex items-center justify-between p-4 text-left hover:bg-surface-2"
-    >
-      <span className="flex items-center gap-3">
-        <IconBadge icon={Icon} tone={label === "Notifications" ? "coral" : "emerald"} size="sm" />
-        <span className="text-sm font-medium">{label}</span>
-      </span>
-      <span
-        className={`w-10 h-6 rounded-full relative transition-colors ${checked ? "bg-brand" : "bg-border"}`}
-      >
-        <span
-          className={`absolute top-1 w-4 h-4 rounded-full bg-surface transition-all ${checked ? "right-1" : "left-1"}`}
-        />
-      </span>
-    </button>
+    <div className="profile-page px-5 pb-8 pt-8 sm:px-6">
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div><p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-text">Your trip profile</p><h1 className="font-serif text-[34px] leading-none text-text">Plan for you.</h1></div>
+        <ThemeToggle compact/>
+      </div>
+      <section className="profile-pass relative mb-6 overflow-hidden rounded-2xl p-5 text-white shadow-lg">
+        <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/65">Atithi AI · Demo persona</p>
+        <div className="mt-5 flex items-center gap-3">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-surface/5 font-serif text-2xl text-[#E7C99C]">{guest?.name?.trim()?.[0]?.toUpperCase() || "P"}</div>
+          <div><h2 className="font-serif text-[25px] leading-none">{persona?.name || guest?.name || "Traveller"}</h2><p className="mt-2 text-xs text-white/75">{persona?.age ? `Age ${persona.age} · group ${persona.ageGroup}` : persona?.description || "Regional safety overview"}</p><p className="mt-1 text-[10px] text-white/65">{persona?.fitnessProfile || "Health-aware travel profile"}</p></div>
+        </div>
+        <p className="mt-5 border-t border-white/15 pt-3 text-[10px] leading-relaxed text-white/75">Demo profile only · health tags are not a medical record or medical advice.</p>
+      </section>
+
+      <section className="mb-6 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+        <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Personal safety context</p><h2 className="mt-1 font-serif text-2xl text-text">Health tags</h2><p className="mt-2 text-xs leading-relaxed text-muted">Choose only the demo tags you want used for safer planning. This is not connected to medical records.</p></div>
+        <div className="mt-4"><p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-muted">Age group</p><span className="inline-flex rounded-full border border-border bg-surface-2 px-3 py-2 text-xs font-semibold text-text">{persona?.ageGroup || "Not set"}{persona?.age ? ` · age ${persona.age} (demo)` : ""}</span></div>
+        <div className="mt-5"><p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-muted">Known conditions · demo</p><div className="flex flex-wrap gap-2">{conditions.map((tag) => {const selected = healthTags.includes(tag);return <button key={tag} type="button" aria-pressed={selected} onClick={() => toggleHealthTag(tag)} className={`rounded-full border px-3 py-2 text-xs font-semibold capitalize transition ${selected ? "border-brand bg-brand text-white" : "border-border bg-surface text-muted hover:bg-surface-2"}`}>{tag === "BP" ? "BP / hypertension" : tag === "none" ? "None" : tag}</button>;})}</div></div>
+        <p className="mt-4 text-[10px] leading-relaxed text-muted">These tags are optional demo inputs. For an actual emergency, call 112; don't rely on this app for medical assessment.</p>
+      </section>
+
+      <section className="mb-6 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Route context</p>
+        <h2 className="mt-1 font-serif text-xl text-text">Health-aware, weather-aware travel</h2>
+        <p className="mt-2 text-xs leading-relaxed text-muted">Atithi can surface the selected corridor weather, mark affected stops and suggest conservative checkpoints. Coordinates and elevations are approximate planning context, not a navigation or medical guarantee.</p>
+      </section>
+
+      <button type="button" onClick={onSwitchPersona} className="flex w-full items-center justify-between rounded-2xl border border-border bg-surface p-4 text-left shadow-sm transition hover:bg-surface-2">
+        <span><span className="block text-sm font-bold text-text">Switch persona</span><span className="mt-1 block text-xs text-muted">Choose Pilgrim, Trekker or Tourism Officer.</span></span><ChevronRight size={18} className="text-accent-text"/>
+      </button>
+    </div>
   );
 }
 
