@@ -217,7 +217,7 @@ textarea::placeholder {
   font-size: 9px;
 }
 .atithi-places-map .leaflet-control-attribution a {
-  color: var(--accent-text);
+  color: rgb(var(--accent-text-rgb));
 }
 .atithi-places-map .atithi-locate-control {
   margin-top: 10px;

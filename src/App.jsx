@@ -1302,7 +1302,7 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
   );
 }
 
-function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCrowdPlaces = [], onAddPlaceToItinerary }) {
+function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCrowdPlaces = [], onAddPlaceToItinerary, crowdSelectionIds = [] }) {
   const [messages, setMessages] = useState([
     {
       from: "concierge",
@@ -1440,14 +1440,14 @@ function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCr
                     mini
                     height={190}
                     onAddToItinerary={onAddPlaceToItinerary}
-                    selectedPlaceIds={[]}
+                    selectedPlaceIds={crowdSelectionIds}
                   />
                   <div className="mt-3 space-y-2">
                     {suggestedPlaces.map((place) => (
                       <article key={place.id} className="rounded-xl border border-border bg-bg p-3">
                         <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-semibold text-text">{place.name}</h3><p className="mt-1 text-[10px] leading-relaxed text-muted">{place.shortDesc}</p></div><span className="rounded-full bg-surface-2 px-2 py-1 text-[9px] capitalize text-muted">{place.category}</span></div>
                         <p className="mt-2 text-[10px] text-muted">~{place.travelMinutes} min · crowd and time estimates</p>
-                        <button type="button" onClick={() => onAddPlaceToItinerary(place)} className="mt-2 w-full rounded-lg bg-brand px-3 py-2 text-[10px] font-semibold text-white">Add to itinerary</button>
+                        <button type="button" disabled={crowdSelectionIds.includes(place.id)} onClick={() => onAddPlaceToItinerary(place)} className="mt-2 w-full rounded-lg bg-brand px-3 py-2 text-[10px] font-semibold text-white disabled:opacity-50">{crowdSelectionIds.includes(place.id) ? "Already added" : "Add to itinerary"}</button>
                       </article>
                     ))}
                   </div>
