@@ -1,0 +1,11 @@
+{
+  "name": "Atithi AI Hotel Co-Host",
+  "short_name": "Atithi AI",
+  "description": "A demo AI co-host for three-star hotels.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#edf1ed",
+  "theme_color": "#10434F",
+  "lang": "en"
+}
