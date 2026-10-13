@@ -26,7 +26,8 @@ function baseLanguage(value) {
   const candidate = clean(value, 20).toLowerCase().split("-")[0];
   return VALID_LANGUAGES.has(candidate) ? candidate : "en";
 }
-// safe-fallback responses intentionally keep the HTTP status at 200 for provider failures.\nfunction fallback(language, mode) {
+// Safe-fallback responses intentionally keep the HTTP status at 200 for provider failures.
+function fallback(language, mode) {
   const copy = LANG[language] || LANG.en;
   const result = {
     whatIsThis: copy.what,
