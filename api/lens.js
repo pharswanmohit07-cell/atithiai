@@ -134,6 +134,7 @@ export default async function handler(req, res) {
       signal: controller.signal,
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageBase64 } }] }],
+        // The prompt defines mode-specific fields; normalize() validates the returned JSON shape.
         generationConfig: {
           responseMimeType: "application/json"
         }
