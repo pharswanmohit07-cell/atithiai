@@ -192,6 +192,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (!selectedWaypoint) return undefined;
     const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     let mounted = true;
     setWeatherLoading(true);
     setWeatherError("");
@@ -235,12 +236,12 @@ export function AppProvider({ children }) {
         setWeatherError("");
       })
       .catch((error) => {
-        if (error?.name === "AbortError" || !mounted) return;
-        setWeatherError("Live weather is unavailable. Check local conditions before travel.");
+        if (!mounted) return;
+        setWeatherError(error?.name === "AbortError" ? "Live weather timed out. Please check local conditions before travel." : "Live weather is unavailable. Check local conditions before travel.");
       })
-      .finally(() => { if (mounted) setWeatherLoading(false); });
+      .finally(() => { clearTimeout(timeout); if (mounted) setWeatherLoading(false); });
 
-    return () => { mounted = false; controller.abort(); };
+    return () => { mounted = false; clearTimeout(timeout); controller.abort(); };
   }, [selectedWaypoint?.id, selectedWaypoint?.lat, selectedWaypoint?.lon]);
 
   const liveObservation = weatherObservation?.waypointId === selectedWaypointId ? weatherObservation : null;
