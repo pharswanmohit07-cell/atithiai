@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AlertCircle, Camera, Check, Languages, LoaderCircle, MessageCircle, RotateCcw, Volume2, VolumeX } from "lucide-react";
-import { getSeedLensResult } from "../../data/lensCache.js";
+import { getSeedLensResult } from "../../data/lensCache.js";\nimport IconBadge from "../ui/IconBadge.jsx";
 import { useDestination } from "../../context/DestinationContext.jsx";
 import { useProfile } from "../../context/ProfileContext.jsx";
 
@@ -223,7 +223,7 @@ export default function LensTab({ onRequest }) {
   const dishes = Array.isArray(result?.dishes) ? result.dishes : [];
   const transport = result?.transport;
   return <section className="space-y-4" aria-labelledby="lens-title">
-    <header className="flex items-start gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand"><Languages size={20}/></span><div className="min-w-0 flex-1"><h2 id="lens-title" className="font-serif text-2xl">Atithi Lens</h2><p className="mt-1 text-xs leading-relaxed text-muted">Travel help when the world gets unfamiliar. Understand a menu, sign, or local transport detail without losing context.</p></div></header>
+    <header className="flex items-start gap-3"><IconBadge icon={Languages} tone="gold" /><div className="min-w-0 flex-1"><h2 id="lens-title" className="font-serif text-2xl">Atithi Lens</h2><p className="mt-1 text-xs leading-relaxed text-muted">Travel help when the world gets unfamiliar. Understand a menu, sign, or local transport detail without losing context.</p></div></header>
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <label className="text-xs font-bold">Translate into<select value={language} onChange={(event)=>changeLanguage(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm">{LANGUAGES.map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
       <div><span className="block text-xs font-bold">What are you looking at?</span><div className="mt-1 grid grid-cols-4 rounded-xl border border-border bg-bg p-1" role="group" aria-label="Lens mode">{MODES.map(([value,label])=><button key={value} type="button" aria-pressed={mode===value} onClick={()=>{setMode(value);setResult(null);setError("");setCachedDemo(false);}} className={"min-h-9 rounded-lg px-1 text-[10px] font-bold sm:text-xs "+(mode===value?"bg-brand text-white":"text-muted hover:bg-surface-2")}>{label}</button>)}</div></div>
