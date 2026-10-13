@@ -5,6 +5,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # GEMINI_MODEL is a public model name (e.g. "gemini-3.8-flash") that legitimately
+  # appears in source and docs; GEMINI_API_KEY stays scanned.
+  SECRETS_SCAN_OMIT_KEYS = "GEMINI_MODEL"
 
 [[redirects]]
   from = "/api/chat"
