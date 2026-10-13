@@ -1,0 +1,88 @@
+.route-guard-map-canvas {
+  width: 100%;
+  min-height: 320px;
+  background: var(--bg);
+  z-index: 0;
+}
+
+.route-guard-div-icon {
+  background: transparent;
+  border: 0;
+}
+
+.route-guard-waypoint-marker {
+  position: relative;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 9999px;
+  background: #344f78;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.28);
+  color: white;
+  font: 800 12px/1 "Manrope", sans-serif;
+}
+
+.route-guard-waypoint-marker.is-current {
+  background: #b45309;
+  box-shadow: 0 0 0 5px rgb(245 158 11 / 0.28), 0 2px 8px rgb(0 0 0 / 0.28);
+  animation: route-guard-pulse 1.6s ease-out infinite;
+}
+
+.route-guard-village-marker {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 9px;
+  background: #15803d;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.24);
+  color: white;
+  font: 800 12px/1 "Manrope", sans-serif;
+}
+
+.route-guard-map-popup {
+  color: var(--text);
+  font: 12px/1.45 "Manrope", sans-serif;
+}
+
+.route-guard-demo-tag {
+  display: inline-block;
+  margin-bottom: 5px;
+  border-radius: 9999px;
+  background: #fee2e2;
+  padding: 3px 7px;
+  color: #991b1b;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.dark .route-guard-demo-tag {
+  background: #4c1d24;
+  color: #fecaca;
+}
+
+.route-guard-legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 0;
+  border-top: 3px solid #405b83;
+}
+.route-guard-legend-line.blocked {
+  border-top: 3px dashed #dc2626;
+}
+.route-guard-legend-line.detour {
+  border-top: 3px dashed #16a34a;
+}
+
+@keyframes route-guard-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px rgb(245 158 11 / 0.22), 0 2px 8px rgb(0 0 0 / 0.28); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgb(245 158 11 / 0.08), 0 2px 8px rgb(0 0 0 / 0.28); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-guard-waypoint-marker.is-current { animation: none; }
+}
