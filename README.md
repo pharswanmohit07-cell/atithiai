@@ -91,3 +91,10 @@ Distributed under the [MIT License](LICENSE). See `LICENSE` for more information
 ---
 
 <p align="center">Built with ❤️ for the future of luxury hospitality.</p>
+
+
+## Auth (demo only)
+
+Guest and staff sign-in use mock records and store a selected demo identity in browser `localStorage` (`atithi-auth`). This is **client-side demo authentication only**: it is not secure, does not verify a real booking, and must never be used with real guest/staff data or treated as production access control.
+
+The planned production design is a signed per-room QR token validated server-side against the PMS booking. It should be bound to the active stay and expire at checkout. Staff should use a trusted identity provider or server-managed sessions. Room/last-name checks and demo staff credentials are only for the hackathon walkthrough.
