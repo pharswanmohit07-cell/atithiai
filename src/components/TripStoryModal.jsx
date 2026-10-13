@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toBlob } from "html-to-image";
-import { ArrowDownToLine, Check, CloudRain, Download, Leaf, LoaderCircle, Share2, Sparkles, Sun, X } from "lucide-react";
+import { Check, Download, Leaf, LoaderCircle, Share2, Sparkles, Sun, X } from "lucide-react";
 import { PLACES, getCrowd, getCrowdLevel } from "../data/places.js";
 
 const STORY_WIDTH = 360;
@@ -83,6 +83,7 @@ export default function TripStoryModal({
   const [captionSource, setCaptionSource] = useState("local");
   const [captionLoading, setCaptionLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [previewScale, setPreviewScale] = useState(1);
   const [status, setStatus] = useState("");
   const [exportError, setExportError] = useState("");
   const language = preferences?.language || guest?.language || guest?.preferredLanguage || "en";
@@ -109,6 +110,13 @@ export default function TripStoryModal({
     [guestName, highlights, hindi],
   );
   const displayedCaption = caption.length === 2 ? caption : localCaption;
+
+  useEffect(() => {
+    const syncPreviewScale = () => setPreviewScale(Math.min(1, Math.max(0.65, (window.innerWidth - 40) / STORY_WIDTH)));
+    syncPreviewScale();
+    window.addEventListener("resize", syncPreviewScale);
+    return () => window.removeEventListener("resize", syncPreviewScale);
+  }, []);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -254,15 +262,17 @@ export default function TripStoryModal({
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 sm:p-4">
-              <div className="mx-auto w-[360px] max-w-full origin-top" style={{ aspectRatio: "9 / 16" }}>
+              <div className="mx-auto origin-top" style={{ width: STORY_WIDTH * previewScale, height: STORY_HEIGHT * previewScale }}>
                 <motion.div
                   ref={storyRef}
-                  className="trip-story-art relative flex h-[640px] w-[360px] max-w-full flex-col overflow-hidden text-[#2B342A]"
+                  className="trip-story-art relative flex h-[640px] w-[360px] flex-col overflow-hidden text-[#2B342A]"
                   initial={{ opacity: 0, y: 18, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: 0.55, ease: "easeOut" } }}
                   style={{
                     background: "linear-gradient(160deg, #FCE5BD 0%, #F6C6AB 25%, #EDB5B0 48%, #F4D7BE 70%, #FCF0D8 100%)",
                     boxShadow: "0 18px 44px rgba(95, 59, 41, .16)",
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: "top left",
                   }}
                 >
                   <div className="pointer-events-none absolute -right-14 -top-9 h-52 w-52 rounded-full border border-white/45" />
