@@ -252,7 +252,7 @@ function ProfileView({ user, preferences, updatePreferences, destination, select
   );
 }
 
-function ManagerDashboard({ destination, weather, weatherLoading, weatherError, requests, updateRequestStatus, onSwitch, selectDestination, destinations, formatCurrency }) {
+function ManagerDashboard({ destination, weather, weatherLoading, weatherError, requests, updateRequestStatus, onSwitch, selectDestination, destinations }) {
   const orderedRequests = [...requests].sort((a, b) => Number(b.priority === "urgent") - Number(a.priority === "urgent") || String(b.createdAt).localeCompare(String(a.createdAt)));
   const pending = orderedRequests.filter((request) => request.status === "Pending human review").length;
   return (
