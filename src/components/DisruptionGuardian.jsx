@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, ArrowRightLeft, CheckCircle2, Clock3, Compass, Leaf, MapPin, ShieldCheck, Users } from "lucide-react";
-import { PLACES, getCrowd, getCrowdLevel } from "../data/places.js";
+import { PLACES, getCrowd, getCrowdLevel, getNearestPlaces } from "../data/places.js";
 
 function estimatedVisitFlags() {
   const day = new Date().getDay();
@@ -98,6 +98,47 @@ export function DestinationOverview({ redirectionsCount = 0, localSpendRedirecte
       <div className="space-y-3">{scored.map((place) => {const level=getCrowdLevel(place.crowdScore);const bar=level==="Low"?"bg-emerald-500":level==="Medium"?"bg-amber-500":"bg-rose-500";return <div key={place.id}><div className="mb-1 flex items-center justify-between gap-2"><span className="truncate text-xs font-medium text-text">{place.name}</span><span className="shrink-0 text-[10px] text-muted">{place.crowdScore}/100 · est.</span></div><div className="h-2 overflow-hidden rounded-full bg-surface-2"><div className={`h-full rounded-full ${bar}`} style={{width:`${place.crowdScore}%`}}/></div></div>;})}</div>
       <div className="mt-5 grid grid-cols-2 gap-3"><div className="rounded-xl bg-surface-2 p-4"><p className="text-[10px] uppercase tracking-wide text-muted">Redirected trips</p><p className="mt-1 text-2xl font-semibold text-text">{redirectionsCount}</p><p className="text-[10px] text-muted">Guardian accepts</p></div><div className="rounded-xl bg-surface-2 p-4"><p className="text-[10px] uppercase tracking-wide text-muted">Local spend redirected</p><p className="mt-1 text-2xl font-semibold text-text">₹{Number(localSpendRedirected).toLocaleString("en-IN")}</p><p className="text-[10px] text-muted">estimated INR</p></div></div>
       <div className="mt-5"><ActionsTakenLog actions={actions} compact/></div>
+    </section>
+  );
+}
+
+export function BeatCrowdsPanel({ search = "", onAddPlace, isWeekend = false, selectedPlaceIds = [] }) {
+  const [enabled, setEnabled] = React.useState(false);
+  const [chosenHigh, setChosenHigh] = React.useState(null);
+  const flags = { isWeekend, isHoliday: false };
+  const query = search.trim().toLowerCase();
+  const places = PLACES.filter((place) => `${place.name} ${place.shortDesc} ${place.category}`.toLowerCase().includes(query));
+  const lowCrowdAlternative = chosenHigh
+    ? getNearestPlaces(chosenHigh, PLACES, PLACES.length)
+        .filter((place) => getCrowdLevel(getCrowd(place, flags)) === "Low")
+        .sort((a, b) => getCrowd(a, flags) - getCrowd(b, flags) || a.distanceKm - b.distanceKm)
+        .slice(0, 2)
+    : [];
+
+  return (
+    <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"><Users size={18}/></span>
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent-text">Trip Guardian</p><h3 className="font-serif text-xl text-text">Beat the crowds</h3><p className="text-xs text-muted">Choose a quieter route into the hills.</p></div>
+        </div>
+        <button type="button" role="switch" aria-checked={enabled} onClick={() => setEnabled((value) => !value)} className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${enabled?"bg-brand":"bg-border"}`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-all ${enabled?"left-6":"left-1"}`}/><span className="sr-only">Toggle Beat the crowds</span></button>
+      </div>
+      {!enabled && <p className="mt-3 rounded-xl bg-surface-2 p-3 text-xs leading-relaxed text-muted">Turn on to compare estimated crowd levels and find local alternatives to busy hotspots.</p>}
+      {enabled && <div className="mt-4 space-y-3">
+        {places.map((place) => {
+          const score = getCrowd(place, flags);
+          const level = getCrowdLevel(score);
+          return <article key={place.id} className="rounded-xl border border-border bg-bg p-3">
+            <div className="flex items-start justify-between gap-2"><div className="min-w-0"><h4 className="text-sm font-semibold text-text">{place.name}</h4><p className="mt-1 text-xs leading-relaxed text-muted">{place.shortDesc}</p></div><CrowdBadge place={place} score={score}/></div>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted"><span>{place.travelMinutes} min from Dehradun · estimated</span><span>·</span><span>₹{place.localSpendINR} local spend · estimated</span></div>
+            {level === "High" ? <button type="button" onClick={() => setChosenHigh(place)} className="mt-3 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-accent-text hover:bg-surface-2">Find a nearby Low-crowd alternative</button> : <button type="button" disabled={selectedPlaceIds.includes(place.id)} onClick={() => onAddPlace(place, null)} className="mt-3 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{selectedPlaceIds.includes(place.id)?"Added to your day":"Add to my day"}</button>}
+            {chosenHigh?.id === place.id && <div className="mt-3 space-y-2 rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 dark:border-emerald-900 dark:bg-emerald-950/20"><p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-200">A quieter alternative · estimated crowd</p>{lowCrowdAlternative.length?lowCrowdAlternative.map((alternative)=><div key={alternative.id} className="border-t border-emerald-200/70 pt-2 first:border-0 first:pt-0 dark:border-emerald-900/70"><div className="flex items-start justify-between gap-2"><div><p className="text-sm font-semibold text-text">{alternative.name}</p><p className="mt-0.5 text-[10px] text-muted">{alternative.distanceKm.toFixed(1)} km away · estimated · {getCrowd(alternative,flags)}/100 crowd index</p></div><CrowdBadge place={alternative} score={getCrowd(alternative,flags)}/></div><p className="mt-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-200">+₹{alternative.localSpendINR} estimated to local community</p><button type="button" disabled={selectedPlaceIds.includes(alternative.id)} onClick={() => {onAddPlace(alternative, place);setChosenHigh(null);}} className="mt-2 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">{selectedPlaceIds.includes(alternative.id)?"Already in your day":"Add alternative"}</button></div>):<p className="text-xs text-muted">No low-crowd place is currently available in the curated list.</p>}</div>}
+          </article>;
+        })}
+        {places.length===0&&<p className="py-5 text-center text-sm text-muted">No destinations match that search.</p>}
+        <p className="text-[10px] leading-relaxed text-muted">Crowd levels, travel minutes and community-spend figures are estimated demo values, not live feeds or guarantees.</p>
+      </div>}
     </section>
   );
 }
