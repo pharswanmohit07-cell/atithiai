@@ -87,7 +87,7 @@ const RescuePass = forwardRef(function RescuePass({
     page: "#F1F3EE", card: "#FFFFFF", cardAlt: "#FAFCFA", text: "#192F2C", muted: "#4A625E",
     border: "#BFD0C7", borderAccent: passColors.borderAccent, brand: "#10434F", brandText: "#174D52",
     accent: "#C78A25", accentText: "#765018", headerMuted: "#DBE9E4", panel: "#EDF3EF",
-    soft: "#E4F0EC", warm: "#FFF0D7", warmText: "#765018", warmMuted: passColors.warmMuted,
+    soft: "#E4F0EC", warm: "#FFF0D7", warmText: "#765018", warmMuted: "#795D36",
   };
   const passRef = useRef(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -277,14 +277,14 @@ const RescuePass = forwardRef(function RescuePass({
         printColorAdjust: "exact",
       }}
     >
-      <div style={{ width: "100%", height: "100%", border: "3px solid #19392F", borderRadius: 28, overflow: "hidden", display: "flex", flexDirection: "column", background: passColors.card }}>
+      <div style={{ width: "100%", height: "100%", border: "3px solid " + passColors.brand, borderRadius: 28, overflow: "hidden", display: "flex", flexDirection: "column", background: passColors.card }}>
         <div style={{ background: passColors.brand, color: "#FFFFFF", padding: "31px 38px 29px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <div style={{ fontSize: 16, letterSpacing: 4, fontWeight: 800, color: passColors.accent }}>ATITHI AI · TRAVEL SAFETY</div>
             <div style={{ fontSize: 39, letterSpacing: 0.2, fontWeight: 800, marginTop: 10 }}>OFFLINE RESCUE PASS</div>
             <div style={{ fontSize: 17, marginTop: 8, color: passColors.headerMuted }}>Personal trip summary · informational use only</div>
           </div>
-          <div style={{ width: 88, height: 88, borderRadius: 44, border: "2px solid #E8C18A", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 43, color: passColors.accent, fontWeight: 800 }}>A</div>
+          <div style={{ width: 88, height: 88, borderRadius: 44, border: "2px solid " + passColors.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 43, color: passColors.accent, fontWeight: 800 }}>A</div>
         </div>
 
         <div style={{ padding: "28px 34px 18px", display: "flex", flexDirection: "column", gap: 18, flex: 1 }}>
@@ -294,7 +294,7 @@ const RescuePass = forwardRef(function RescuePass({
               <div style={{ fontSize: 36, fontWeight: 800, marginTop: 6, overflowWrap: "anywhere" }}>{travelerName}</div>
               <div style={{ fontSize: 18, marginTop: 6, color: passColors.muted }}>Persona: {personaName}</div>
             </div>
-            <div style={{ minWidth: 250, maxWidth: 350, border: "1px solid #B8C8BE", borderRadius: 15, padding: "17px 20px", background: passColors.panel }}>
+            <div style={{ minWidth: 250, maxWidth: 350, border: "1px solid " + passColors.border, borderRadius: 15, padding: "17px 20px", background: passColors.panel }}>
               <div style={{ fontSize: 13, fontWeight: 800, letterSpacing: 1.5, color: passColors.muted }}>TRIP DATES</div>
               <div style={{ fontSize: 19, fontWeight: 700, marginTop: 8 }}>{tripDates}</div>
               <div style={{ fontSize: 13, marginTop: 7, color: passColors.muted }}>Add or update dates in pass preview</div>
@@ -302,27 +302,27 @@ const RescuePass = forwardRef(function RescuePass({
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1.15fr 0.85fr", gap: 16 }}>
-            <div style={{ borderRadius: 18, padding: 20, background: passColors.soft, border: "1px solid #B8D1BE" }}>
+            <div style={{ borderRadius: 18, padding: 20, background: passColors.soft, border: "1px solid " + passColors.borderAccent }}>
               <div style={{ fontSize: 13, color: passColors.brandText, fontWeight: 800, letterSpacing: 1.8 }}>CURRENT WAYPOINT</div>
               <div style={{ fontSize: 30, fontWeight: 800, marginTop: 9 }}>{waypointName}</div>
               <div style={{ fontSize: 19, marginTop: 7 }}>Elevation: {elevation == null ? "Not available" : elevation.toLocaleString("en-IN") + " m"}</div>
             </div>
-            <div style={{ borderRadius: 18, padding: 20, background: passColors.warm, border: "1px solid #E5C58D" }}>
+            <div style={{ borderRadius: 18, padding: 20, background: passColors.warm, border: "1px solid " + passColors.borderAccent }}>
               <div style={{ fontSize: 13, color: passColors.warmText, fontWeight: 800, letterSpacing: 1.5 }}>ALTITUDE ADVISORY</div>
               <div style={{ fontSize: 28, fontWeight: 800, marginTop: 13 }}>{altitudeAdvisoryLevel || "Not assessed"}</div>
               <div style={{ fontSize: 14, marginTop: 7, color: passColors.warmMuted }}>General guidance, not medical advice</div>
             </div>
           </div>
 
-          <div style={{ border: "1px solid #C9D3CD", borderRadius: 17, padding: "17px 20px" }}>
+          <div style={{ border: "1px solid " + passColors.border, borderRadius: 17, padding: "17px 20px" }}>
             <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.6 }}>HEALTH TAGS · DEMO PROFILE</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginTop: 12 }}>
-              {tagLabels.map((tag) => <span key={tag} style={{ fontSize: 15, fontWeight: 700, color: passColors.brand, background: passColors.soft, border: "1px solid #C5D5CA", borderRadius: 40, padding: "9px 15px" }}>{tag}</span>)}
+              {tagLabels.map((tag) => <span key={tag} style={{ fontSize: 15, fontWeight: 700, color: passColors.brand, background: passColors.soft, border: "1px solid " + passColors.border, borderRadius: 40, padding: "9px 15px" }}>{tag}</span>)}
             </div>
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 18, minHeight: 325 }}>
-            <div style={{ border: "1px solid #CAD3CE", borderRadius: 17, padding: "17px 20px" }}>
+            <div style={{ border: "1px solid " + passColors.border, borderRadius: 17, padding: "17px 20px" }}>
               <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.6 }}>ITINERARY SUMMARY</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 14 }}>
                 {itinerary.map((stop, index) => (
@@ -339,19 +339,19 @@ const RescuePass = forwardRef(function RescuePass({
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
-              <div style={{ border: "1px solid #C5D1C9", borderRadius: 17, padding: "15px 17px", background: passColors.cardAlt }}>
+              <div style={{ border: "1px solid " + passColors.border, borderRadius: 17, padding: "15px 17px", background: passColors.cardAlt }}>
                 <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.4 }}>EMERGENCY CONTACTS</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 13 }}>
                   <div style={{ width: 46, height: 46, borderRadius: 12, background: passColors.brand, color: "white", display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ fontSize: 20, fontWeight: 800 }}>112</span></div>
                   <div><div style={{ fontSize: 17, fontWeight: 800 }}>112</div><div style={{ fontSize: 12, marginTop: 3, color: passColors.muted }}>General emergency</div></div>
                 </div>
-                <div style={{ marginTop: 15, borderTop: "1px solid #D7DED9", paddingTop: 12 }}>
+                <div style={{ marginTop: 15, borderTop: "1px solid " + passColors.border, paddingTop: 12 }}>
                   <div style={{ fontSize: 12, color: passColors.muted }}>Traveller's own contact</div>
                   <div style={{ fontSize: 17, fontWeight: 700, marginTop: 4, overflowWrap: "anywhere" }}>{emergencyContact.trim() || "Not provided"}</div>
                 </div>
               </div>
 
-              <div style={{ border: "1px solid #C5D1C9", borderRadius: 17, padding: "15px 17px", textAlign: "center", flex: 1 }}>
+              <div style={{ border: "1px solid " + passColors.border, borderRadius: 17, padding: "15px 17px", textAlign: "center", flex: 1 }}>
                 {qrCodeUrl
                   ? <img src={qrCodeUrl} alt="Self-generated Rescue Pass QR code" style={{ width: 190, height: 190, margin: "0 auto", imageRendering: "pixelated" }}/>
                   : <div style={{ width: 190, height: 190, margin: "0 auto", background: passColors.soft, borderRadius: 10 }}/>}
@@ -361,12 +361,12 @@ const RescuePass = forwardRef(function RescuePass({
             </div>
           </div>
 
-          <div style={{ borderRadius: 17, border: "1px solid #CAD3CE", padding: "15px 20px" }}>
+          <div style={{ borderRadius: 17, border: "1px solid " + passColors.border, padding: "15px 20px" }}>
             <div style={{ fontSize: 14, color: passColors.muted, fontWeight: 800, letterSpacing: 1.6 }}>ACTIONS TAKEN BY ATITHI · LATEST ENTRIES</div>
             <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
               {latestActions.length
                 ? latestActions.map((action, index) => (
-                  <div key={action.title + index} style={{ flex: 1, minWidth: 0, borderLeft: "4px solid #DAB477", paddingLeft: 12 }}>
+                  <div key={action.title + index} style={{ flex: 1, minWidth: 0, borderLeft: "4px solid " + passColors.accent, paddingLeft: 12 }}>
                     <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.3 }}>{action.title}</div>
                     <div style={{ fontSize: 11, color: passColors.muted, marginTop: 5 }}>{action.status}{action.time ? " · " + action.time : ""}</div>
                   </div>
@@ -375,7 +375,7 @@ const RescuePass = forwardRef(function RescuePass({
             </div>
           </div>
 
-          <div style={{ borderTop: "2px solid #DCE3DD", paddingTop: 13, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18 }}>
+          <div style={{ borderTop: "2px solid " + passColors.border, paddingTop: 13, display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 18 }}>
             <div>
               <div style={{ fontSize: 15, fontWeight: 800 }}>Generated by Atithi AI on {formatDateTime(generatedAt)}</div>
               <div style={{ fontSize: 12, color: passColors.muted, marginTop: 5 }}>{DISCLAIMER}</div>
