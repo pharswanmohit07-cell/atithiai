@@ -95,7 +95,6 @@ export function HotelProvider({ children }) {
       title: String(request?.title || "Guest request").slice(0, 140),
       category: String(request?.category || "Front desk").slice(0, 60),
       detail: String(request?.detail || "").slice(0, 1000),
-      status: "Pending human review",
       priority: request?.priority === "urgent" ? "urgent" : "normal",
       createdAt: new Date().toISOString(),
       destinationId: destination.id,
@@ -103,6 +102,10 @@ export function HotelProvider({ children }) {
       ...(typeof request?.kind === "string" ? { kind: request.kind } : {}),
       ...(typeof request?.requestedTime === "string" ? { requestedTime: request.requestedTime } : {}),
       ...(request?.offer && typeof request.offer === "object" ? { offer: request.offer } : {}),
+      ...(typeof request?.staffNote === "string" ? { staffNote: request.staffNote.slice(0, 500) } : {}),
+      ...(typeof request?.billLine === "string" ? { billLine: request.billLine.slice(0, 200) } : {}),
+      ...(request?.finalFee != null && Number.isFinite(Number(request.finalFee)) ? { finalFee: Number(request.finalFee) } : {}),
+      ...(typeof request?.approvedTime === "string" ? { approvedTime: request.approvedTime } : {}),
     };
     setRequests((current) => { const next = [item, ...current].slice(0, 80); safeWrite(REQUESTS_KEY(destination.id), next); return next; });
     return item;
@@ -125,7 +128,7 @@ export function HotelProvider({ children }) {
     setChatMessages((current) => { const next = [...current,item].slice(-100); safeWrite(CHAT_KEY(destination.id),next); return next; }); return item;
   }, [destination.id]);
   const createFlexStayRequest = useCallback(({ kind, time, offer, guestName } = {}) => {
-    const fee = Number.isFinite(Number(offer?.fee)) ? Number(offer.fee) : null;
+    const fee = offer?.fee != null && Number.isFinite(Number(offer.fee)) ? Number(offer.fee) : null;
     const auto = flexSettings.autoApproveEnabled && offer?.status==="available" && fee!==null && fee<=flexSettings.autoApproveUnder;
     let billLine;
     if (auto) { let amount = String(fee)+" "+destination.currency.code; try { amount = new Intl.NumberFormat(destination.locale,{style:"currency",currency:destination.currency.code}).format(fee); } catch { /* ISO currency code fallback. */ } billLine = "Add "+amount+" to room bill (demo)"; }
