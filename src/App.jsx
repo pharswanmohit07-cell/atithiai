@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext.jsx";
 import { useAppContext } from "./context/AppContext.jsx";
 import { PLACES, getCrowd, getCrowdLevel } from "./data/places.js";
-import { CORRIDOR_WAYPOINTS, DEMO_HOMESTAYS } from "./data/corridor.js";
+import { CORRIDOR_WAYPOINTS, DEMO_HOMESTAYS, getNearestDemoHomestays } from "./data/corridor.js";
 import { CORRIDOR_ITINERARY } from "./data/guest.js";
 import DemoControls from "./components/DemoControls.jsx";
+import RouteMap from "./components/RouteMap.jsx";
+import RouteGuardCard, { ActionsTakenByAtithi } from "./components/RouteGuardCard.jsx";
 import {
   ActionsTakenLog,
   BeatCrowdsPanel,
@@ -237,13 +239,17 @@ export default function AtithiAI() {
     selectedWaypoint, selectedWaypointId, setSelectedWaypointId,
     weather, weatherSource, weatherObservation, weatherLoading, weatherError,
     manualRainOverride, toggleManualRainOverride,
+    disruptions, simulateLandslide, clearDemoEvents,
   } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
   const isDemoMode = new URLSearchParams(location.search).get("demo") === "1";
   const [appMode, setAppMode] = useState(location.pathname === "/admin" ? "admin" : "guest");
-  const [disruptions, setDisruptions] = useState([]);
   const [actionsLog, setActionsLog] = useState([]);
+  const [routeActions, setRouteActions] = useState([]);
+  const [detourVillage, setDetourVillage] = useState(null);
+  const [reroutesAccepted, setReroutesAccepted] = useState(0);
+  const [routeSpendINR, setRouteSpendINR] = useState(0);
   const [crowdSelectionIds, setCrowdSelectionIds] = useState([]);
   const [itinerary, setItinerary] = useState(SUNNY_ITINERARY);
   const [showAIIntervention, setShowAIIntervention] = useState(false);
@@ -285,46 +291,9 @@ export default function AtithiAI() {
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent("atithi:weather", { detail: weather }));
-    if (weather === "rainy") {
-      setDisruptions((current) => current.some((item) => item.type === "rain") ? current : [...current, {
-        id: "weather-rain", type: "rain", title: "Rain changes the mountain plan",
-        affectedPlaceIds: ["rudraprayag", "guptkashi", "sonprayag", "gaurikund", "kedarnath", "robbers-cave", "sahastradhara"],
-        severity: "moderate", source: weatherSource,
-      }]);
-      setActionsLog((current) => current.some((action) => action.id === "weather-rain-alert") ? current : [{
-        id: "weather-rain-alert",
-        title: "Weather-linked disruption flagged",
-        detail: "Outdoor stops were checked against the current weather state. Crowd and travel estimates remain illustrative.",
-        time: "Just now", source: weatherSource, kind: "alert",
-      }, ...current]);
-    } else {
-      setDisruptions((current) => current.filter((item) => item.type !== "rain"));
-    }
-  }, [weather, weatherSource]);
+  }, [weather]);
 
-  const simulateDisruption = (type) => {
-    const definitions = {
-      landslide: {
-        title: "Demo landslide alert · hillside route at risk",
-        affectedPlaceIds: ["rudraprayag", "guptkashi", "sonprayag", "gaurikund", "kedarnath", "kimadi-ridge", "sainji-corn-village"],
-        severity: "high",
-      },
-      roadblock: {
-        title: "Demo roadblock · corridor access needs confirmation",
-        affectedPlaceIds: ["devprayag", "srinagar-garhwal", "rudraprayag", "guptkashi", "sonprayag", "gaurikund", "mussoorie-mall-road", "kempty-falls"],
-        severity: "high",
-      },
-    };
-    const definition = definitions[type];
-    if (!definition) return;
-    const disruption = { id: `demo-${type}-${Date.now()}`, type, ...definition, source: "demo" };
-    setDisruptions((current) => [...current.filter((item) => item.type !== type), disruption]);
-    setActionsLog((current) => [{
-      id: `log-${disruption.id}`, title: disruption.title,
-      detail: `Guardian is checking ${definition.affectedPlaceIds.length} affected destinations and ranking alternatives.`,
-      time: "Just now", source: "demo", kind: "alert",
-    }, ...current]);
-  };
+  const simulateDisruption = () => simulateLandslide();
 
   const addPlaceToItinerary = (place, redirectedFrom = null) => {
     setItinerary((current) => {
@@ -457,7 +426,7 @@ export default function AtithiAI() {
     localSpendINR: place.localSpendINR, crowdEstimate: getCrowd(place, flags), shortDesc: place.shortDesc,
   })).sort((first, second) => first.crowdEstimate - second.crowdEstimate).slice(0, 5);
   const redirectionsCount = actionsLog.filter((action) => action.kind === "redirection").length;
-  const localSpendRedirected = actionsLog.filter((action) => action.kind === "redirection").reduce((sum, action) => sum + Number(action.localSpendINR || 0), 0);
+  const localSpendRedirected = actionsLog.filter((action) => action.kind === "redirection").reduce((sum, action) => sum + Number(action.localSpendINR || 0), 0) + routeSpendINR;
   const isWeekend = flags.isWeekend;
 
   return (
