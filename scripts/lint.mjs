@@ -82,13 +82,24 @@ const planPath = path.join(root, "api", "plan.js");
 const appSource = await readFile(appPath, "utf8");
 const routerSource = await readFile(routerPath, "utf8");
 const planSource = await readFile(planPath, "utf8");
+const destinationContextPath = path.join(root, "src", "context", "DestinationContext.jsx");
+const registryPath = path.join(root, "src", "data", "destinations", "index.js");
+const chatPath = path.join(root, "api", "chat.js");
+const lensPath = path.join(root, "api", "lens.js");
+const destinationContextSource = await readFile(destinationContextPath, "utf8");
+const registrySource = await readFile(registryPath, "utf8");
+const chatSource = await readFile(chatPath, "utf8");
+const lensSource = await readFile(lensPath, "utf8");
 const requiredChecks = [
-  [appSource.includes("useAuth()"), "Guest/admin app must use AuthContext."],
-  [!appSource.includes("GUEST."), "Hardcoded GUEST identity references must be removed."],
-  [appSource.includes('fetch("/api/chat"'), "Concierge chat must call /api/chat."],
-  [routerSource.includes('path="/staff-login"') && routerSource.includes('path="/admin"'), "Guest/staff routes must be registered."],
-  [routerSource.includes("ProtectedRoute") && routerSource.includes("RoleRoute"), "Protected role guards must be present."],
-  [planSource.includes("places.slice(0,15)") && planSource.includes("function verify("), "Itinerary generation must whitelist supplied places."],
+  [appSource.includes("useAuth()"), "Guest/manager app must use AuthContext."],
+  [appSource.includes('fetch("/api/chat"'), "Co-host chat must call /api/chat."],
+  [routerSource.includes('path="/guest"') && routerSource.includes('path="/admin"'), "Guest and manager routes must be registered."],
+  [routerSource.includes("ProtectedRoute") && routerSource.includes("RoleRoute"), "Role guards must be present."],
+  [destinationContextSource.includes("useDestination") && destinationContextSource.includes("api.open-meteo.com"), "Destination context must provide pack selection and live weather."],
+  [registrySource.includes("jaipur") && registrySource.includes("ubud") && registrySource.includes("lisbon"), "Destination registry must include all three demo packs."],
+  [planSource.includes("getDestinationById") && planSource.includes("verifyPlan"), "Itinerary generation must use and validate the selected pack."],
+  [chatSource.includes("process.env.GEMINI_API_KEY") && chatSource.includes("local-fallback"), "Chat must keep the server-side key and a local fallback."],
+  [lensSource.includes("MAX_IMAGE_BYTES") && lensSource.includes("safe-fallback"), "Price Lens must enforce a payload limit and a safe fallback."],
 ];
 for (const [passed, message] of requiredChecks) if (!passed) failures.push(message);
 
