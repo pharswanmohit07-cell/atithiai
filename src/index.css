@@ -191,7 +191,7 @@ input::placeholder, textarea::placeholder {
     border: 1px solid rgb(174 57 43 / 0.75);
     border-radius: 9999px;
     color: #fff;
-    background: linear-gradient(115deg, #ab352e, #d95f36 78%, #9f3f38);
+    background: linear-gradient(115deg, #8e292a, #b04428 78%, #87352f);
     box-shadow: 0 3px 10px rgb(145 46 38 / 0.25);
     font-size: 0.625rem;
     font-weight: 900;
