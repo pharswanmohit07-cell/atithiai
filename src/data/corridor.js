@@ -72,3 +72,34 @@ export const DEMO_HOMESTAYS = [
     listingStatus: "DEMO LISTING",
   },
 ];
+
+export function getDistanceKm(from, to) {
+  const toRadians = (degrees) => degrees * (Math.PI / 180);
+  const latitudeDelta = toRadians(Number(to.lat) - Number(from.lat));
+  const longitudeDelta = toRadians(Number(to.lon) - Number(from.lon));
+  const firstLatitude = toRadians(Number(from.lat));
+  const secondLatitude = toRadians(Number(to.lat));
+  const arc = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(firstLatitude) * Math.cos(secondLatitude) * Math.sin(longitudeDelta / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(arc), Math.sqrt(Math.max(0, 1 - arc)));
+}
+
+// Distances are straight-line estimates from the selected corridor waypoint.
+// Lower-elevation preference is a ranking nudge for the Pilgrim demo persona,
+// not a guarantee of safety or suitability at altitude.
+export function getNearestDemoHomestays(currentWaypoint, personaId, limit = 2) {
+  if (!currentWaypoint) return [];
+  return DEMO_HOMESTAYS.map((village) => {
+    const distanceKm = getDistanceKm(currentWaypoint, village);
+    const pilgrimElevationPenalty = personaId === "pilgrim" ? village.elevationM / 500 : 0;
+    return {
+      ...village,
+      distanceKm: Math.round(distanceKm * 10) / 10,
+      roughTravelMinutes: Math.max(1, Math.round((distanceKm / 25) * 60)),
+      rankScore: distanceKm + pilgrimElevationPenalty,
+      listingStatus: "DEMO LISTING",
+    };
+  })
+    .sort((first, second) => first.rankScore - second.rankScore || first.distanceKm - second.distanceKm)
+    .slice(0, limit);
+}
