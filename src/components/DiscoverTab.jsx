@@ -4,6 +4,7 @@ import {
   Plus, Send, Sparkles, Sun, Users, X
 } from "lucide-react";
 import { rankPlaces, rankDishes, rankExperiences } from "../lib/rank.js";
+import IconBadge from "./ui/IconBadge.jsx";
 
 const SEGMENTS = [
   { id: "hidden", label: "Hidden Gems", icon: Sparkles },
@@ -259,9 +260,8 @@ export default function DiscoverTab({
   </section> : null;
 
   return <section className="space-y-5">
-    <div className="overflow-hidden rounded-3xl p-5 text-white sm:p-7" style={{ background: "linear-gradient(125deg, #163e4b 0%, #28365c 55%, " + destination.themeColors.accent + " 100%)" }}>
-      <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Discover · {destination.city}</p>
-      <h1 className="mt-2 font-serif text-4xl">Go beyond the usual.</h1>
+    <div className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-7" style={{ "--destination-accent": destination.themeColors.accent }}>
+      <div className="flex items-center gap-3"><IconBadge icon={Compass} tone="coral"/><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Discover · {destination.city}</p><h1 className="deck-heading mt-1 font-display text-4xl">Go beyond the usual.</h1></div></div>
       <p className="mt-2 max-w-2xl text-sm text-white/80">Find hidden corners, community-led ideas and dishes that say something about this place.</p>
       <p className="mt-3 text-[10px] leading-relaxed text-white/75">Demo content · Experiences, stories and prices are illustrative. Confirm details locally.</p>
     </div>
