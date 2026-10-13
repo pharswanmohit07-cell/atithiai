@@ -6,6 +6,7 @@ const PREFS_KEY = "atithi-preferences";
 const COMPLETED_KEY = "atithi-onboarding-complete";
 const PERSONA_KEY = "atithi-persona";
 const WAYPOINT_KEY = "atithi-selected-waypoint";
+const RESCUE_ALTITUDE_KEY = "atithi-rescue-pass-altitude";
 
 export const DEFAULT_PREFERENCES = {
   interests: ["nature", "culture"],
@@ -59,6 +60,19 @@ function readWaypoint() {
   const saved = safeRead(WAYPOINT_KEY, DEFAULT_CORRIDOR_WAYPOINT_ID);
   return CORRIDOR_WAYPOINTS.some((item) => item.id === saved) ? saved : DEFAULT_CORRIDOR_WAYPOINT_ID;
 }
+function readRescuePassAltitude() {
+  const saved = safeRead(RESCUE_ALTITUDE_KEY, null);
+  if (!saved || typeof saved !== "object") {
+    return { altitudeLevel: null, personaId: null, elevationM: null, ascentPerDay: null, updatedAt: null };
+  }
+  return {
+    altitudeLevel: ["low", "moderate", "high"].includes(saved.altitudeLevel) ? saved.altitudeLevel : null,
+    personaId: ["pilgrim", "trekker", "tourism-officer"].includes(saved.personaId) ? saved.personaId : null,
+    elevationM: Number.isFinite(Number(saved.elevationM)) ? Math.max(0, Number(saved.elevationM)) : null,
+    ascentPerDay: Number.isFinite(Number(saved.ascentPerDay)) ? Math.max(0, Number(saved.ascentPerDay)) : null,
+    updatedAt: typeof saved.updatedAt === "string" ? saved.updatedAt : null,
+  };
+}
 function segmentForWaypoint(waypointId) {
   const index = CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === waypointId);
   if (index < 0) return ["rudraprayag", "guptkashi"];
@@ -92,6 +106,7 @@ export function AppProvider({ children }) {
   const [weatherError, setWeatherError] = useState("");
   const [manualRainOverride, setManualRainOverride] = useState(false);
   const [disruptions, setDisruptions] = useState([]);
+  const [rescuePassContext, setRescuePassContext] = useState(readRescuePassAltitude);
 
   const selectedWaypoint = useMemo(
     () => CORRIDOR_WAYPOINTS.find((item) => item.id === selectedWaypointIdState) || CORRIDOR_WAYPOINTS.find((item) => item.id === DEFAULT_CORRIDOR_WAYPOINT_ID),
@@ -141,6 +156,26 @@ export function AppProvider({ children }) {
 
   const toggleManualRainOverride = useCallback(() => {
     setManualRainOverride((previous) => !previous);
+  }, []);
+
+  const updateRescuePassAltitude = useCallback((payload = {}) => {
+    setRescuePassContext((previous) => {
+      const nextValues = {
+        altitudeLevel: ["low", "moderate", "high"].includes(payload.level) ? payload.level : null,
+        personaId: ["pilgrim", "trekker", "tourism-officer"].includes(payload.personaId) ? payload.personaId : null,
+        elevationM: Number.isFinite(Number(payload.elevationM)) ? Math.max(0, Number(payload.elevationM)) : null,
+        ascentPerDay: Number.isFinite(Number(payload.ascentPerDay)) ? Math.max(0, Number(payload.ascentPerDay)) : null,
+      };
+      if (
+        previous.altitudeLevel === nextValues.altitudeLevel
+        && previous.personaId === nextValues.personaId
+        && previous.elevationM === nextValues.elevationM
+        && previous.ascentPerDay === nextValues.ascentPerDay
+      ) return previous;
+      const next = { ...nextValues, updatedAt: new Date().toISOString() };
+      try { localStorage.setItem(RESCUE_ALTITUDE_KEY, JSON.stringify(next)); } catch { /* Keep Rescue Pass context for this session. */ }
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -287,12 +322,14 @@ export function AppProvider({ children }) {
     corridorWaypoints: CORRIDOR_WAYPOINTS, selectedWaypoint, selectedWaypointId, setSelectedWaypointId,
     weather, weatherSource, weatherObservation: liveObservation, weatherLoading, weatherError,
     disruptions, simulateLandslide, clearDemoEvents,
+    rescuePassContext, updateRescuePassAltitude,
     manualRainOverride, toggleManualRainOverride,
   }), [
     preferences, savePreferences, isOnboardingComplete, markOnboardingComplete,
     persona, selectPersona, clearPersona, updateHealthTags,
     selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weather, weatherSource,
     liveObservation, weatherLoading, weatherError, disruptions, simulateLandslide, clearDemoEvents,
+    rescuePassContext, updateRescuePassAltitude,
     manualRainOverride, toggleManualRainOverride,
   ]);
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
