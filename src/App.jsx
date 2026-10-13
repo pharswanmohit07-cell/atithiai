@@ -288,7 +288,6 @@ export default function AtithiAI({ mode = "guest" }) {
   const { destination, destinations, selectDestination, formatCurrency, weather, weatherLoading, weatherError, cachedDemoMode, setCachedDemoMode } = useDestination();
   const { itinerary, requests, addRequest, updateRequestStatus, preferences, updatePreferences, addItineraryStop, removeItineraryStop, setItinerary } = useHotelContext();
   const navigate = useNavigate();
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState("home");
   const [planLoading, setPlanLoading] = useState(false);
 
