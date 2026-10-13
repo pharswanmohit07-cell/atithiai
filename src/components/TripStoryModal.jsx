@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { toBlob } from "html-to-image";
 import { Check, Download, Leaf, LoaderCircle, Share2, Sparkles, Sun, X } from "lucide-react";
 import { PLACES, getCrowd, getCrowdLevel } from "../data/places.js";
+import { useAppContext } from "../context/AppContext.jsx";
 
 const STORY_WIDTH = 360;
 const STORY_HEIGHT = 640;
@@ -78,6 +79,7 @@ export default function TripStoryModal({
   itinerary = [],
   crowdSelectionIds = [],
 }) {
+  const { cachedDemoMode } = useAppContext();
   const storyRef = useRef(null);
   const [caption, setCaption] = useState([]);
   const [captionSource, setCaptionSource] = useState("local");
@@ -125,6 +127,12 @@ export default function TripStoryModal({
     const timeout = window.setTimeout(() => controller.abort(), 10500);
     setCaption(localCaption);
     setCaptionSource("local");
+    if (cachedDemoMode) {
+      setCaption(localCaption);
+      setCaptionSource("local");
+      setCaptionLoading(false);
+      return undefined;
+    }
     setCaptionLoading(true);
     setStatus("");
     setExportError("");
@@ -169,7 +177,7 @@ export default function TripStoryModal({
       controller.abort();
       window.clearTimeout(timeout);
     };
-  }, [open, guestName, language, dateLabel, weatherLabel, highlights, metrics.lowCrowdPicks, metrics.spend, localCaption]);
+  }, [open, guestName, language, dateLabel, weatherLabel, highlights, metrics.lowCrowdPicks, metrics.spend, localCaption, cachedDemoMode]);
 
   const makePng = useCallback(async () => {
     if (!storyRef.current) throw new Error("The story card is not ready yet.");
