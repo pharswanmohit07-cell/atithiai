@@ -23,7 +23,14 @@ function visiblePriceIsClear(prices, explicitFlag) {
 }
 
 function noOfficialRateClaims(value) {
-  return !/(verified\s+official\s+rate|official tariff (?:is|says|confirms)|official rate (?:is|says|confirms)|government-approved price|government approved tariff)/i.test(value);
+  const prohibitedClaims = [
+    /verified\\s+(?:official\\s+)?(?:rate|tariff)/i,
+    /official\\s+(?:rate|tariff)\\s+(?:is|was|says|confirms|sets|equals|amounts to)/i,
+    /(?:is|was|are)\\s+(?:the\\s+)?official\\s+(?:rate|tariff)/i,
+    /government[- ]approved\\s+(?:price|rate|tariff)/i,
+    /(?:fixed|required|guaranteed|confirmed)\\s+(?:official\\s+)?(?:rate|tariff)/i,
+  ];
+  return prohibitedClaims.every((pattern) => !pattern.test(value));
 }
 
 function fallbackResult(language = "en") {
