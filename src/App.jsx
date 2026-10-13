@@ -447,7 +447,9 @@ function GuestApp(props) {
               onClick={() => setActiveTab("ai")}
               className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform ${activeTab === "ai" ? "bg-[#BCA37F] text-white shadow-[#BCA37F]/30" : "bg-white text-[#BCA37F] shadow-black/10"}`}
             >
-              <Sparkles size={24} />
+              <motion.div whileTap={{ scale: 0.9 }} animate={activeTab === "ai" ? { y: [0, -3, 0] } : { y: 0 }} transition={{ duration: 0.28 }}>
+                <IconBadge icon={Sparkles} tone="violet" size="md" className="!h-12 !w-12 rounded-full" />
+              </motion.div>
             </button>
           </div>
 
@@ -898,7 +900,7 @@ function DiscoverTab({ onRequest }) {
         </div>
       </button>
       <label className="relative block mb-4">
-        <Search size={17} className="absolute left-3 top-3 text-[#8C857B]" />
+        <IconBadge icon={Search} tone="teal" size="sm" className="absolute left-2 top-2 !h-7 !w-7 rounded-full" />
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
@@ -1426,9 +1428,9 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#F2EFE8] text-[#45594C]">
                   {request.status === "Completed" ? (
-                    <Check size={15} />
+                    <IconBadge icon={Check} tone="emerald" size="sm" className="!h-7 !w-7 rounded-lg" />
                   ) : (
-                    <Clock size={15} />
+                    <IconBadge icon={Clock} tone="saffron" size="sm" className="!h-7 !w-7 rounded-lg" pulse={request.status === "Received"} />
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -1800,7 +1802,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
             alert={isConflict}
             tone="coral"
           />
-          <SidebarItem icon={Bell} label="Service Requests" count={12} tone="sky" alert={isConflict} />
+          <SidebarItem icon={Bell} label="Service Requests" count={12} tone="sky" />
           <SidebarItem icon={CalendarDays} label="Bookings" tone="violet" />
         </div>
       </div>
