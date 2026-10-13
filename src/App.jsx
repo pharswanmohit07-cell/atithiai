@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
+import IconBadge from "./components/ui/IconBadge.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
 import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
 import DiscoverTab from "./components/DiscoverTab.jsx";
@@ -146,10 +147,10 @@ function WeatherPanel({ destination, weather, loading, error, formatNumber }) {
 
 function WelcomeScreen({ destination, destinations, selectDestination, onStart }) {
   return <main className="min-h-screen bg-bg px-4 py-5 text-text sm:px-6 sm:py-8">
-    <header className="mx-auto flex max-w-5xl items-center justify-between"><div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl text-white" style={{ backgroundColor: destination.themeColors.accent }}><Compass size={23}/></span><div><p className="font-serif text-2xl leading-none">Atithi AI</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Go beyond the usual</p></div></div><ThemeToggle compact/></header>
-    <section className="mx-auto mt-6 max-w-5xl overflow-hidden rounded-[2rem] p-6 text-white sm:mt-10 sm:p-10" style={{ background: "linear-gradient(125deg, #163e4b 0%, #28365c 55%, " + destination.themeColors.accent + " 100%)" }}>
+    <header className="mx-auto flex max-w-5xl items-center justify-between"><div className="flex items-center gap-3"><IconBadge icon={Compass} tone="gold" size="lg" /><div><p className="font-serif text-2xl leading-none">Atithi AI</p><p className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted">Go beyond the usual</p></div></div><ThemeToggle compact/></header>
+    <section className="pitch-hero mx-auto mt-6 max-w-5xl overflow-hidden rounded-[2rem] p-6 text-white shadow-2xl sm:mt-10 sm:p-10" style={{ "--destination-accent": destination.themeColors.accent }}>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/75">A more personal way to explore</p>
-      <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-tight sm:text-6xl">Find the places and stories that make a destination feel personal.</h1>
+      <h1 className="deck-heading mt-4 max-w-3xl font-display text-4xl leading-tight sm:text-6xl">Find the places and stories that make a destination feel personal.</h1>
       <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/80 sm:text-base">Discover neighbourhood details, local food and thoughtful experiences beyond the usual shortlist — at your own pace.</p>
       <div className="mt-7 grid grid-cols-1 gap-3 md:grid-cols-3">
         {destinations.map((item) => <button key={item.id} type="button" onClick={() => selectDestination(item.id)} aria-pressed={destination.id === item.id} className={"min-h-28 rounded-2xl border p-4 text-left transition-colors " + (destination.id === item.id ? "border-white bg-white text-slate-900" : "border-white/25 bg-white/10 text-white hover:bg-white/20")}>
@@ -157,7 +158,7 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
           <span className="mt-1 block text-xs opacity-75">{item.primaryLanguages.slice(0, 2).join(" · ")}</span>
         </button>)}
       </div>
-      <button type="button" onClick={onStart} className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-extrabold text-slate-900">{ "Start exploring" } <ArrowRight size={17}/></button>
+      <button type="button" onClick={onStart} className="btn-primary mt-6 inline-flex min-h-12 items-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold">{ "Start exploring" } <ArrowRight size={17}/></button>
     </section>
     <p className="mx-auto mt-4 max-w-5xl text-[10px] leading-relaxed text-muted">Demo content · Place details, stories and spend ranges are AI-assisted examples. Confirm details locally. Only weather is live.</p>
   </main>;
@@ -450,23 +451,23 @@ export default function AtithiAI() {
   if (!profile.onboardingComplete) return <ProfileOnboarding destination={destination} onFinish={() => setActiveTab("home")}/>;
 
   return <main className="min-h-screen bg-bg pb-[calc(5.75rem+env(safe-area-inset-bottom))] text-text">
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 shadow-sm backdrop-blur sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-border bg-surface/85 px-4 py-3 shadow-sm backdrop-blur-xl sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white" style={{ backgroundColor: destination.themeColors.accent }}><Compass size={22}/></span><span className="min-w-0"><span className="block truncate font-serif text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Go beyond the usual</span></span></button>
+        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Go beyond the usual</span></span></button>
         <div className="flex items-center gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-32 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-bold sm:max-w-48">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact/><a href={"tel:" + emergencyNumber} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-border px-2 py-2 text-xs font-extrabold text-text" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
       </div>
     </header>
 
     <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-7">
       {activeTab === "home" && <div className="space-y-5">
-        <section className="overflow-hidden rounded-3xl p-5 text-white shadow-lg sm:p-8" style={{ background: "linear-gradient(125deg, #163e4b 0%, #28365c 55%, " + destination.themeColors.accent + " 100%)" }}>
+        <section className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-8" style={{ "--destination-accent": destination.themeColors.accent }}>
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/75">{destination.city} · {destination.country}</p>
-          <h1 className="mt-3 max-w-3xl font-serif text-4xl leading-tight sm:text-5xl">{destination.greeting}</h1>
+          <h1 className="deck-heading mt-3 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">{destination.greeting}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">A personalised travel companion for hidden places, local stories and experiences that make a destination feel personal.</p>
-          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-slate-900">Discover the unexpected <ArrowRight size={16}/></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold text-white">Build my day</button></div>
+          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold">Discover the unexpected <ArrowRight size={16}/></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold text-white">Build my day</button></div>
         </section>
         <WeatherPanel destination={destination} weather={weather} loading={weatherLoading} error={weatherError} formatNumber={formatNumber}/>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-serif text-2xl">A few places to begin</h2><p className="mt-1 text-xs text-muted">A changing mix of well-known landmarks and quieter corners.</p></div><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">All places <ArrowRight size={14}/></button></div>
+        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="deck-heading font-serif text-2xl">A few places to begin</h2><p className="mt-1 text-xs text-muted">A changing mix of well-known landmarks and quieter corners.</p></div><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">All places <ArrowRight size={14}/></button></div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">{[...destination.places].sort((a,b)=>Number(b.isHiddenGem)-Number(a.isHiddenGem)).slice(0,3).map((place)=><PlaceCard key={place.id} place={place} destination={destination} formatCurrency={formatCurrency} inPlan={planIds.has(place.id)} onAdd={addItineraryStop} onRemove={removeItineraryStop}/>)}</div><DemoNote/>
         </section>
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Your plan</h2><p className="mt-1 text-xs text-muted">{formatNumber(itinerary.length, destination.locale)} places saved for this destination.</p></div><button type="button" onClick={() => setActiveTab("plan")} className="min-h-10 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white">Review plan</button></div>{itinerary.length > 0 ? <ol className="mt-3 space-y-2">{itinerary.slice(0,3).map((stop,index)=><li key={stop.id || stop.placeId} className="flex items-center gap-3 rounded-xl bg-bg p-3"><span className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">{stop.title}</span><span className="block text-[10px] text-muted">{niceWord(stop.bestTime || "any")}</span></span><button type="button" onClick={()=>removeItineraryStop(stop.id || stop.placeId)} className="min-h-9 rounded-lg border border-border px-2 text-xs">Remove</button></li>)}</ol> : <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">Save a place from Discover or build a suggested day to start your plan.</p>}</section>
@@ -493,8 +494,8 @@ export default function AtithiAI() {
       {activeTab === "profile" && <ProfileTab destination={destination} destinations={destinations} selectDestination={selectDestination} requests={requests} formatDate={formatDate}/> }
     </div>
 
-    <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface/95 px-1 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur">
-      <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><button key={id} type="button" onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"bg-brand/10 text-brand dark:text-accent":"text-muted")}><Icon size={18}/><span className="max-w-full truncate">{label}</span></button>)}</div>
-    </nav>
+    <nav aria-label="Main navigation" className="bottom-nav-glass fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-50 rounded-2xl px-1.5 pt-1.5 pb-1.5 sm:inset-x-1/2 sm:w-[min(46rem,calc(100%-2rem))] sm:-translate-x-1/2">
+       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><button key={id} type="button" onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<Icon size={18} className="relative z-10"/><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></button>)}</div>
+     </nav>
   </main>;
 }
