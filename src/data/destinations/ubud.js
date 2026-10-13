@@ -1,7 +1,7 @@
 // Approximate destination and place coordinates; all hotel policies and fees are illustrative DEMO values.
 const demoListing = ["Demo listing"];
 
-export default {
+const destination = {
   id: "ubud",
   city: "Ubud",
   country: "Indonesia",
@@ -58,3 +58,178 @@ export default {
   // DOUBLE-CHECK this local emergency number before travel.
   emergencyNumber: "112",
 };
+
+// Staff-curated demo metadata; prices and durations are illustrative estimates, not provider quotes.
+const experienceDetails = {
+  "ubud-culture-walk": {
+    "durationMinutes": 90,
+    "price": 180000,
+    "category": "walking tour",
+    "rainFriendly": false,
+    "lowCrowd": true,
+    "suits": [
+      "family",
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Ayu at our front desk recommends this gentle introduction to Ubud's art and local customs."
+  },
+  "batik-workshop": {
+    "durationMinutes": 120,
+    "price": 250000,
+    "category": "craft workshop",
+    "rainFriendly": true,
+    "lowCrowd": true,
+    "suits": [
+      "family",
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Ayu likes this indoor, hands-on option for a relaxed rainy afternoon."
+  },
+  "cooking-bali": {
+    "durationMinutes": 150,
+    "price": 320000,
+    "category": "food workshop",
+    "rainFriendly": true,
+    "lowCrowd": true,
+    "suits": [
+      "family",
+      "couple",
+      "solo"
+    ],
+    "hostNote": "Our team recommends asking about ingredients before joining this local-cooking introduction."
+  },
+  "rice-terrace-walk": {
+    "durationMinutes": 180,
+    "price": 220000,
+    "category": "nature walk",
+    "rainFriendly": false,
+    "lowCrowd": false,
+    "suits": [
+      "couple",
+      "solo",
+      "friends"
+    ],
+    "hostNote": "Ayu recommends checking rain and trail conditions with the hotel before considering this walk."
+  },
+  "wood-carving": {
+    "durationMinutes": 120,
+    "price": 280000,
+    "category": "craft workshop",
+    "rainFriendly": true,
+    "lowCrowd": true,
+    "suits": [
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Our front desk team likes this quieter craft-focused idea; details and provider still need checking."
+  },
+  "dance-evening": {
+    "durationMinutes": 100,
+    "price": 200000,
+    "category": "performance",
+    "rainFriendly": true,
+    "lowCrowd": false,
+    "suits": [
+      "family",
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Ayu suggests checking the date and venue with us before planning an evening around it."
+  }
+};
+const dishDetails = {
+  "nasi-campur": {
+    "price": 45000,
+    "dietaryTags": [],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "gado-gado": {
+    "price": 35000,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": false
+  },
+  "nasi-goreng": {
+    "price": 40000,
+    "dietaryTags": [],
+    "timeOfDay": [
+      "breakfast",
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "sate-lilit": {
+    "price": 55000,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "bebek-betutu": {
+    "price": 75000,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "lawar": {
+    "price": 50000,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "jaja-bali": {
+    "price": 18000,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "snack",
+      "anytime"
+    ],
+    "warmInRain": false
+  },
+  "tipat-cantok": {
+    "price": 30000,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "snack"
+    ],
+    "warmInRain": false
+  }
+};
+destination.experiences = destination.experiences.map((experience) => ({ ...experience, ...(experienceDetails[experience.id] || {}) }));
+destination.dishes = destination.dishes.map((dish) => ({ ...dish, ...(dishDetails[dish.id] || {}), dietaryTags: dishDetails[dish.id]?.dietaryTags || [], halal: false, glutenAware: false }));
+export default destination;

@@ -47,6 +47,7 @@ function defaultFlexSettings(destination) {
     autoApproveUnder: 0,
     chefSpecial: "Chef's special: ask the kitchen for today's seasonal option (demo).",
     hostPicks: { localExperiences: true, localFood: true, quieterPlaces: false },
+    hostExperiencePicks: Object.fromEntries((destination.experiences || []).map((experience) => [experience.id, { enabled: true, note: String(experience.hostNote || "The front desk team selected this destination-pack listing.").slice(0, 300) }])),
     hostPickNotes: {
       localExperiences: "Share demo listings only after the front desk verifies provider details.",
       localFood: "Confirm ingredients and allergens with the kitchen.",
@@ -64,6 +65,7 @@ function readFlexSettings(destination) {
   const late = Array.isArray(saved?.flexTiers?.late) && saved.flexTiers.late.length ? saved.flexTiers.late : base.flexTiers.late;
   const hostPicks = saved.hostPicks && typeof saved.hostPicks === "object" ? saved.hostPicks : {};
   const hostPickNotes = saved.hostPickNotes && typeof saved.hostPickNotes === "object" ? saved.hostPickNotes : {};
+  const hostExperiencePicks = saved.hostExperiencePicks && typeof saved.hostExperiencePicks === "object" ? saved.hostExperiencePicks : {};
   return {
     flexTiers: {
       early: early.map((tier, index) => ({
@@ -84,6 +86,7 @@ function readFlexSettings(destination) {
     chefSpecial: typeof saved.chefSpecial === "string" ? saved.chefSpecial.slice(0, 500) : base.chefSpecial,
     hostPicks: Object.fromEntries(Object.keys(base.hostPicks).map((key) => [key, hostPicks[key] === undefined ? base.hostPicks[key] : hostPicks[key] === true])),
     hostPickNotes: Object.fromEntries(Object.keys(base.hostPickNotes).map((key) => [key, typeof hostPickNotes[key] === "string" ? hostPickNotes[key].slice(0, 300) : base.hostPickNotes[key]])),
+    hostExperiencePicks: Object.fromEntries(Object.entries(base.hostExperiencePicks).map(([id, defaults]) => { const savedItem = hostExperiencePicks[id]; return [id, { enabled: savedItem?.enabled !== false, note: typeof savedItem?.note === "string" ? savedItem.note.slice(0, 300) : defaults.note }]; })),
   };
 }
 function readRequests(destinationId) {
@@ -182,6 +185,14 @@ export function HotelProvider({ children }) {
       ...(request.finalFee != null && Number.isFinite(Number(request.finalFee)) ? { finalFee: Number(request.finalFee) } : {}),
       ...(request.estimatedCommission != null && Number.isFinite(Number(request.estimatedCommission)) ? { estimatedCommission: Number(request.estimatedCommission) } : {}),
       ...(typeof request.approvedTime === "string" ? { approvedTime: request.approvedTime } : {}),
+      ...(typeof request.experienceId === "string" ? { experienceId: request.experienceId } : {}),
+      ...(typeof request.dishId === "string" ? { dishId: request.dishId } : {}),
+      ...(typeof request.partner === "string" ? { partner: request.partner.slice(0, 160) } : {}),
+      ...(request.price != null && Number.isFinite(Number(request.price)) ? { price: Number(request.price) } : {}),
+      ...(request.estimatedTotal != null && Number.isFinite(Number(request.estimatedTotal)) ? { estimatedTotal: Math.max(0, Number(request.estimatedTotal)) } : {}),
+      ...(request.headcount != null && Number.isFinite(Number(request.headcount)) ? { headcount: Math.max(1, Math.min(12, Number(request.headcount))) } : {}),
+      ...(request.durationMinutes != null && Number.isFinite(Number(request.durationMinutes)) ? { durationMinutes: Number(request.durationMinutes) } : {}),
+      ...(typeof request.hostNote === "string" ? { hostNote: request.hostNote.slice(0, 300) } : {}),
     };
     setRequests((current) => {
       const next = [item, ...current].slice(0, 80);
@@ -307,6 +318,7 @@ export function HotelProvider({ children }) {
       chefSpecial: patch.chefSpecial === undefined ? flexSettings.chefSpecial : String(patch.chefSpecial).slice(0, 500),
       hostPicks: patch.hostPicks ? { ...flexSettings.hostPicks, ...Object.fromEntries(Object.keys(flexSettings.hostPicks).map((key) => [key, patch.hostPicks[key] === undefined ? flexSettings.hostPicks[key] : patch.hostPicks[key] === true])) } : flexSettings.hostPicks,
       hostPickNotes: patch.hostPickNotes ? { ...flexSettings.hostPickNotes, ...Object.fromEntries(Object.keys(flexSettings.hostPickNotes).map((key) => [key, patch.hostPickNotes[key] === undefined ? flexSettings.hostPickNotes[key] : String(patch.hostPickNotes[key]).slice(0, 300)])) } : flexSettings.hostPickNotes,
+      hostExperiencePicks: patch.hostExperiencePicks ? { ...flexSettings.hostExperiencePicks, ...Object.fromEntries(Object.entries(patch.hostExperiencePicks).map(([id, item]) => [id, { ...(flexSettings.hostExperiencePicks[id] || { enabled: true, note: "" }), ...(item && typeof item === "object" ? item : {}), enabled: item?.enabled === undefined ? (flexSettings.hostExperiencePicks[id]?.enabled !== false) : item.enabled === true, note: item?.note === undefined ? (flexSettings.hostExperiencePicks[id]?.note || "") : String(item.note).slice(0, 300) }])) } : flexSettings.hostExperiencePicks,
     };
     setFlexSettings(next);
     safeWrite(settingsKey(destination.id), next);

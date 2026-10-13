@@ -1,7 +1,7 @@
 // Approximate destination and place coordinates; all hotel policies and fees are illustrative DEMO values.
 const demoListing = ["Demo listing"];
 
-export default {
+const destination = {
   id: "jaipur",
   city: "Jaipur",
   country: "India",
@@ -58,3 +58,183 @@ export default {
   // DOUBLE-CHECK this local emergency number before travel.
   emergencyNumber: "112",
 };
+
+// Staff-curated demo metadata; prices and durations are illustrative estimates, not provider quotes.
+const experienceDetails = {
+  "jaipur-walk": {
+    "durationMinutes": 90,
+    "price": 900,
+    "category": "walking tour",
+    "rainFriendly": false,
+    "lowCrowd": false,
+    "suits": [
+      "family",
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Maria from our front desk recommends this as an easy first introduction to the Pink City."
+  },
+  "block-print": {
+    "durationMinutes": 120,
+    "price": 1400,
+    "category": "craft workshop",
+    "rainFriendly": true,
+    "lowCrowd": true,
+    "suits": [
+      "family",
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Ravi at the front desk likes this hands-on option when guests want a slower indoor afternoon."
+  },
+  "market-craft": {
+    "durationMinutes": 120,
+    "price": 1100,
+    "category": "market visit",
+    "rainFriendly": false,
+    "lowCrowd": false,
+    "suits": [
+      "couple",
+      "solo",
+      "friends"
+    ],
+    "hostNote": "Maria recommends asking the guide about craft techniques before deciding what to buy."
+  },
+  "cooking-jaipur": {
+    "durationMinutes": 150,
+    "price": 1800,
+    "category": "food workshop",
+    "rainFriendly": true,
+    "lowCrowd": true,
+    "suits": [
+      "family",
+      "couple",
+      "solo"
+    ],
+    "hostNote": "Our front desk team likes this for guests curious about regional home cooking; confirm dietary needs first."
+  },
+  "heritage-photo": {
+    "durationMinutes": 100,
+    "price": 1000,
+    "category": "photography",
+    "rainFriendly": false,
+    "lowCrowd": true,
+    "suits": [
+      "couple",
+      "solo",
+      "friends"
+    ],
+    "hostNote": "Ravi recommends this for travellers who enjoy architecture and taking their time with photos."
+  },
+  "folk-music": {
+    "durationMinutes": 90,
+    "price": 1600,
+    "category": "music",
+    "rainFriendly": true,
+    "lowCrowd": false,
+    "suits": [
+      "couple",
+      "solo",
+      "friends",
+      "seniors"
+    ],
+    "hostNote": "Maria suggests this as an evening cultural idea, pending venue and schedule confirmation."
+  }
+};
+const dishDetails = {
+  "dal-baati-churma": {
+    "price": 320,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "pyaaz-kachori": {
+    "price": 60,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "breakfast",
+      "snack"
+    ],
+    "warmInRain": true
+  },
+  "ghewar": {
+    "price": 180,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "snack",
+      "anytime"
+    ],
+    "warmInRain": false
+  },
+  "laal-maas": {
+    "price": 550,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "ker-sangri": {
+    "price": 300,
+    "dietaryTags": [
+      "vegetarian",
+      "vegan"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "gatte-ki-sabzi": {
+    "price": 260,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "mirchi-vada": {
+    "price": 50,
+    "dietaryTags": [
+      "vegetarian",
+      "vegan"
+    ],
+    "timeOfDay": [
+      "breakfast",
+      "snack"
+    ],
+    "warmInRain": true
+  },
+  "mawa-kachori": {
+    "price": 90,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "snack",
+      "anytime"
+    ],
+    "warmInRain": false
+  }
+};
+destination.experiences = destination.experiences.map((experience) => ({ ...experience, ...(experienceDetails[experience.id] || {}) }));
+destination.dishes = destination.dishes.map((dish) => ({ ...dish, ...(dishDetails[dish.id] || {}), dietaryTags: dishDetails[dish.id]?.dietaryTags || [], halal: false, glutenAware: false }));
+export default destination;

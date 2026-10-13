@@ -1,7 +1,7 @@
 // Approximate destination and place coordinates; all hotel policies and fees are illustrative DEMO values.
 const demoListing = ["Demo listing"];
 
-export default {
+const destination = {
   id: "lisbon",
   city: "Lisbon",
   country: "Portugal",
@@ -58,3 +58,176 @@ export default {
   // DOUBLE-CHECK this local emergency number before travel.
   emergencyNumber: "112",
 };
+
+// Staff-curated demo metadata; prices and durations are illustrative estimates, not provider quotes.
+const experienceDetails = {
+  "lisbon-neighborhood-walk": {
+    "durationMinutes": 100,
+    "price": 22,
+    "category": "walking tour",
+    "rainFriendly": false,
+    "lowCrowd": false,
+    "suits": [
+      "family",
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Maria from our front desk recommends this for getting oriented to the hills and neighbourhoods."
+  },
+  "azulejo-workshop": {
+    "durationMinutes": 120,
+    "price": 35,
+    "category": "craft workshop",
+    "rainFriendly": true,
+    "lowCrowd": true,
+    "suits": [
+      "family",
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Our team likes this indoor craft idea for guests who want a slower, creative afternoon."
+  },
+  "pastel-workshop": {
+    "durationMinutes": 90,
+    "price": 28,
+    "category": "food workshop",
+    "rainFriendly": true,
+    "lowCrowd": true,
+    "suits": [
+      "family",
+      "couple",
+      "solo"
+    ],
+    "hostNote": "Maria suggests confirming ingredients and allergens with the provider before considering this baking demo."
+  },
+  "fado-introduction": {
+    "durationMinutes": 100,
+    "price": 30,
+    "category": "music",
+    "rainFriendly": true,
+    "lowCrowd": false,
+    "suits": [
+      "couple",
+      "solo",
+      "seniors"
+    ],
+    "hostNote": "Our front desk team recommends checking the event date, venue and final price first."
+  },
+  "market-food-tour": {
+    "durationMinutes": 120,
+    "price": 32,
+    "category": "food tour",
+    "rainFriendly": true,
+    "lowCrowd": false,
+    "suits": [
+      "couple",
+      "solo",
+      "friends"
+    ],
+    "hostNote": "Maria recommends sharing dietary requirements before anyone makes a plan for this food-focused walk."
+  },
+  "river-photo-walk": {
+    "durationMinutes": 90,
+    "price": 24,
+    "category": "photography",
+    "rainFriendly": false,
+    "lowCrowd": true,
+    "suits": [
+      "couple",
+      "solo",
+      "friends"
+    ],
+    "hostNote": "Our team likes this photo-walk idea in fair weather; confirm the route and schedule first."
+  }
+};
+const dishDetails = {
+  "bacalhau-a-bras": {
+    "price": 15,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "caldo-verde": {
+    "price": 7,
+    "dietaryTags": [],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "sardinhas-assadas": {
+    "price": 16,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "bifana": {
+    "price": 8,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "breakfast",
+      "lunch",
+      "snack"
+    ],
+    "warmInRain": true
+  },
+  "pastel-de-nata": {
+    "price": 2,
+    "dietaryTags": [
+      "vegetarian"
+    ],
+    "timeOfDay": [
+      "breakfast",
+      "snack",
+      "anytime"
+    ],
+    "warmInRain": false
+  },
+  "arroz-de-marisco": {
+    "price": 20,
+    "dietaryTags": [
+      "non-veg"
+    ],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "acorda": {
+    "price": 13,
+    "dietaryTags": [],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  },
+  "feijoada": {
+    "price": 14,
+    "dietaryTags": [],
+    "timeOfDay": [
+      "lunch",
+      "dinner"
+    ],
+    "warmInRain": true
+  }
+};
+destination.experiences = destination.experiences.map((experience) => ({ ...experience, ...(experienceDetails[experience.id] || {}) }));
+destination.dishes = destination.dishes.map((dish) => ({ ...dish, ...(dishDetails[dish.id] || {}), dietaryTags: dishDetails[dish.id]?.dietaryTags || [], halal: false, glutenAware: false }));
+export default destination;
