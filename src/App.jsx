@@ -602,6 +602,9 @@ function GuestApp(props) {
                   weather={props.weather}
                   disruptions={props.disruptions}
                   lowCrowdPlaces={props.lowCrowdPlaces}
+                  selectedWaypoint={props.selectedWaypoint}
+                  weatherObservation={props.weatherObservation}
+                  crowdSelectionIds={props.crowdSelectionIds}
                   onAddPlaceToItinerary={props.onAddPlaceToItinerary}
                 />
               </motion.div>
@@ -1321,18 +1324,18 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
   );
 }
 
-function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCrowdPlaces = [], onAddPlaceToItinerary, crowdSelectionIds = [] }) {
+function AITab({ onRequest, guest, preferences, weather, weatherObservation, selectedWaypoint, disruptions = [], lowCrowdPlaces = [], onAddPlaceToItinerary, crowdSelectionIds = [] }) {
   const [messages, setMessages] = useState([
     {
       from: "concierge",
-      text: `Good afternoon, ${guest?.name || "there"}. I can help with room service, local plans, or anything you need during your stay.`,
+      text: `Welcome, ${guest?.name || "traveller"}. I can help with corridor safety, weather changes, route disruptions, suspected scams and quieter local alternatives. Confirm current official advice before travelling.`,
     },
   ]);
   const [draft, setDraft] = useState("");
   const quickReplies = [
-    "Book the spa",
-    "Show vegetarian dining",
-    "Request fresh towels",
+    "Check the selected waypoint weather",
+    "Suggest a quieter local stop",
+    "What should I ask before agreeing to a fare?",
   ];
 
   const sendMessage = async (text = draft) => {
@@ -1340,55 +1343,24 @@ function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCr
     if (!message) return;
     setMessages((current) => [...current, { from: "guest", text: message }]);
     const lower = message.toLowerCase();
-    let reply =
-      "I have shared your request with the hotel team. They will follow up shortly.";
-    if (lower.includes("spa")) {
+    let reply = "Tell me which corridor waypoint you are considering, or ask about an active disruption, a safer pause point or lower-crowd alternatives.";
+    if (/(hazard|landslide|roadblock|road block|unsafe|scam|overcharg|overpricing|suspicious fare)/i.test(message)) {
       onRequest({
-        title: "Spa booking",
-        category: "Spa Booking",
-        detail: "Please arrange a wellness session.",
-      });
-      reply =
-        "I sent a spa booking request to the wellness team. They will confirm an available time shortly.";
-    } else if (
-      lower.includes("towel") ||
-      lower.includes("housekeep") ||
-      lower.includes("clean")
-    ) {
-      onRequest({
-        title: "Housekeeping request",
-        category: "Housekeeping",
+        title: "Safety concern reported",
+        category: "Trip safety",
         detail: message,
       });
-      reply =
-        "Your housekeeping request is with the team now. Track it in Hotel Services.";
-    } else if (
-      lower.includes("dining") ||
-      lower.includes("food") ||
-      lower.includes("menu")
-    ) {
-      reply =
-        "Saffron Heritage Room has a vegetarian tasting menu tonight at 7:30 PM. Ask me to book it and I will send a request.";
-    } else if (
-      lower.includes("transport") ||
-      lower.includes("car") ||
-      lower.includes("valet")
-    ) {
-      onRequest({
-        title: "Transport assistance",
-        category: "Valet / Transport",
-        detail: message,
-      });
-      reply =
-        "I forwarded your transport request to the valet desk. They will confirm shortly.";
-    } else if (lower.includes("book") || lower.includes("order")) {
-      onRequest({
-        title: "Dining request",
-        category: "In-Room Dining",
-        detail: message,
-      });
-      reply =
-        "I sent your dining request to the restaurant team. They will confirm shortly.";
+      reply = "I logged this concern in the demo Trip Guardian report list for follow-up. This does not alert emergency services or verify the report; check current local guidance before proceeding.";
+    } else if (/(emergency|urgent help|112)/i.test(message)) {
+      reply = "If you or someone else is in immediate danger in India, call 112 now. This chat is not an emergency dispatch service.";
+    } else if (/(weather|rain|temperature|wind|forecast)/i.test(message)) {
+      reply = weatherObservation
+        ? `The latest Open-Meteo observation supplied to this chat is for ${selectedWaypoint?.name || "the selected corridor waypoint"}: ${weatherObservation.temperatureC}°C, ${weatherObservation.condition}, rain ${weatherObservation.rainMm} mm, wind ${weatherObservation.windSpeedKmh ?? "unavailable"} km/h. Forecast data cannot confirm road safety or route access.`
+        : `Live weather for ${selectedWaypoint?.name || "the selected corridor waypoint"} is not available right now. Check official forecasts and local road advisories before setting out.`;
+    } else if (/(homestay|village stay|local stay)/i.test(message)) {
+      reply = "Open Discover to see six Demo listing village-area ideas. They are fictional planning examples, not verified properties or bookable accommodation.";
+    } else if (/(crowd|quiet|less busy|offbeat|where should|where can|visit|explore|trip|travel|route|what to do)/i.test(message)) {
+      reply = "I can compare curated destinations by estimated crowd level and suggest a conservative alternative. These estimates are illustrative; I cannot confirm current access or road conditions.";
     }
     setDraft("");
     let finalReply = reply;
@@ -1405,6 +1377,8 @@ function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCr
           context: {
             guest: { name: guest?.name, room: guest?.room, stayId: guest?.stayId },
             preferences, weather, disruptions, lowCrowdPlaces,
+            selectedWaypoint: selectedWaypoint ? { id: selectedWaypoint.id, name: selectedWaypoint.name } : null,
+            weatherObservation,
           },
         }),
       });
