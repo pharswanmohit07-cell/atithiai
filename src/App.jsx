@@ -71,7 +71,7 @@ function Header({ manager = false, onSwitch }) {
   );
 }
 
-function localChatFallback(message, destination, formatCurrency) {
+function localChatFallback(message, destination) {
   const text = String(message || "").toLowerCase();
   if (/(price|cost|fee|charge|refund|pay|payment|booking|book|available|availability)/i.test(text)) {
     return "I can send this question to the hotel team. Any fee, booking or availability must be confirmed by a staff member; nothing is charged or booked by this assistant.";
@@ -104,7 +104,7 @@ function GuestChat({ guest, destination, preferences, addRequest, cachedDemoMode
       setMessages((current) => [...current, { role: "assistant", text: "I recorded an urgent demo request for the hotel team. This app cannot dispatch emergency services. If there is immediate danger, call " + destination.emergencyNumber + " now." }]);
       return;
     }
-    let reply = localChatFallback(message, destination, (amount) => amount);
+    let reply = localChatFallback(message, destination);
     if (!cachedDemoMode) {
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 6000);
