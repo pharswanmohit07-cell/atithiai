@@ -199,7 +199,7 @@ function makeIntro(destination, itinerary, currencyCode, language = "en") {
   const copy = {
     en: names
       ? ["Your " + destination.city + " day is shaped around " + names + ", with a meal and time to wander.", "Costs use illustrative " + currencyCode + " estimates; travel time is a straight-line approximation, not a route or traffic prediction."]
-      : ["Build a day around a few thoughtful stops, with room to pause and explore.", "All times, costs and travel estimates are approximate."],
+      : ["Build a day around a few thoughtful stops, with time to pause and explore.", "All times, costs and travel estimates are approximate."],
     hi: names
       ? ["आपका " + destination.city + " का दिन " + names + " के आसपास है, जिसमें भोजन और घूमने का समय भी शामिल है।", "खर्च " + currencyCode + " में अनुमानित है; यात्रा समय सीधी दूरी पर आधारित है, सड़क मार्ग या ट्रैफिक का अनुमान नहीं।"]
       : ["कुछ सोच-समझकर चुने गए पड़ावों और आराम के समय के साथ अपना दिन बनाएँ।", "समय, खर्च और यात्रा के सभी अनुमान लगभग हैं।"],
