@@ -1819,13 +1819,11 @@ function AdminDashboard({
   weather, weatherSource, itinerary, staffUser, persona, onSwitchPersona,
   selectedWaypoint, selectedWaypointId, setSelectedWaypointId,
   weatherObservation, weatherLoading, weatherError,
-  disruptions = [], actionsLog = [], redirectionsCount = 0, localSpendRedirected = 0, requests = [],
-  guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative,
+  disruptions = [], actionsLog = [], routeActions = [], affectedTravelers = 0, reroutesAccepted = 0,
+  routeGuardDisruption, nearestSafeVillages = [], routeSegment = [], detourVillage, onRouteReroute, onKeepWaiting,
+  redirectionsCount = 0, localSpendRedirected = 0, requests = [],
 }) {
-  const isConflict = disruptions.some((event) => itinerary.some((item) => {
-    const stopId = item.waypointId || item.placeId;
-    return stopId && event.affectedPlaceIds.includes(stopId);
-  }));
+  const isConflict = disruptions.some((event) => Array.isArray(event.segment) && event.segment.length === 2);
   const isResolved = itinerary.some((item) => item.guardianAdjusted || item.aiAdjusted);
   const weatherSourceLabel = weatherSource === "demo" ? "Manual rain override" : weatherObservation ? "Live Open-Meteo" : "No observation";
 
@@ -1886,7 +1884,7 @@ function AdminDashboard({
           </div>
         </header>
 
-        <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8 xl:grid-cols-4">
           <StatCard
             title="Active disruptions"
             value={String(disruptions.length)}
@@ -1895,7 +1893,14 @@ function AdminDashboard({
             icon={CloudRain}
             tone="coral"
           />
-          <StatCard title="Trip redirections" value={String(redirectionsCount)} trend="Accepted alternatives" icon={Compass} tone="emerald" />
+          <StatCard
+            title="Affected travelers"
+            value={String(affectedTravelers)}
+            trend="Demo estimate · in-app traveler"
+            icon={User}
+            tone="saffron"
+          />
+          <StatCard title="Reroutes accepted" value={String(reroutesAccepted)} trend="Demo itinerary updates" icon={Compass} tone="emerald" />
           <StatCard
             title="Estimated local spend redirected"
             value={String(localSpendRedirected.toLocaleString("en-IN"))}
@@ -1923,10 +1928,29 @@ function AdminDashboard({
           {weatherError && <p role="status" className="mt-3 text-xs text-amber-700 dark:text-amber-300">{weatherError}</p>}
           <p className="mt-3 text-[10px] leading-relaxed text-muted">Weather informs planning; it does not verify route openings, landslides or travel safety. Confirm current local authority advisories.</p>
         </section>
+        <section className="mb-5 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Route Guard · Active disruptions</p><h2 className="mt-1 font-serif text-2xl text-text">Corridor incident overview</h2><p className="mt-1 text-xs text-muted">Source and segment are shown per signal. Demo events are simulated and are not official road reports.</p></div>
+            <span className="rounded-full bg-surface-2 px-2.5 py-1.5 text-[10px] font-semibold text-muted">{disruptions.length} active</span>
+          </div>
+          {disruptions.length === 0
+            ? <p className="mt-4 rounded-xl bg-surface-2 p-3 text-xs text-muted">No current disruption signals in the app state. This does not prove that the route is clear.</p>
+            : <div className="mt-4 space-y-2">{disruptions.map((event) => {
+              const from = CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === event.segment?.[0]);
+              const to = CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === event.segment?.[1]);
+              return <article key={event.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border bg-bg p-3">
+                <div><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold capitalize text-text">{event.type} · {from?.name || "Waypoint"} → {to?.name || "Waypoint"}</h3>{event.source === "demo" ? <span className="rounded-full bg-rose-100 px-2 py-1 text-[8px] font-extrabold text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">DEMO EVENT</span> : <span className="rounded-full bg-emerald-100 px-2 py-1 text-[8px] font-bold text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200">LIVE WEATHER</span>}</div><p className="mt-1 text-[10px] text-muted">Severity: {event.severity} · Detected: {event.detectedAt ? new Date(event.detectedAt).toLocaleString() : "Not available"}</p></div>
+              </article>;
+            })}</div>}
+        </section>
+        <div className="mb-8 space-y-6">
+          <RouteMap selectedWaypointId={selectedWaypointId} setSelectedWaypointId={setSelectedWaypointId} disruptions={disruptions} detourVillage={detourVillage} height={420} />
+          {routeGuardDisruption && <RouteGuardCard disruption={routeGuardDisruption} currentWaypoint={selectedWaypoint} nearestSafe={nearestSafeVillages} persona={persona} onReroute={onRouteReroute} onKeepWaiting={onKeepWaiting} />}
+          <ActionsTakenByAtithi actions={routeActions} />
+        </div>
         <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
           <DestinationOverview redirectionsCount={redirectionsCount} localSpendRedirected={localSpendRedirected} actions={actionsLog} />
           <div className="space-y-6">
-            {guardianDisruption && affectedStop && <GuardianCard disruption={guardianDisruption} itineraryItem={affectedStop} alternatives={guardianAlternatives} onAccept={onAcceptGuardianAlternative} />}
             <StaffRequestsPanel requests={requests} />
           </div>
         </div>
