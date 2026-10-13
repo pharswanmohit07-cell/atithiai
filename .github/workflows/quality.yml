@@ -3,6 +3,7 @@ name: Source checks
 on:
   push:
     branches:
+      - main
       - "reposition/**"
   pull_request:
 
