@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext.jsx";
+import { useAppContext } from "./context/AppContext.jsx";
+import { PLACES } from "./data/places.js";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import {
@@ -32,18 +36,8 @@ import {
   ChevronLeft,
   Send,
   X,
+  LogOut,
 } from "lucide-react";
-
-const GUEST = {
-  name: "Virat",
-  lastName: "Sharma",
-  room: "402 (Luxury Suite)",
-  preferences: {
-    diet: "Vegetarian",
-    interests: ["Culture", "Wellness", "Quiet Dining"],
-    vibe: "Relaxing",
-  },
-};
 
 const SUNNY_ITINERARY = [
   {
@@ -191,7 +185,12 @@ const INITIAL_REQUESTS = [
 
 // --- MAIN APP ---
 export default function AtithiAI() {
-  const [appMode, setAppMode] = useState("guest");
+  const { user, logout } = useAuth();
+  const { preferences, savePreferences } = useAppContext();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isDemoMode = new URLSearchParams(location.search).get("demo") === "1";
+  const [appMode, setAppMode] = useState(location.pathname === "/admin" ? "admin" : "guest");
   const [weather, setWeather] = useState("sunny");
   const [itinerary, setItinerary] = useState(SUNNY_ITINERARY);
   const [showAIIntervention, setShowAIIntervention] = useState(false);
@@ -200,13 +199,51 @@ export default function AtithiAI() {
   const [isDemoControlsOpen, setIsDemoControlsOpen] = useState(true);
   const [requests, setRequests] = useState(INITIAL_REQUESTS);
 
+  useEffect(() => {
+    const applyPlan = (event) => {
+      const plan = Array.isArray(event.detail) ? event.detail : [];
+      const nextItinerary = plan.map((item, index) => {
+        const place = PLACES.find((candidate) => candidate.id === item.placeId);
+        const tags = Array.isArray(item.tags) ? item.tags : [];
+        const dining = tags.includes("food") || tags.includes("dining") || place?.category === "food";
+        return {
+          id: `personalized-${Date.now()}-${index}`,
+          time: item.time,
+          title: place?.name || item.title,
+          desc: item.desc || place?.description || "A thoughtfully selected experience for your day.",
+          location: place?.location || "The Aranya House",
+          icon: dining ? Utensils : tags.includes("nature") ? MapPin : Compass,
+          type: dining ? "dining" : "activity",
+          status: index === 0 ? "current" : "upcoming",
+          isVulnerableToWeather: Boolean(place?.outdoor),
+          placeId: item.placeId,
+        };
+      });
+      if (nextItinerary.length) {
+        setItinerary(nextItinerary);
+        setActiveGuestTab("home");
+      }
+    };
+    window.addEventListener("atithi:plan-accepted", applyPlan);
+    return () => window.removeEventListener("atithi:plan-accepted", applyPlan);
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("atithi:weather", { detail: weather }));
+  }, [weather]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   const addRequest = (request) => {
     setRequests((current) => [
       {
         id: Date.now(),
         title: request.title,
         category: request.category,
-        detail: request.detail || "Requested for Room 402",
+        detail: `${request.detail || "Guest request"} · Requested for Room ${user?.room || "—"}`,
         status: "Received",
         time: "Today, just now",
       },
@@ -255,6 +292,11 @@ export default function AtithiAI() {
     <div className="min-h-screen bg-bg text-text font-sans selection:bg-accent selection:text-text">
       {appMode === "guest" ? (
         <GuestApp
+          guest={user}
+          preferences={preferences}
+          onSavePreferences={savePreferences}
+          onOpenOnboarding={() => window.dispatchEvent(new Event("atithi:reopen-onboarding"))}
+          onLogout={handleLogout}
           weather={weather}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
@@ -272,10 +314,12 @@ export default function AtithiAI() {
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
           requests={requests}
+          staffUser={user}
+          onLogout={handleLogout}
         />
       )}
 
-      {!isDemoControlsOpen && (
+      {isDemoMode && !isDemoControlsOpen && (
         <button
           onClick={() => setIsDemoControlsOpen(true)}
           className="fixed bottom-4 right-4 z-50 rounded-full bg-brand text-white px-3 py-2 text-xs font-medium shadow-lg md:hidden"
@@ -284,6 +328,7 @@ export default function AtithiAI() {
         </button>
       )}
 
+      {isDemoMode && (
       <div
         className={`fixed bottom-4 right-4 z-50 flex flex-col gap-3 bg-surface/90 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-border transition-all duration-300 md:bottom-6 md:right-6 ${
           isDemoControlsOpen
@@ -337,6 +382,7 @@ export default function AtithiAI() {
           {weather === "sunny" ? "Trigger Rain (4:00 PM)" : "Reset Weather"}
         </button>
       </div>
+      )}
     </div>
   );
 }
@@ -394,7 +440,7 @@ function GuestApp(props) {
                 exit="exit"
                 className="h-full"
               >
-                <AITab onRequest={props.addRequest} />
+                <AITab onRequest={props.addRequest} guest={props.guest} preferences={props.preferences} weather={props.weather} />
               </motion.div>
             )}
             {activeTab === "services" && (
@@ -422,7 +468,7 @@ function GuestApp(props) {
                 exit="exit"
                 className="h-full"
               >
-                <ProfileTab />
+                <ProfileTab guest={props.guest} preferences={props.preferences} onSavePreferences={props.onSavePreferences} onOpenOnboarding={props.onOpenOnboarding} onLogout={props.onLogout} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -475,6 +521,8 @@ function GuestApp(props) {
 // --- TAB COMPONENTS ---
 
 function HomeTab({
+  guest,
+  preferences,
   weather,
   itinerary,
   showAIIntervention,
@@ -524,11 +572,11 @@ function HomeTab({
             <h1 className="max-w-[290px] font-serif text-[42px] leading-[0.93]">
               Good morning,
               <br />
-              <span className="italic">{GUEST.name}.</span>
+              <span className="italic">{guest?.name?.split(" ")[0] || "Guest"}.</span>
             </h1>
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium backdrop-blur">
-                Suite 402 · Luxury
+                Suite {guest?.room || "—"} · Luxury
               </span>
               <span className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium backdrop-blur">
                 {weather === "sunny" ? (
@@ -1072,11 +1120,11 @@ function DiscoverTab({ onRequest }) {
   );
 }
 
-function AITab({ onRequest }) {
+function AITab({ onRequest, guest, preferences, weather }) {
   const [messages, setMessages] = useState([
     {
       from: "concierge",
-      text: `Good afternoon, ${GUEST.name}. I can help with room service, local plans, or anything you need during your stay.`,
+      text: `Good afternoon, ${guest?.name || "there"}. I can help with room service, local plans, or anything you need during your stay.`,
     },
   ]);
   const [draft, setDraft] = useState("");
@@ -1086,7 +1134,7 @@ function AITab({ onRequest }) {
     "Request fresh towels",
   ];
 
-  const sendMessage = (text = draft) => {
+  const sendMessage = async (text = draft) => {
     const message = text.trim();
     if (!message) return;
     setMessages((current) => [...current, { from: "guest", text: message }]);
@@ -1141,15 +1189,25 @@ function AITab({ onRequest }) {
       reply =
         "I sent your dining request to the restaurant team. They will confirm shortly.";
     }
-    window.setTimeout(
-      () =>
-        setMessages((current) => [
-          ...current,
-          { from: "concierge", text: reply },
-        ]),
-      350,
-    );
     setDraft("");
+    let finalReply = reply;
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message,
+          context: { guest: { name: guest?.name, room: guest?.room, stayId: guest?.stayId }, preferences, weather },
+        }),
+      });
+      if (response.ok) {
+        const payload = await response.json();
+        if (typeof payload.reply === "string" && payload.reply.trim()) finalReply = payload.reply.trim();
+      }
+    } catch {
+      // Keep a local concierge response when the serverless function is unavailable.
+    }
+    setMessages((current) => [...current, { from: "concierge", text: finalReply }]);
   };
 
   return (
@@ -1539,8 +1597,8 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
   );
 }
 
-function ProfileTab() {
-  const [diet, setDiet] = useState("Vegetarian");
+function ProfileTab({ guest, preferences, onSavePreferences, onOpenOnboarding, onLogout }) {
+  const diet = preferences?.dietaryPreference || "No preference";
   const [autoAdjust, setAutoAdjust] = useState(true);
   const [notifications, setNotifications] = useState(true);
   const [openPanel, setOpenPanel] = useState("");
@@ -1569,9 +1627,9 @@ function ProfileTab() {
               </div>
               <div>
                 <h2 className="font-serif text-[25px] leading-none">
-                  {GUEST.name} {GUEST.lastName}
+                  {guest?.name || "Guest"}
                 </h2>
-                <p className="mt-1.5 text-[10px] text-white/65">{GUEST.room}</p>
+                <p className="mt-1.5 text-[10px] text-white/65">Room {guest?.room || "—"}</p>
               </div>
             </div>
           </div>
@@ -1655,6 +1713,10 @@ function ProfileTab() {
           />
         </div>
       </section>
+      <button type="button" onClick={onOpenOnboarding} className="mb-6 flex w-full items-center justify-between rounded-2xl border border-border bg-surface p-4 text-left shadow-sm hover:bg-surface-2">
+        <span><span className="block text-sm font-semibold">Personalize my day</span><span className="mt-1 block text-xs text-muted">Update interests, travel style, pace and diet</span></span>
+        <Sparkles size={18} className="text-accent-text" />
+      </button>
       <section>
         <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3">
           Account Settings
@@ -1681,6 +1743,9 @@ function ProfileTab() {
           />
         </div>
       </section>
+      <button type="button" onClick={onLogout} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-text hover:bg-surface-2">
+        <LogOut size={16} /> Log out
+      </button>
       {openPanel && (
         <div
           className="fixed inset-0 z-[70] bg-black/45 p-5 flex items-center justify-center"
@@ -1708,7 +1773,7 @@ function ProfileTab() {
                   DIET
                   <select
                     value={diet}
-                    onChange={(event) => setDiet(event.target.value)}
+                    onChange={(event) => onSavePreferences({ ...preferences, dietaryPreference: event.target.value })}
                     className="block w-full mt-2 rounded-xl border border-border bg-surface px-3 py-3 text-sm font-normal"
                   >
                     <option>Vegetarian</option>
@@ -1718,7 +1783,7 @@ function ProfileTab() {
                   </select>
                 </label>
                 <p className="text-xs text-muted mt-4">
-                  Interests: Culture · Wellness · Quiet Dining
+                  Interests: {(preferences?.interests || []).map((interest) => interest[0]?.toUpperCase() + interest.slice(1)).join(" · ") || "Not set"}
                 </p>
               </>
             ) : (
@@ -1785,7 +1850,7 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
 
 // --- ADMIN DASHBOARD ---
 // Keeping the Admin Dashboard intact for the Demo controller
-function AdminDashboard({ weather, itinerary, showAIIntervention }) {
+function AdminDashboard({ weather, itinerary, showAIIntervention, staffUser, onLogout }) {
   const isConflict =
     weather === "rainy" && itinerary.some((i) => i.isVulnerableToWeather);
   const isResolved = weather === "rainy" && itinerary.some((i) => i.aiAdjusted);
@@ -1841,6 +1906,7 @@ function AdminDashboard({ weather, itinerary, showAIIntervention }) {
               </div>
             </div>
             <ThemeToggle compact />
+            <button type="button" onClick={onLogout} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-2"><LogOut size={15}/> Log out</button>
           </div>
         </header>
 
