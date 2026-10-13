@@ -267,11 +267,22 @@ export default function PlanTab() {
     const experienceIndex = pace === "relaxed" ? 0 : pace === "balanced" ? 2 : 1;
     const used = new Set();
     const stops = [];
+    const eligibleMeals = rankDishes(destination.dishes, plannerProfile, {
+      diet: profile?.diet || "none",
+      maxSpiceLevel: profile?.spiceTolerance || 2,
+      timeOfDay: "afternoon"
+    }, { weather, timeOfDay: "afternoon", freeMinutes: 60 });
+    const mealReserve = budget == null || !eligibleMeals.length
+      ? 0
+      : Math.min(...eligibleMeals.map((dish) => Number(dish.priceRangeLocal?.[1])).filter(Number.isFinite));
     let spend = 0;
     let previousPlace = null;
     for (let index = 0; index < maxStops; index += 1) {
       const windowName = targetWindow(index, mealIndex, maxStops);
-      const remainingBudget = budget == null ? null : Math.max(0, budget - spend);
+      const rawRemainingBudget = budget == null ? null : Math.max(0, budget - spend);
+      const remainingBudget = rawRemainingBudget == null || index === mealIndex
+        ? rawRemainingBudget
+        : Math.max(0, rawRemainingBudget - mealReserve);
       const budgetFilter = remainingBudget == null ? {} : { maxBudgetLocal: remainingBudget };
       let chosen = null;
       let kind = "place";
