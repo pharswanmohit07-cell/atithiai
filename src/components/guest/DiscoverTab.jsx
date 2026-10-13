@@ -73,7 +73,7 @@ export default function DiscoverTab({ destination, weather, preferences, itinera
     weatherKind: weather?.kind || weather?.condition || "unknown",
     lowCrowdPreference: flexSettings.hostPicks.quieterPlaces,
   }), [activeExperiences, preferences?.travelParty, weather?.kind, weather?.condition, flexSettings.hostPicks.quieterPlaces]);
-  const filteredDishes = useMemo(() => destination.dishes.filter((dish) => {
+  const filteredDishes = useMemo(() => (flexSettings.hostPicks.localFood ? destination.dishes : []).filter((dish) => {
     const price = Number(dish.price);
     if (budgetCap !== "" && Number.isFinite(price) && price > Math.max(0, Number(budgetCap))) return false;
     if (diet !== "any" && !rankDishes([dish], { diet }).length) return false;
@@ -82,7 +82,7 @@ export default function DiscoverTab({ destination, weather, preferences, itinera
     if (selectedSpice && (spiceScore[dish.spiceLevel] || 3) > selectedSpice) return false;
     if (timeOfDay !== "any" && !(dish.timeOfDay || []).includes(timeOfDay) && !(dish.timeOfDay || []).includes("anytime")) return false;
     return true;
-  }), [destination.dishes, budgetCap, diet, spice, timeOfDay]);
+  }), [destination.dishes, flexSettings.hostPicks.localFood, budgetCap, diet, spice, timeOfDay]);
   const rankedDishes = useMemo(() => rankDishes(filteredDishes, { diet, spice, timeOfDay, weatherKind: weather?.kind || weather?.condition || "unknown" }), [filteredDishes, diet, spice, timeOfDay, weather?.kind, weather?.condition]);
   const suggestions = useMemo(() => suggestedIds.length ? rankedDishes.filter((dish) => suggestedIds.includes(dish.id)).slice(0, 3) : [], [rankedDishes, suggestedIds]);
   const bookExperience = (experience) => addRequest({
@@ -127,7 +127,7 @@ export default function DiscoverTab({ destination, weather, preferences, itinera
       <button type="button" onClick={() => setSuggestedIds(rankDishes(filteredDishes, { diet, spice, timeOfDay, weatherKind: weather?.kind || weather?.condition || "unknown" }).slice(0, 3).map((dish) => dish.id))} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-extrabold text-white"><Sparkles size={16}/>What should I eat now?</button>
       {suggestedIds.length > 0 && <div className="mt-3 rounded-xl border border-border bg-bg p-3"><p className="text-xs font-bold">Three rule-ranked ideas</p><p className="mt-1 text-[10px] text-muted">{isRainy(weather) ? "Rain-aware ranking gives warm dishes extra weight." : "Ranked from your diet, spice, time and budget filters."}</p></div>}
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">{(suggestedIds.length ? suggestions : rankedDishes).slice(0, suggestedIds.length ? 3 : 12).map((dish) => <DishCard key={dish.id} dish={dish} destination={destination} formatCurrency={formatCurrency} onOrder={orderDish}/>)}</div>
-      {rankedDishes.length === 0 && <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">No dishes in this pack are tagged for every selected filter. Ask the hotel to check the menu; no ingredient or halal/gluten status is assumed.</p>}
+      {rankedDishes.length === 0 && <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">{flexSettings.hostPicks.localFood ? "No dishes in this pack are tagged for every selected filter. Ask the hotel to check the menu; no ingredient or halal/gluten status is assumed." : "The front desk has paused local-food recommendations for this destination. Ask the hotel team for help with the menu."}</p>}
       <p className="mt-3 text-[10px] font-semibold text-amber-800 dark:text-amber-200">Confirm ingredients with the restaurant. No dish is represented as allergen-free. Dietary tags are illustrative and recipes vary.</p>
     </section>
 
