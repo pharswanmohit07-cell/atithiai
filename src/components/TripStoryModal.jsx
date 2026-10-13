@@ -212,16 +212,22 @@ export default function TripStoryModal({
     setStatus("");
     try {
       const blob = await makePng();
-      const file = new File([blob], `atithi-trip-story-${today.toISOString().slice(0, 10)}.png`, { type: "image/png" });
-      if (typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: "My Trip Story · Atithi AI",
-          text: displayedCaption.join("\n"),
-        });
-        setStatus("Your journey story was shared.");
+      const filename = `atithi-trip-story-${today.toISOString().slice(0, 10)}.png`;
+      if (typeof File === "function" && typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+        const file = new File([blob], filename, { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "My Trip Story · Atithi AI",
+            text: displayedCaption.join("\n"),
+          });
+          setStatus("Your journey story was shared.");
+        } else {
+          saveBlob(blob, filename);
+          setStatus("File sharing is unavailable here, so your PNG was downloaded instead.");
+        }
       } else {
-        saveBlob(blob, file.name);
+        saveBlob(blob, filename);
         setStatus("Image sharing is unavailable here, so your PNG was downloaded instead.");
       }
     } catch (error) {
