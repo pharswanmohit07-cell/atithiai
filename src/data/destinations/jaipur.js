@@ -22,6 +22,7 @@ export default {
       early: [{ from: "10:00", fee: 1200 }, { from: "12:00", fee: 600 }],
       late: [{ until: "13:00", fee: 500 }, { until: "15:00", fee: 1200 }],
     },
+    flexCutoffs: { earlyEarliest: "10:00", lateLatest: "15:00" },
   },
   places: [
     { id: "hawa-mahal", name: "Hawa Mahal", lat: 26.9239, lon: 75.8267, category: "heritage", tags: ["architecture", "history", "photo"], rainFriendly: false, lowCrowd: false },

@@ -22,6 +22,7 @@ export default {
       early: [{ from: "10:00", fee: 25 }, { from: "12:00", fee: 12 }],
       late: [{ until: "13:00", fee: 10 }, { until: "15:00", fee: 25 }],
     },
+    flexCutoffs: { earlyEarliest: "10:00", lateLatest: "15:00" },
   },
   places: [
     { id: "belem-tower", name: "Belém Tower", lat: 38.6916, lon: -9.2160, category: "heritage", tags: ["history", "architecture", "river"], rainFriendly: false, lowCrowd: false },

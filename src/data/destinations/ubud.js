@@ -22,6 +22,7 @@ export default {
       early: [{ from: "10:00", fee: 150000 }, { from: "12:00", fee: 75000 }],
       late: [{ until: "13:00", fee: 60000 }, { until: "15:00", fee: 150000 }],
     },
+    flexCutoffs: { earlyEarliest: "10:00", lateLatest: "15:00" },
   },
   places: [
     { id: "ubud-monkey-forest", name: "Sacred Monkey Forest Sanctuary", lat: -8.5188, lon: 115.2580, category: "nature", tags: ["forest", "wildlife", "walk"], rainFriendly: false, lowCrowd: false },
