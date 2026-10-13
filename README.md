@@ -25,6 +25,10 @@ Each chat message follows a fixed pipeline:
 3. `POST /api/chat` receives up to five canonical pack entries and their ranking reasons. Gemini may phrase a short answer from that list; the client independently renders result cards, reason chips, Add to plan and Show on map actions.
 
 Scores are deterministic and are not a guarantee of fit. Crowd levels, local stories, diet flags and budget values come from curated demonstration packs and should be verified locally.
+## Hosting
+
+**Primary hosting target: Vercel.** The `vercel.json` rewrites client-side routes to `index.html` while leaving `/api/*` for Vercel serverless functions. Existing Netlify configuration is retained for compatibility but is not the primary deployment target.
+
 ## Technology
 
 - Vite, React 18, React Router and Tailwind CSS 3

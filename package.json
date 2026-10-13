@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "npm run lint && vite build",
     "lint": "node scripts/lint.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:images": "node scripts/check-images.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.11.9",

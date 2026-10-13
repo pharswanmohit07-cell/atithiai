@@ -58,14 +58,16 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     root.classList.toggle("dark", resolvedTheme === "dark");
     root.style.colorScheme = resolvedTheme;
-    const themeColor = resolvedTheme === "dark" ? "#1E1038" : "#FFF8EC";
-    let meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) {
-      meta = document.createElement("meta");
+    const themeColor = resolvedTheme === "dark" ? "#1A0B2E" : "#FFF8EC";
+    const metas = Array.from(document.querySelectorAll('meta[name="theme-color"]'));
+    const meta = metas[0] || document.createElement("meta");
+    if (!metas.length) {
       meta.name = "theme-color";
       document.head.appendChild(meta);
     }
     meta.setAttribute("content", themeColor);
+    meta.media = "all";
+    metas.slice(1).forEach((inactiveMeta) => { inactiveMeta.media = "(prefers-color-scheme: never)"; });
   }, [resolvedTheme]);
 
   const value = useMemo(() => ({
