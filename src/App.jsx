@@ -12,7 +12,7 @@ import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import StayPass from "./components/StayPass.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
 import DiscoverTab from "./components/guest/DiscoverTab.jsx";
-import { rankDishes, rankExperiences } from "./lib/rank.js";
+import { getFreeTimeMinutes, rankDishes, rankExperiences } from "./lib/rank.js";
 import FlexStayCard from "./components/guest/FlexStayCard.jsx";
 import AdminDashboard from "./components/AdminDashboard.jsx";
 import { detectChatIntent } from "./lib/chatIntents.js";
@@ -102,7 +102,7 @@ function FlexChatAction({ action, guest, destination }) {
 function GuestChat({ guest, destination, preferences, addRequest, cachedDemoMode, weather }) {
   const { chatMessages, addChatMessage, flexSettings } = useHotelContext();
   const chatExperiencePool = flexSettings.hostPicks.localExperiences ? destination.experiences.filter((item) => flexSettings.hostExperiencePicks?.[item.id]?.enabled !== false).map((item) => ({ ...item, hostNote: flexSettings.hostExperiencePicks?.[item.id]?.note || item.hostNote })) : [];
-  const rankedExperiences = rankExperiences(chatExperiencePool, { partyType: preferences?.travelParty || guest?.persona || "Family", freeTimeMinutes: 240, weatherKind: weather?.kind || weather?.condition || "unknown", lowCrowdPreference: flexSettings.hostPicks.quieterPlaces }).slice(0, 5);
+  const rankedExperiences = rankExperiences(chatExperiencePool, { partyType: preferences?.travelParty || guest?.persona || "Family", freeTimeMinutes: getFreeTimeMinutes(destination.hotel.checkOut, preferences?.departureTime), weatherKind: weather?.kind || weather?.condition || "unknown", lowCrowdPreference: flexSettings.hostPicks.quieterPlaces }).slice(0, 5);
   const rankedDishes = flexSettings.hostPicks.localFood ? rankDishes(destination.dishes, { diet: preferences?.dietaryPreference || "any", weatherKind: weather?.kind || weather?.condition || "unknown" }).slice(0, 5) : [];
   const [draft, setDraft] = useState(""); const [sending, setSending] = useState(false);
   const handoff = (detail) => { const request=addRequest({type:"human_handoff",title:"Guest requests a human",category:"Human assistance",priority:"urgent",status:"Waiting for team",guestName:guest?.name||guest?.persona||"Demo guest",detail:String(detail||"Guest asked to speak to a hotel team member.")+" A team member has not joined yet; this is a demo handoff."}); addChatMessage({role:"assistant",text:"A team member will join (demo).",requestId:request.id}); };
@@ -219,6 +219,7 @@ function ProfileView({ user, preferences, updatePreferences, destination, select
           <label className="text-xs font-semibold text-muted">Language preference<select value={preferences.language} onChange={(event) => updatePreferences({ language: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{!languageOptions.includes(preferences.language) && <option value={preferences.language}>{preferences.language}</option>}{languageOptions.map((language) => <option key={language} value={language}>{language}</option>)}</select></label>
           <label className="text-xs font-semibold text-muted">Dietary preference<select value={preferences.dietaryPreference} onChange={(event) => updatePreferences({ dietaryPreference: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{["No preference", "Vegetarian", "Vegan", "Pescatarian", "Halal", "Gluten-free", "Dairy-free", "Other — ask me"].map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="text-xs font-semibold text-muted sm:col-span-2">Travel party<select value={preferences.travelParty} onChange={(event) => updatePreferences({ travelParty: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{["Family", "Solo", "Couple", "Friends", "Business"].map((item) => <option key={item}>{item}</option>)}</select></label>
+          <label className="text-xs font-semibold text-muted sm:col-span-2">Departure time on check-out day<input type="time" value={preferences.departureTime || "15:00"} onChange={(event) => updatePreferences({ departureTime: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"/><span className="mt-1 block text-[10px] font-normal text-muted">Used to estimate free time after check-out ({destination.hotel.checkOut}); adjust it to your travel plan.</span></label>
         </div>
       </section>
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
