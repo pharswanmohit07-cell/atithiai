@@ -145,6 +145,30 @@ function safeContext(input = {}) {
   };
 }
 
+function routeGuardFallback(routeGuard) {
+  const villages = (routeGuard.nearestSafe || []).slice(0, 2).map((village) => village.name);
+  const alternatives = villages.length === 2 ? villages[0] + " or " + villages[1] : villages[0] || "no listed demo village area";
+  const prefix = routeGuard.disruption?.source === "demo" ? "DEMO EVENT: " : "Live weather signal: ";
+  return (prefix + "A disruption affects the next corridor segment. Pause near "
+    + (routeGuard.currentWaypoint?.name || "the current waypoint")
+    + " and check local authority advice. Potential demo village-area options: "
+    + alternatives
+    + ". Travel times are rough straight-line estimates, not road travel times.").trim();
+}
+
+function safeRouteGuardReply(reply, routeGuard) {
+  if (typeof reply !== "string" || !reply.trim() || reply.trim().split(/\s+/).length > 50) return false;
+  if (/(road is open|road is closed|confirmed landslide|road closure confirmed|safe to travel|driver has been notified|homestay is booked)/i.test(reply)) return false;
+  const allowedNames = [routeGuard.currentWaypoint?.name, ...(routeGuard.nearestSafe || []).map((village) => village.name)]
+    .filter(Boolean).map((name) => name.toLowerCase());
+  const forbiddenPlaceNames = [
+    ...CORRIDOR_WAYPOINTS.map((waypoint) => waypoint.name),
+    ...DEMO_HOMESTAYS.map((village) => village.name),
+    ...PLACES.map((place) => place.name),
+  ].filter((name) => !allowedNames.includes(name.toLowerCase()));
+  return forbiddenPlaceNames.every((name) => !reply.toLowerCase().includes(name.toLowerCase()));
+}
+
 function disruptionNote(context) {
   if (!context.disruptions.length) return "";
   const alerts = context.disruptions.map((item) => {
@@ -225,6 +249,9 @@ export default async function handler(req, res) {
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const fallback = friendlyFallback(message, context);
   const fallbackAction = safePlaceAction(null, message, context);
+  if (context.routeGuard.enabled && !apiKey) {
+    return send(res, 200, { reply: routeGuardFallback(context.routeGuard), action: { type: "none", placeIds: [] }, source: "route-guard-fallback" });
+  }
   if (!apiKey) return send(res, 200, { reply: fallback, action: fallbackAction, source: "friendly-fallback" });
   const allowedPlaceIds = context.lowCrowdPlaces.map((place) => place.id);
 
