@@ -1,11 +1,3 @@
-# Atithi Lens sample photos
+# Price Lens examples
 
-Atithi Lens expects these bundled sample image paths:
-
-- `sample-taxi.jpg` — taxi fare board with example prices
-- `sample-menu.jpg` — menu with clearly visible prices
-- `sample-temple.jpg` — temple visitor notice board (no clear price)
-
-Replace/add the JPEG files at these exact paths. They are illustrative sample assets, not photographs of official tariffs, real businesses, or current prices.
-
-The UI includes a seeded, labelled demo result for each sample so the sample action still works if an image asset or analysis service is unavailable. Real image scans use `/api/lens`; successful sample results are cached in localStorage by sample ID.
+The Price Lens sample buttons use bundled, labelled example results and do not require binary image assets or network access. Uploaded photos are resized in the browser before an optional analysis request. Sample content is illustrative demo data, not a quote or a market price.
