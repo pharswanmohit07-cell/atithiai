@@ -11,6 +11,7 @@ const requestsKey = (id) => "atithi-requests:" + id;
 const chatKey = (id) => "atithi-chat:" + id;
 const settingsKey = (id) => "atithi-flex-settings:" + id;
 const actionsKey = (id) => "atithi-actions:" + id;
+const disruptionsKey = (id) => "atithi-disruptions:" + id;
 const WELCOME = "Welcome. I’m your hotel co-host for this demo stay. Ask about local experiences, food, weather or a request for the team.";
 
 function newId() {
@@ -48,6 +49,14 @@ function defaultFlexSettings(destination) {
     autoApproveUnder: 0,
     chefSpecial: "Chef's special: ask the kitchen for today's seasonal option (demo).",
     hostPicks: { localExperiences: true, localFood: true, quieterPlaces: false },
+    disruptionCare: {
+      lateArrivalHoldEnabled: true,
+      lateArrivalNote: "Late arrival noted in this demo. The front desk must confirm any room hold and the check-in plan.",
+      lateCheckoutReliefEnabled: true,
+      lateCheckoutDiscountPercent: 15,
+      extraNightOfferEnabled: true,
+      extraNightNote: "Ask the front desk for a manager-confirmed local-currency rate and room availability.",
+    },
     hostExperiencePicks: Object.fromEntries((destination.experiences || []).map((experience) => [experience.id, { enabled: true, note: String(experience.hostNote || "The front desk team selected this destination-pack listing.").slice(0, 300) }])),
     hostPickNotes: {
       localExperiences: "Share demo listings only after the front desk verifies provider details.",
@@ -67,6 +76,7 @@ function readFlexSettings(destination) {
   const hostPicks = saved.hostPicks && typeof saved.hostPicks === "object" ? saved.hostPicks : {};
   const hostPickNotes = saved.hostPickNotes && typeof saved.hostPickNotes === "object" ? saved.hostPickNotes : {};
   const hostExperiencePicks = saved.hostExperiencePicks && typeof saved.hostExperiencePicks === "object" ? saved.hostExperiencePicks : {};
+  const disruptionCare = saved.disruptionCare && typeof saved.disruptionCare === "object" ? saved.disruptionCare : {};
   return {
     flexTiers: {
       early: early.map((tier, index) => ({
@@ -88,7 +98,19 @@ function readFlexSettings(destination) {
     hostPicks: Object.fromEntries(Object.keys(base.hostPicks).map((key) => [key, hostPicks[key] === undefined ? base.hostPicks[key] : hostPicks[key] === true])),
     hostPickNotes: Object.fromEntries(Object.keys(base.hostPickNotes).map((key) => [key, typeof hostPickNotes[key] === "string" ? hostPickNotes[key].slice(0, 300) : base.hostPickNotes[key]])),
     hostExperiencePicks: Object.fromEntries(Object.entries(base.hostExperiencePicks).map(([id, defaults]) => { const savedItem = hostExperiencePicks[id]; return [id, { enabled: savedItem?.enabled !== false, note: typeof savedItem?.note === "string" ? savedItem.note.slice(0, 300) : defaults.note }]; })),
+    disruptionCare: {
+      lateArrivalHoldEnabled: disruptionCare.lateArrivalHoldEnabled !== false,
+      lateArrivalNote: typeof disruptionCare.lateArrivalNote === "string" ? disruptionCare.lateArrivalNote.slice(0, 300) : base.disruptionCare.lateArrivalNote,
+      lateCheckoutReliefEnabled: disruptionCare.lateCheckoutReliefEnabled !== false,
+      lateCheckoutDiscountPercent: Number.isFinite(Number(disruptionCare.lateCheckoutDiscountPercent)) ? Math.max(0, Math.min(80, Number(disruptionCare.lateCheckoutDiscountPercent))) : base.disruptionCare.lateCheckoutDiscountPercent,
+      extraNightOfferEnabled: disruptionCare.extraNightOfferEnabled !== false,
+      extraNightNote: typeof disruptionCare.extraNightNote === "string" ? disruptionCare.extraNightNote.slice(0, 300) : base.disruptionCare.extraNightNote,
+    },
   };
+}
+function readDisruptions(destinationId) {
+  const allowed = new Set(["rain", "storm", "heat", "strike", "closure", "flight_delay"]);
+  return safeRead(disruptionsKey(destinationId), []).filter((item) => item && typeof item.id === "string" && allowed.has(item.type) && ["live", "demo"].includes(item.source)).slice(0, 20);
 }
 function readRequests(destinationId) {
   return safeRead(requestsKey(destinationId), []).filter((item) => item && typeof item.id === "string" && item.destinationId === destinationId).slice(0, 80);
@@ -116,6 +138,8 @@ export function HotelProvider({ children }) {
   const [chatMessages, setChatMessages] = useState(() => readChatMessages(destination.id));
   const [flexSettings, setFlexSettings] = useState(() => readFlexSettings(destination));
   const [actionsTaken, setActionsTaken] = useState(() => readActions(destination.id));
+  const [disruptions, setDisruptions] = useState(() => readDisruptions(destination.id));
+  const disruptionsRef = useRef(disruptions);
   const [preferences, setPreferences] = useState(readPreferences);
 
   useEffect(() => {
@@ -126,7 +150,12 @@ export function HotelProvider({ children }) {
     setChatMessages(readChatMessages(destination.id));
     setFlexSettings(readFlexSettings(destination));
     setActionsTaken(readActions(destination.id));
+    const nextDisruptions = readDisruptions(destination.id);
+    disruptionsRef.current = nextDisruptions;
+    setDisruptions(nextDisruptions);
   }, [destination]);
+
+  useEffect(() => { disruptionsRef.current = disruptions; }, [disruptions]);
 
   const recordAction = useCallback((entry = {}) => {
     const item = {
@@ -194,6 +223,10 @@ export function HotelProvider({ children }) {
       ...(request.headcount != null && Number.isFinite(Number(request.headcount)) ? { headcount: Math.max(1, Math.min(12, Number(request.headcount))) } : {}),
       ...(request.durationMinutes != null && Number.isFinite(Number(request.durationMinutes)) ? { durationMinutes: Number(request.durationMinutes) } : {}),
       ...(typeof request.hostNote === "string" ? { hostNote: request.hostNote.slice(0, 300) } : {}),
+      ...(typeof request.disruptionId === "string" ? { disruptionId: request.disruptionId.slice(0, 140) } : {}),
+      ...(typeof request.careOfferType === "string" ? { careOfferType: request.careOfferType.slice(0, 60) } : {}),
+      ...(request.offerFee != null && Number.isFinite(Number(request.offerFee)) ? { offerFee: Math.max(0, Number(request.offerFee)) } : {}),
+      ...(request.discountPercent != null && Number.isFinite(Number(request.discountPercent)) ? { discountPercent: Math.max(0, Math.min(80, Number(request.discountPercent))) } : {}),
     };
     setRequests((current) => {
       const next = [item, ...current].slice(0, 80);
@@ -209,8 +242,72 @@ export function HotelProvider({ children }) {
     return item;
   }, [destination.id, recordAction]);
 
+  const addDisruption = useCallback((input = {}) => {
+    const allowedTypes = new Set(["strike", "closure", "flight_delay"]);
+    const type = allowedTypes.has(input.type) ? input.type : null;
+    if (!type) return null;
+    const validPlaceIds = new Set((destination.places || []).map((place) => place.id));
+    const affectedPlaceIds = Array.isArray(input.affectedPlaceIds)
+      ? Array.from(new Set(input.affectedPlaceIds.filter((id) => typeof id === "string" && validPlaceIds.has(id)))).slice(0, 30)
+      : [];
+    const item = {
+      id: newId(),
+      type,
+      title: String(input.title || "Demo disruption").slice(0, 160),
+      severity: ["low", "medium", "high", "critical"].includes(input.severity) ? input.severity : "medium",
+      affectedPlaceIds,
+      source: "demo",
+      detectedAt: new Date().toISOString(),
+    };
+    const next = [item, ...disruptionsRef.current.filter((event) => event.id !== item.id)].slice(0, 20);
+    disruptionsRef.current = next;
+    setDisruptions(next);
+    safeWrite(disruptionsKey(destination.id), next);
+    recordAction({ title: "DEMO EVENT: " + item.title, detail: item.type + " · severity " + item.severity + " · demo event only; no transport or venue service was contacted.", actor: "Front Desk" });
+    recordAction({ title: "Front desk alerted (demo)", detail: "Atithi logged " + item.title + " for this destination. No real notification was sent.", actor: "Atithi AI" });
+    if (type === "strike" || type === "flight_delay") recordAction({ title: "Driver notified (demo)", detail: item.title + " · simulated notification only; no driver or transport provider was contacted.", actor: "Atithi AI" });
+    return item;
+  }, [destination.id, destination.places, recordAction]);
+
+  const syncLiveWeatherDisruptions = useCallback((events = []) => {
+    const current = disruptionsRef.current;
+    const existingLive = current.filter((item) => item.source === "live");
+    const normalized = (Array.isArray(events) ? events : []).filter((item) => item && ["rain", "storm", "heat"].includes(item.type) && item.source === "live").slice(0, 3).map((event) => {
+      const existing = existingLive.find((item) => item.id === event.id);
+      const validIds = new Set((destination.places || []).map((place) => place.id));
+      return {
+        id: String(event.id || ("weather-" + destination.id + "-" + event.type)).slice(0, 140),
+        type: event.type,
+        title: String(event.title || "Weather advisory").slice(0, 160),
+        severity: ["low", "medium", "high", "critical"].includes(event.severity) ? event.severity : "medium",
+        affectedPlaceIds: Array.from(new Set((Array.isArray(event.affectedPlaceIds) ? event.affectedPlaceIds : []).filter((id) => validIds.has(id))).values()).slice(0, 30),
+        source: "live",
+        detectedAt: existing?.detectedAt || (typeof event.detectedAt === "string" ? event.detectedAt : new Date().toISOString()),
+      };
+    });
+    const previousSignature = JSON.stringify(existingLive.map((item) => ({ id:item.id,type:item.type,title:item.title,severity:item.severity,affectedPlaceIds:item.affectedPlaceIds })).sort((a,b)=>a.id.localeCompare(b.id)));
+    const nextSignature = JSON.stringify(normalized.map((item) => ({ id:item.id,type:item.type,title:item.title,severity:item.severity,affectedPlaceIds:item.affectedPlaceIds })).sort((a,b)=>a.id.localeCompare(b.id)));
+    if (previousSignature === nextSignature) return;
+    normalized.filter((item) => !existingLive.some((old) => old.id === item.id)).forEach((item) => {
+      recordAction({ title: "Live weather disruption detected", detail: item.title + " · Open-Meteo · " + item.severity + " severity. Only the weather observation is live.", actor: "System" });
+      recordAction({ title: "Front desk alerted (demo)", detail: item.title + " · logged from Open-Meteo weather; no external notification sent.", actor: "Atithi AI" });
+    });
+    const next = [...normalized, ...current.filter((item) => item.source !== "live")].slice(0, 20);
+    disruptionsRef.current = next;
+    setDisruptions(next);
+    safeWrite(disruptionsKey(destination.id), next);
+  }, [destination.id, destination.places, recordAction]);
+
+  const clearDemoDisruptions = useCallback(() => {
+    const next = disruptionsRef.current.filter((item) => item.source !== "demo");
+    disruptionsRef.current = next;
+    setDisruptions(next);
+    safeWrite(disruptionsKey(destination.id), next);
+    recordAction({ title: "Demo disruptions cleared", detail: "Simulated disruption events were removed. Live weather advisories are unchanged.", actor: "Front Desk" });
+  }, [destination.id, recordAction]);
+
   const updateRequest = useCallback((id, patch = {}) => {
-    const allowed = ["status", "staffNote", "billLine", "counterOffer", "approvedTime", "finalFee", "takenOverBy", "offer", "requestedTime", "estimatedCommission", "aiSuggested", "aiSuggestionReason", "resolvedAt", "firstResponseAt"];
+    const allowed = ["status", "staffNote", "billLine", "counterOffer", "approvedTime", "finalFee", "takenOverBy", "offer", "requestedTime", "estimatedCommission", "aiSuggested", "aiSuggestionReason", "resolvedAt", "firstResponseAt", "offerFee", "discountPercent"];
     const safePatch = {};
     for (const key of allowed) if (Object.prototype.hasOwnProperty.call(patch, key)) safePatch[key] = patch[key];
     const previous = requests.find((request) => request.id === id);
@@ -320,6 +417,16 @@ export function HotelProvider({ children }) {
       hostPicks: patch.hostPicks ? { ...flexSettings.hostPicks, ...Object.fromEntries(Object.keys(flexSettings.hostPicks).map((key) => [key, patch.hostPicks[key] === undefined ? flexSettings.hostPicks[key] : patch.hostPicks[key] === true])) } : flexSettings.hostPicks,
       hostPickNotes: patch.hostPickNotes ? { ...flexSettings.hostPickNotes, ...Object.fromEntries(Object.keys(flexSettings.hostPickNotes).map((key) => [key, patch.hostPickNotes[key] === undefined ? flexSettings.hostPickNotes[key] : String(patch.hostPickNotes[key]).slice(0, 300)])) } : flexSettings.hostPickNotes,
       hostExperiencePicks: patch.hostExperiencePicks ? { ...flexSettings.hostExperiencePicks, ...Object.fromEntries(Object.entries(patch.hostExperiencePicks).map(([id, item]) => [id, { ...(flexSettings.hostExperiencePicks[id] || { enabled: true, note: "" }), ...(item && typeof item === "object" ? item : {}), enabled: item?.enabled === undefined ? (flexSettings.hostExperiencePicks[id]?.enabled !== false) : item.enabled === true, note: item?.note === undefined ? (flexSettings.hostExperiencePicks[id]?.note || "") : String(item.note).slice(0, 300) }])) } : flexSettings.hostExperiencePicks,
+      disruptionCare: patch.disruptionCare ? {
+        ...flexSettings.disruptionCare,
+        ...patch.disruptionCare,
+        lateArrivalHoldEnabled: patch.disruptionCare.lateArrivalHoldEnabled === undefined ? flexSettings.disruptionCare.lateArrivalHoldEnabled : patch.disruptionCare.lateArrivalHoldEnabled === true,
+        lateArrivalNote: patch.disruptionCare.lateArrivalNote === undefined ? flexSettings.disruptionCare.lateArrivalNote : String(patch.disruptionCare.lateArrivalNote).slice(0, 300),
+        lateCheckoutReliefEnabled: patch.disruptionCare.lateCheckoutReliefEnabled === undefined ? flexSettings.disruptionCare.lateCheckoutReliefEnabled : patch.disruptionCare.lateCheckoutReliefEnabled === true,
+        lateCheckoutDiscountPercent: patch.disruptionCare.lateCheckoutDiscountPercent === undefined ? flexSettings.disruptionCare.lateCheckoutDiscountPercent : Math.max(0, Math.min(80, Number(patch.disruptionCare.lateCheckoutDiscountPercent) || 0)),
+        extraNightOfferEnabled: patch.disruptionCare.extraNightOfferEnabled === undefined ? flexSettings.disruptionCare.extraNightOfferEnabled : patch.disruptionCare.extraNightOfferEnabled === true,
+        extraNightNote: patch.disruptionCare.extraNightNote === undefined ? flexSettings.disruptionCare.extraNightNote : String(patch.disruptionCare.extraNightNote).slice(0, 300),
+      } : flexSettings.disruptionCare,
     };
     setFlexSettings(next);
     safeWrite(settingsKey(destination.id), next);
@@ -333,6 +440,7 @@ export function HotelProvider({ children }) {
       safeWrite(chatKey(pack.id), welcomeFor(pack.id));
       safeWrite(settingsKey(pack.id), defaultFlexSettings(pack));
       safeWrite(actionsKey(pack.id), []);
+      safeWrite(disruptionsKey(pack.id), []);
     }
     const currentWelcome = welcomeFor(destination.id);
     setRequests([]);
@@ -342,6 +450,9 @@ export function HotelProvider({ children }) {
     setFlexSettings(defaultFlexSettings(destination));
     const resetAction = [{ id: newId(), title: "Reset demo data", detail: "Demo requests, shared chat, action history and settings were reset across all destination packs.", actor: "System", createdAt: new Date().toISOString(), destinationId: destination.id }];
     setActionsTaken(resetAction);
+    disruptionsRef.current = [];
+    setDisruptions([]);
+    safeWrite(disruptionsKey(destination.id), []);
     safeWrite(actionsKey(destination.id), resetAction);
     safeWrite(PROFILE_KEY, EMPTY_PREFERENCES);
   }, [destination]);
@@ -362,6 +473,7 @@ export function HotelProvider({ children }) {
     preferences, updatePreferences, addItineraryStop, removeItineraryStop,
     chatMessages, addChatMessage, flexSettings, updateFlexSettings, createFlexStayRequest,
     resetDemoData, actionsTaken, undoAction, recordAction,
+    disruptions, addDisruption, syncLiveWeatherDisruptions, clearDemoDisruptions,
   };
   return <HotelContext.Provider value={value}>{children}</HotelContext.Provider>;
 }
