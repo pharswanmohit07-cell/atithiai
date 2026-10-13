@@ -94,7 +94,7 @@ function InboxCard({ request, currency, currencyCode, formatDate, onAction, staf
 export default function AdminDashboard({ onSwitch }) {
   const { user } = useAuth();
   const { destination, destinations, selectDestination, formatCurrency, weather, cachedDemoMode, setCachedDemoMode, weatherLoading, weatherError } = useDestination();
-  const { requests, updateRequest, addRequest, chatMessages, addChatMessage, flexSettings, updateFlexSettings, actionsTaken, undoAction, resetDemoData } = useHotelContext();
+  const { requests, updateRequest, addRequest, chatMessages, addChatMessage, flexSettings, updateFlexSettings, actionsTaken, undoAction, resetDemoData, disruptions } = useHotelContext();
   const [staffName,setStaffName]=useState(user?.name?.replace(/\s*\(demo\)$/i,"")||"Maria");
   const [conversationFilter,setConversationFilter]=useState("all");
   const [settingsOpen,setSettingsOpen]=useState(true);
@@ -128,6 +128,10 @@ export default function AdminDashboard({ onSwitch }) {
   }),[requests,destination.id]);
   const guestMessages=chatMessages;
   const visibleMessages=conversationFilter==="all"?guestMessages.slice(-30):guestMessages.filter((message)=>message.role===conversationFilter).slice(-30);
+  const activeDisruptions=(disruptions||[]).filter((item)=>["live","demo"].includes(item.source));
+  const disruptionIds=new Set(activeDisruptions.map((item)=>item.id));
+  const disruptionCareRequests=currentRequests.filter((request)=>request.type==="disruption_care"&&disruptionIds.has(request.disruptionId)&&ACTIVE.has(request.status));
+  const disruptionGuestCount=Math.max(activeDisruptions.length?1:0,new Set(disruptionCareRequests.map((request)=>request.guestName||"Demo guest")).size);
 
   const signedNote=(text)=>(staffName.trim()||"Front Desk")+" from Front Desk: "+(String(text||"").trim()||"I've reviewed your request. I'll follow up with the details.");
   const sendStaffMessage=(request,note,patch={})=>{
@@ -169,6 +173,9 @@ export default function AdminDashboard({ onSwitch }) {
   const changeHostPick=(key,value)=>updateFlexSettings({hostPicks:{[key]:value}});
   const changeHostNote=(key,value)=>updateFlexSettings({hostPickNotes:{[key]:value}});
   const updateExperiencePick=(experience,patch)=>updateFlexSettings({hostExperiencePicks:{[experience.id]:{...(flexSettings.hostExperiencePicks?.[experience.id]||{enabled:true,note:experience.hostNote||""}),...patch}}});
+  const updateDisruptionSetting=(patch)=>updateFlexSettings({disruptionCare:{...flexSettings.disruptionCare,...patch}});
+  const approveAllDisruptionCare=()=>{for(const request of disruptionCareRequests){updateRequest(request.id,{status:"Approved by staff",staffNote:"Front desk approved the disruption-care request (demo). Confirm room availability and terms before any real commitment."});addChatMessage({role:"staff",text:"The front desk approved your disruption-care request in the demo. Please confirm real availability and terms with the hotel.",requestId:request.id});}};
+  const reviewDisruptionRequests=()=>{const target=document.getElementById("approval-inbox");if(target)target.scrollIntoView({behavior:"smooth",block:"start"});};
 
   return <main className="min-h-screen bg-bg text-text">
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur sm:px-6">
