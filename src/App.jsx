@@ -551,7 +551,15 @@ function GuestApp(props) {
                 exit="exit"
                 className="h-full"
               >
-                <AITab onRequest={props.addRequest} guest={props.guest} preferences={props.preferences} weather={props.weather} disruptions={props.disruptions} lowCrowdPlaces={props.lowCrowdPlaces} />
+                <AITab
+                  onRequest={props.addRequest}
+                  guest={props.guest}
+                  preferences={props.preferences}
+                  weather={props.weather}
+                  disruptions={props.disruptions}
+                  lowCrowdPlaces={props.lowCrowdPlaces}
+                  onAddPlaceToItinerary={props.onAddPlaceToItinerary}
+                />
               </motion.div>
             )}
             {activeTab === "services" && (
@@ -1294,7 +1302,7 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
   );
 }
 
-function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCrowdPlaces = [] }) {
+function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCrowdPlaces = [], onAddPlaceToItinerary }) {
   const [messages, setMessages] = useState([
     {
       from: "concierge",
@@ -1365,6 +1373,10 @@ function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCr
     }
     setDraft("");
     let finalReply = reply;
+    const shouldShowPlaces = /where|place|destination|visit|explore|recommend|suggest|crowd|quiet|offbeat|trip|travel|route|what can i see|what to do/i.test(message);
+    let finalAction = shouldShowPlaces
+      ? { type: "show_places", placeIds: lowCrowdPlaces.slice(0, 5).map((place) => place.id).filter(Boolean) }
+      : { type: "none", placeIds: [] };
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -1380,11 +1392,20 @@ function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCr
       if (response.ok) {
         const payload = await response.json();
         if (typeof payload.reply === "string" && payload.reply.trim()) finalReply = payload.reply.trim();
+        if (payload.action && (payload.action.type === "show_places" || payload.action.type === "none")) {
+          const validIds = new Set(PLACES.map((place) => place.id));
+          finalAction = {
+            type: payload.action.type,
+            placeIds: Array.isArray(payload.action.placeIds)
+              ? payload.action.placeIds.filter((id) => validIds.has(id)).slice(0, 5)
+              : [],
+          };
+        }
       }
     } catch {
       // Keep a local concierge response when the serverless function is unavailable.
     }
-    setMessages((current) => [...current, { from: "concierge", text: finalReply }]);
+    setMessages((current) => [...current, { from: "concierge", text: finalReply, query: message, action: finalAction }]);
   };
 
   return (
@@ -1403,14 +1424,38 @@ function AITab({ onRequest, guest, preferences, weather, disruptions = [], lowCr
         </div>
       </div>
       <div className="flex-1 p-5 overflow-y-auto space-y-3 pb-5">
-        {messages.map((message, index) => (
-          <div
-            key={`${index}-${message.from}`}
-            className={`max-w-[86%] rounded-2xl p-4 text-sm leading-relaxed ${message.from === "guest" ? "ml-auto bg-brand text-white rounded-br-sm" : "bg-surface shadow-sm border border-border rounded-tl-sm"}`}
-          >
-            {message.text}
-          </div>
-        ))}
+        {messages.map((message, index) => {
+          const showMap = message.from === "concierge" && message.action?.type === "show_places";
+          const suggestedPlaces = showMap ? rankPlacesForChat(message.query || "", message.action.placeIds) : [];
+          return (
+            <div key={`${index}-${message.from}`} className={message.from === "guest" ? "ml-auto max-w-[86%]" : "max-w-[98%]"}>
+              <div className={`rounded-2xl p-4 text-sm leading-relaxed ${message.from === "guest" ? "bg-brand text-white rounded-br-sm" : "bg-surface shadow-sm border border-border rounded-tl-sm"}`}>
+                {message.text}
+              </div>
+              {showMap && suggestedPlaces.length > 0 && (
+                <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface p-3 shadow-sm">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-accent-text">Places to consider · estimated data</p>
+                  <PlacesMap
+                    places={suggestedPlaces}
+                    mini
+                    height={190}
+                    onAddToItinerary={onAddPlaceToItinerary}
+                    selectedPlaceIds={[]}
+                  />
+                  <div className="mt-3 space-y-2">
+                    {suggestedPlaces.map((place) => (
+                      <article key={place.id} className="rounded-xl border border-border bg-bg p-3">
+                        <div className="flex items-start justify-between gap-2"><div><h3 className="text-xs font-semibold text-text">{place.name}</h3><p className="mt-1 text-[10px] leading-relaxed text-muted">{place.shortDesc}</p></div><span className="rounded-full bg-surface-2 px-2 py-1 text-[9px] capitalize text-muted">{place.category}</span></div>
+                        <p className="mt-2 text-[10px] text-muted">~{place.travelMinutes} min · crowd and time estimates</p>
+                        <button type="button" onClick={() => onAddPlaceToItinerary(place)} className="mt-2 w-full rounded-lg bg-brand px-3 py-2 text-[10px] font-semibold text-white">Add to itinerary</button>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
         {messages.length === 1 && (
           <div className="flex flex-wrap gap-2 pt-2">
             {quickReplies.map((reply) => (
