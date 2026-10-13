@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, ArrowRight, Clock3, Route, ShieldCheck } from "lucide-react";
 import { CORRIDOR_WAYPOINTS } from "../data/corridor.js";
+import { useAppContext } from "../context/AppContext.jsx";
 
 const advisoryFallbackCache = new Map();
 
@@ -51,6 +52,7 @@ export default function RouteGuardCard({
   onKeepWaiting,
   detourVillage = null,
 }) {
+  const { cachedDemoMode } = useAppContext();
   const fallbackAdvisory = useMemo(
     () => getFallbackAdvisory(disruption, currentWaypoint, nearestSafe),
     [disruption, currentWaypoint, nearestSafe],
@@ -63,7 +65,7 @@ export default function RouteGuardCard({
     setAdvisory(fallbackAdvisory);
     setAdvisorySource("cached-fallback");
     setWaiting(false);
-    if (!disruption || !currentWaypoint) return undefined;
+    if (!disruption || !currentWaypoint || cachedDemoMode) return undefined;
 
     const controller = new AbortController();
     let active = true;
@@ -137,7 +139,7 @@ export default function RouteGuardCard({
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [disruption, currentWaypoint, nearestSafe, persona, fallbackAdvisory]);
+  }, [disruption, currentWaypoint, nearestSafe, persona, fallbackAdvisory, cachedDemoMode]);
 
   if (!disruption || !currentWaypoint) return null;
   const from = CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === disruption.segment?.[0]);
