@@ -26,12 +26,12 @@ export function AuthProvider({ children }) {
     const safeUser = nextUser?.role === "staff"
       ? { role: "staff", name: String(nextUser.name || "Atithi staff") }
       : { role: "guest", name: String(nextUser.name || "Guest"), room: String(nextUser.room || ""), stayId: String(nextUser.stayId || "") };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser)); } catch { /* Demo auth remains usable for this session when storage is blocked. */ }
     setUser(safeUser);
     return safeUser;
   }, []);
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* In-memory logout still proceeds if storage is blocked. */ }
     setUser(null);
   }, []);
   return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
