@@ -15,6 +15,7 @@ import {
 } from "./components/DisruptionGuardian.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
+import PlacesMap from "./components/PlacesMap.jsx";
 import {
   Sun,
   CloudRain,
@@ -127,6 +128,36 @@ const EXPERIENCES = [
     img: "https://images.unsplash.com/photo-1448375240586-882707db888b?q=85&w=1000&auto=format&fit=crop",
   },
 ];
+
+function rankPlacesForChat(query = "", hintedIds = []) {
+  const hints = new Set(Array.isArray(hintedIds) ? hintedIds : []);
+  const normalized = String(query).toLowerCase().replace(/[^a-z0-9\\s-]/g, " ").replace(/\\s+/g, " ").trim();
+  const terms = normalized.split(" ").filter((term) => term.length > 2 && !["where", "what", "show", "give", "some", "with", "from", "near", "places", "place", "should", "could", "would", "have", "today", "please", "find", "tell", "recommend", "suggest", "visit", "explore"].includes(term));
+  const synonyms = [];
+  if (/quiet|calm|less crowded|avoid crowd|not busy|low crowd/.test(normalized)) synonyms.push("low-crowd");
+  if (/rain|rainy|wet weather|indoor/.test(normalized)) synonyms.push("indoor", "rain-friendly");
+  if (/local craft|handicraft|artisan|market|shopping/.test(normalized)) synonyms.push("local-artisan", "market");
+  if (/green|eco|nature|forest|sustain/.test(normalized)) synonyms.push("eco-friendly", "nature");
+  const ranked = PLACES.map((place) => {
+    const searchable = [place.name, place.category, ...(place.tags || []), place.shortDesc].join(" ").toLowerCase();
+    let score = hints.has(place.id) ? 1 : 0;
+    for (const term of terms) {
+      if (place.name.toLowerCase().includes(term)) score += 7;
+      if (place.category.toLowerCase().includes(term)) score += 4;
+      if ((place.tags || []).some((tag) => tag.includes(term))) score += 3;
+      if (place.shortDesc.toLowerCase().includes(term)) score += 1;
+    }
+    for (const synonym of synonyms) if (searchable.includes(synonym)) score += 4;
+    return { place, score, crowd: getCrowd(place, getVisitFlags()) };
+  }).sort((a, b) => b.score - a.score || a.crowd - b.crowd || a.place.name.localeCompare(b.place.name));
+  const matches = ranked.filter((item) => item.score > 1);
+  if (matches.length) return matches.slice(0, 4).map((item) => item.place);
+  const hinted = Array.from(hints).map((id) => PLACES.find((place) => place.id === id)).filter(Boolean);
+  if (hinted.length) {
+    return hinted.sort((a, b) => getCrowd(a, getVisitFlags()) - getCrowd(b, getVisitFlags())).slice(0, 4);
+  }
+  return ranked.sort((a, b) => a.crowd - b.crowd).slice(0, 4).map((item) => item.place);
+}
 
 function getVisitFlags() {
   const day = new Date().getDay();
