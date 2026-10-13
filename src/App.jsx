@@ -176,7 +176,7 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
     </header>
     <motion.section ref={heroRef} className="welcome-hero relative mx-auto mt-4 max-w-6xl overflow-hidden rounded-[1.75rem] sm:mt-6 sm:rounded-[2rem]" style={{ "--destination-accent": destination.themeColors.accent }}>
       <motion.div className="welcome-hero-art" style={{ y: reduceMotion ? 0 : heroY }} animate={reduceMotion ? undefined : { scale: [1, 1.08, 1] }} transition={reduceMotion ? undefined : { duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }} aria-hidden="true">
-        <img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="eager" fetchPriority="high" decoding="async"/>
+        <img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="eager" fetchPriority="high" decoding="async" onError={(event) => { event.currentTarget.style.opacity = "0"; }}/>
       </motion.div>
       <div className="welcome-hero-overlay" aria-hidden="true"/><div className="welcome-hero-glow" aria-hidden="true"/>
       {!reduceMotion && <div className="welcome-fireflies" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} style={{ "--firefly-index": index }}/>)}</div>}
