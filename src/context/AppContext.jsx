@@ -334,14 +334,14 @@ export function AppProvider({ children }) {
     weather, weatherSource, weatherObservation: liveObservation, weatherLoading, weatherError,
     disruptions, simulateLandslide, clearDemoEvents,
     rescuePassContext, updateRescuePassAltitude,
-    manualRainOverride, toggleManualRainOverride,
+    manualRainOverride, toggleManualRainOverride, cachedDemoMode, setCachedDemoMode,
   }), [
     preferences, savePreferences, isOnboardingComplete, markOnboardingComplete,
     persona, selectPersona, clearPersona, updateHealthTags,
     selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weather, weatherSource,
     liveObservation, weatherLoading, weatherError, disruptions, simulateLandslide, clearDemoEvents,
     rescuePassContext, updateRescuePassAltitude,
-    manualRainOverride, toggleManualRainOverride,
+    manualRainOverride, toggleManualRainOverride, cachedDemoMode, setCachedDemoMode,
   ]);
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
