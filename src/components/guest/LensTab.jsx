@@ -84,11 +84,20 @@ function saveSample(id, language, mode, result) {
 }
 function formatPriceNote(note, destination) {
   if (!note) return null;
-  // Keep model wording, but normalize any standalone numeric amount only when it is clearly marked with the destination currency.
   const currency = destination?.currency?.code;
   if (!currency) return note;
-  try { new Intl.NumberFormat(destination.locale,{style:"currency",currency}).format(0); } catch { return note; }
-  return note;
+  try {
+    const formatter = new Intl.NumberFormat(destination.locale, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: ["IDR","JPY","KRW","VND","CLP"].includes(currency) ? 0 : 2
+    });
+    // priceNote is reserved for a clearly visible price; format its numeric amounts in the selected pack's locale/currency.
+    return note.replace(/(?<![\\w])\\d+(?:[.,]\\d{1,2})?(?![\\w])/g, (raw) => {
+      const amount = Number(raw.replace(",", "."));
+      return Number.isFinite(amount) ? formatter.format(amount) : raw;
+    });
+  } catch { return note; }
 }
 export default function LensTab({ onRequest }) {
   const { destination } = useDestination();
