@@ -199,6 +199,9 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
       <motion.div className="welcome-hero-art" style={{ y: reduceMotion || !heroActive ? 0 : heroY }} animate={reduceMotion || !heroActive ? { scale: 1 } : { scale: [1, 1.08, 1] }} transition={reduceMotion || !heroActive ? { duration: 0 } : { duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }} aria-hidden="true">
         <img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="eager" fetchPriority="high" decoding="async" onError={(event) => { event.currentTarget.style.opacity = "0"; }}/>
       </motion.div>
+            <AnimatePresence initial={false} mode="wait">
+        {destinationArt[destination.id] && <motion.img key={destination.id} src={destinationArt[destination.id].src} alt="" aria-hidden="true" width="540" height="360" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} className="welcome-destination-crossfade" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 0.22 }} exit={{ opacity: 0 }} transition={{ duration: reduceMotion ? 0 : 0.4 }}/>}
+      </AnimatePresence>
       <div className="welcome-hero-overlay" aria-hidden="true"/><div className="welcome-hero-glow" aria-hidden="true"/>
       {!reduceMotion && <div className="welcome-fireflies" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} style={{ "--firefly-index": index }}/>)}</div>}
       <div className="welcome-hero-inner relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-7 px-5 py-7 sm:px-8 sm:py-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-6 lg:px-10 lg:py-12 xl:px-12">
@@ -495,7 +498,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
       </div>)}
       {sending && <p role="status" className="text-xs text-muted">{t("sending", getDefaultLanguage())}</p>}
     </div>
-    <form onSubmit={submit} className="mt-3 flex gap-2"><input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={1200} placeholder={t("chatPlaceholder", getDefaultLanguage())} className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm" aria-label={t("chatPlaceholder", getDefaultLanguage())}/><button type="submit" disabled={!draft.trim() || sending} aria-label={t("send", getDefaultLanguage())} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: destination.themeColors.accent }}><Send size={15}/><span className="hidden sm:inline">{t("send", getDefaultLanguage())}</span></button></form>
+    <form onSubmit={submit} className="chat-composer mt-3 flex gap-2"><input type="text" inputMode="text" enterKeyHint="send" autoComplete="off" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={1200} placeholder={t("chatPlaceholder", getDefaultLanguage())} className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm" aria-label={t("chatPlaceholder", getDefaultLanguage())}/><button type="submit" disabled={!draft.trim() || sending} aria-label={t("send", getDefaultLanguage())} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: destination.themeColors.accent }}><Send size={15}/><span className="hidden sm:inline">{t("send", getDefaultLanguage())}</span></button></form>
     <DemoNote>Rank scores and reason chips come from deterministic rules. Stories, hosts and spending ranges are illustrative; only weather is live.</DemoNote>
   </section>;
 }
@@ -565,7 +568,7 @@ export default function AtithiAI() {
       <AnimatePresence mode="wait" initial={false}><motion.div key={activeTab} initial={disableMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={disableMotion ? undefined : { opacity: 0, y: -5 }} transition={{ duration: disableMotion ? 0 : 0.25 }}><Suspense fallback={<Skeleton label="Loading this section…" lines={3}/>}>
       {activeTab === "home" && <div className="space-y-5">
         <section className="app-home-hero pitch-hero relative overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-8" style={{ "--destination-accent": destination.themeColors.accent }}>
-          <div className="app-home-art" aria-hidden="true"><img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="lazy" decoding="async"/></div><div className="relative z-10">
+          <div className="app-home-art" aria-hidden="true"><img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }}/></div><div className="relative z-10">
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/75">{destination.city} · {destination.country}</p>
           <h1 className="deck-heading mt-3 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">{destination.greeting}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">A personalised travel companion for hidden places, local stories and experiences that make a destination feel personal.</p>

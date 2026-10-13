@@ -265,7 +265,6 @@ body::after {
 .segment-image-strip img { width: 100%; height: 100%; object-fit: cover; filter: saturate(.96); }
 .segment-image-strip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg,rgb(26 11 46 / .48),transparent 65%),linear-gradient(0deg,rgb(26 11 46 / .25),transparent 80%); pointer-events: none; }
 .btn-primary { color: #211039; }
-.btn-primary:hover { box-shadow: 0 12px 34px rgb(251 191 36 / .34); }
 .toast-surface { border-color: rgb(251 191 36 / .56); }
 .deck-heading::after { background: linear-gradient(90deg,#FB4F6E 0%,#FBBF24 100%); width: 4.25rem; }
 .bottom-nav-glass { border-color: rgb(255 255 255 / .12); background: rgb(var(--surface-rgb) / .86); backdrop-filter: blur(18px) saturate(145%); }
@@ -361,3 +360,11 @@ html.tab-hidden *, html.tab-hidden *::before, html.tab-hidden *::after { animati
 }
 
 .reduced-effects .hero-shimmer::after { display: none !important; }
+
+.welcome-destination-crossfade { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center; mix-blend-mode: screen; filter: saturate(.72) contrast(.92); pointer-events: none; }
+.app-home-art img { background: linear-gradient(135deg, #3B1D7A, #1A0B2E); }
+@media (pointer: coarse) {
+  button, [role="button"], input[type="checkbox"], input[type="radio"] { min-height: 44px; }
+  button[aria-label], button[role="switch"] { min-width: 44px; }
+}
+@media (max-width: 767px) { .chat-composer { padding-bottom: env(safe-area-inset-bottom); } }

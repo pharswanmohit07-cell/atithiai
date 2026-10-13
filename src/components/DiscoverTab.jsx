@@ -268,7 +268,7 @@ export default function DiscoverTab({
     </div>
 
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-      <div className="flex flex-wrap gap-1 rounded-xl bg-bg p-1">{SEGMENTS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setSegment(id)} aria-pressed={segment === id} className={"inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-extrabold sm:text-sm " + (segment === id ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-surface-2")}>{Icon && <Icon size={15}/>}<span>{label}</span></button>)}}</div>
+      <div className="flex flex-wrap gap-1 rounded-xl bg-bg p-1">{SEGMENTS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => setSegment(id)} aria-pressed={segment === id} className={"inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-extrabold sm:text-sm " + (segment === id ? "bg-brand text-white shadow-sm" : "text-muted hover:bg-surface-2")}>{Icon && <Icon size={15}/>}<span>{label}</span></button>)}</div>
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => setBeatCrowds((current) => !current)} role="switch" aria-checked={beatCrowds} className={"inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold " + (beatCrowds ? "border-transparent bg-brand text-white" : "border-border bg-bg text-text")}><span className={"h-2 w-2 rounded-full " + (beatCrowds ? "bg-emerald-300" : "bg-muted")}/>{beatCrowds ? "Beat the crowds: on" : "Beat the crowds"}</button>
         <button type="button" onClick={() => setMapVisible((visible) => !visible)} aria-pressed={mapVisible} className={"inline-flex min-h-10 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold " + (mapVisible ? "border-transparent bg-brand text-white" : "border-border bg-bg text-text")}><MapIcon size={14}/>{mapVisible ? "Hide map" : "Map view"}</button>
@@ -312,7 +312,7 @@ export default function DiscoverTab({
       </section>
     </section>}
 
-    {segment === "experiences" && <section className="space-y-4"><div className="segment-image-strip"><img src="/images/local-experiences.webp" alt="Traveler learning pottery from a local artisan in a warm workshop" width="540" height="304" loading="lazy" decoding="async"/></div>
+    {segment === "experiences" && <section className="space-y-4"><div className="segment-image-strip"><img src="/images/local-experiences.webp" alt="Traveler learning pottery from a local artisan in a warm workshop" width="540" height="304" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }}/></div>
       <div className="rounded-2xl border border-border bg-surface p-4"><h2 className="font-serif text-2xl">Local experiences</h2><p className="mt-1 text-xs text-muted">Community-led activity ideas ranked against your interests, pace and travel party. Hosts and prices are demo content.</p><p className="mt-1 text-[10px] text-muted">“Request via host (demo)” only saves a note here. It does not contact a host or create a booking.</p></div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{rankedExperiences.map((experience) => {
         const saved = savedExperiences.includes(experience.id);
@@ -334,7 +334,7 @@ export default function DiscoverTab({
       {!rankedExperiences.length && <p className="rounded-2xl border border-dashed border-border bg-surface p-6 text-sm text-muted">No community-led activity matches this profile in the current pack.</p>}
     </section>}
 
-    {segment === "food" && <section className="space-y-4"><div className="segment-image-strip"><img src="/images/taste-local.webp" alt="Lantern-lit local street-food stall serving colorful regional dishes" width="540" height="301" loading="lazy" decoding="async"/></div>
+    {segment === "food" && <section className="space-y-4"><div className="segment-image-strip"><img src="/images/taste-local.webp" alt="Lantern-lit local street-food stall serving colorful regional dishes" width="540" height="301" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }}/></div>
       <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Taste Local</h2><p className="mt-1 text-xs text-muted">Recommendations consider your food preference, spice tolerance, estimated spend and destination time.</p>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <label className="text-xs font-bold text-muted">Diet filter<select value={tasteDiet} onChange={(event) => setTasteDiet(event.target.value)} className="mt-1 min-h-10 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"><option value="none">No preference</option><option value="veg">Vegetarian</option><option value="vegan">Vegan</option><option value="non-veg">Non-vegetarian</option><option value="halal">Halal-tagged only</option><option value="gluten-aware">Gluten-aware</option></select></label>
