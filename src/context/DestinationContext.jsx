@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { DEFAULT_DESTINATION_ID, DESTINATIONS, getDestinationById } from "../data/destinations/index.js";
+import { demoFetch } from "../lib/demoCache.js";
 
 const DestinationContext = createContext(null);
 const DESTINATION_KEY = "atithi-destination-id";
@@ -65,7 +66,7 @@ export function DestinationProvider({ children }) {
       timezone: destination.timezone
     });
 
-    fetch("https://api.open-meteo.com/v1/forecast?" + params.toString(), { signal: controller.signal })
+    demoFetch("https://api.open-meteo.com/v1/forecast?" + params.toString(), { signal: controller.signal })
       .then((response) => {
         if (!response.ok) throw new Error("Weather is unavailable.");
         return response.json();
@@ -85,7 +86,7 @@ export function DestinationProvider({ children }) {
           condition: condition.label,
           kind: condition.kind,
           observedAt: String(current.time || ""),
-          source: "live"
+          source: response.headers.get("X-Atithi-Cache") === "demo" ? "cached-demo" : "live"
         });
       })
       .catch((error) => {
