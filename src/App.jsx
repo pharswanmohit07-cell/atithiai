@@ -7,19 +7,19 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
-import LensTab from "./components/guest/LensTab.jsx";
 import DemoModeBar from "./components/DemoModeBar.jsx";
 import { demoFetch, isCachedDemoMode } from "./lib/demoCache.js";
-import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
-import DiscoverTab from "./components/DiscoverTab.jsx";
-import PlanTab from "./components/PlanTab.jsx";
 import { useDestination } from "./context/DestinationContext.jsx";
 import { useTravelContext } from "./context/TravelContext.jsx";
 import { useProfile } from "./context/ProfileContext.jsx";
 import { rankPlaces, rankDishes, rankExperiences } from "./lib/rank.js";
 import { getDefaultLanguage, detectTextLanguage, languageBase, LANGUAGE_OPTIONS, targetLanguageTag, t } from "./i18n.js";
 
-const DestinationMap = lazy(() => import("./components/DestinationMap.jsx"));
+const LensTab = lazy(() => import("./components/guest/LensTab.jsx"));
+const ProfileTab = lazy(() => import("./components/ProfileTab.jsx"));
+const ProfileOnboarding = lazy(() => import("./components/ProfileTab.jsx").then((module) => ({ default: module.ProfileOnboarding })));
+const DiscoverTab = lazy(() => import("./components/DiscoverTab.jsx"));
+const PlanTab = lazy(() => import("./components/PlanTab.jsx"));
 const TABS = [
   { id: "home", label: "Home", Icon: Sun },
   { id: "discover", label: "Discover", Icon: Compass },
@@ -491,11 +491,11 @@ export default function AtithiAI() {
   };
 
   if (!started) return <><DemoModeBar/><WelcomeScreen destination={destination} destinations={destinations} selectDestination={selectDestination} onStart={goStart}/></>;
-  if (!profile.onboardingComplete) return <><DemoModeBar/><ProfileOnboarding destination={destination} onFinish={() => setActiveTab("home")}/></>;
+  if (!profile.onboardingComplete) return <><DemoModeBar/><Suspense fallback={<div role="status" className="mx-auto max-w-6xl p-6 text-sm text-muted">Loading your preferences…</div>}><ProfileOnboarding destination={destination} onFinish={() => setActiveTab("home")}/></Suspense></>;
 
   return <main className="min-h-screen bg-bg pb-[calc(5.75rem+env(safe-area-inset-bottom))] text-text">
     <DemoModeBar/>
-    <header className="sticky top-0 z-40 border-b border-border bg-surface/85 px-4 py-3 shadow-sm backdrop-blur-xl sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 shadow-sm sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
         <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Go beyond the usual</span></span></button>
         <div className="flex items-center gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-32 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-bold sm:max-w-48">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact/><a href={"tel:" + emergencyNumber} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-border px-2 py-2 text-xs font-extrabold text-text" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
@@ -503,6 +503,7 @@ export default function AtithiAI() {
     </header>
 
     <div className="mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-7">
+      <Suspense fallback={<section role="status" className="rounded-2xl border border-border bg-surface p-6 text-sm text-muted">Loading this section…</section>}>
       {activeTab === "home" && <div className="space-y-5">
         <section className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-8" style={{ "--destination-accent": destination.themeColors.accent }}>
           <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/75">{destination.city} · {destination.country}</p>
@@ -536,6 +537,7 @@ export default function AtithiAI() {
       {activeTab === "lens" && <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><LensTab onRequest={(request)=>addRequest({title:request.title,category:request.category,detail:request.detail})}/></section>}
       {activeTab === "chat" && <ChatView key={destination.id} destination={destination} weather={weather} profile={rankProfile} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest} addItineraryItem={addItineraryItem} onShowOnMap={showOnMap} initialPrompt={chatPrefill} onPrefillConsumed={() => setChatPrefill("")}/>}
       {activeTab === "profile" && <ProfileTab destination={destination} destinations={destinations} selectDestination={selectDestination} requests={requests} formatDate={formatDate}/> }
+      </Suspense>
     </div>
 
     <nav aria-label="Main navigation" className="bottom-nav-glass fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-50 rounded-2xl px-1.5 pt-1.5 pb-1.5 sm:inset-x-1/2 sm:w-[min(46rem,calc(100%-2rem))] sm:-translate-x-1/2">

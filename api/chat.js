@@ -2,7 +2,7 @@ import { getDestinationById } from "../src/data/destinations/index.js";
 import { detectTextLanguage, languageBase, targetLanguageTag } from "../src/i18n.js";
 import { isBodyTooLarge, isPlainObject } from "../src/lib/apiHardening.js";
 
-const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
+const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-3.8-flash";
 const ITEM_TYPES = new Set(["place", "experience", "dish"]);
 function send(res, status, payload) {
   res.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -140,10 +140,10 @@ export default async function handler(req, res) {
       })
     ].join("\n");
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(process.env.GEMINI_API_KEY),
+      "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],

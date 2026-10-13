@@ -44,7 +44,7 @@ cp .env.example .env
 npm run dev
 \`\`\`
 
-Set \`GEMINI_API_KEY\` in the server environment to enable Gemini. \`GEMINI_MODEL\` is optional and defaults to \`gemini-2.5-flash\`. Keep both values server-side. Never use a \`VITE_\` variable for a secret.
+Set \`GEMINI_API_KEY\` in the server environment to enable Gemini. \`GEMINI_MODEL\` is optional and defaults to \`gemini-3.8-flash\`. The server sends the key in the \`x-goog-api-key\` header. Keep both values server-side; never use a \`VITE_\` variable for a secret.
 
 Validate source syntax and imports, then create a production bundle:
 
@@ -121,7 +121,7 @@ Travel plans, chat history and saved notes are stored in the current browser. Sw
 ## Environment and secrets
 
 - \`GEMINI_API_KEY\`: server-side Gemini key
-- \`GEMINI_MODEL\`: optional model identifier, default \`gemini-2.5-flash\`
+- \`GEMINI_MODEL\`: optional model identifier, default \`gemini-3.8-flash\`
 
 \`.env\` is ignored by Git. Never commit populated environment files, expose API keys through the browser, or include secrets in client-side bundles.
 

@@ -6,7 +6,7 @@ const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 const VALID_MODES = new Set(["menu", "sign", "transport", "general"]);
 const VALID_LANGUAGES = new Set(["en", "hi", "es", "fr", "de", "pt", "id", "ja", "zh", "ar"]);
 const VALID_VERDICTS = ["Looks fair", "Possibly overpriced", "Can't tell"];
-const MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
+const MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-3.8-flash";
 
 const LANG = {
   en: { what: "I couldn't read this image reliably.", explanation: "The text may be blurred, cropped, or context-dependent. Try a clearer photo and confirm important details with local staff.", tip: "Ask local staff to confirm anything important before acting." },
@@ -132,9 +132,9 @@ export default async function handler(req, res) {
       "Output JSON only, no markdown, with keys: whatIsThis:string, detectedLanguage:string, translation:string|null, explanation:string, tips:string[], confidence:'low'|'medium'|'high'. Include dishes:[{name,explanation,dietGuess,spiceGuess}] only for menu mode. Include transport:{summary,priceNote:string|null,verdict:'Looks fair'|'Possibly overpriced'|'Can't tell'} only for transport mode.",
       JSON.stringify({ targetLanguage: rawLanguage || language, mode, city, country, currency, profileDiet })
     ].join("\n");
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       signal: controller.signal,
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: imageBase64 } }] }],

@@ -2,7 +2,7 @@ import { isBodyTooLarge, isPlainObject } from "../src/lib/apiHardening.js";
 
 const MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "")
   ? process.env.GEMINI_MODEL
-  : "gemini-2.5-flash";
+  : "gemini-3.8-flash";
 const LANGUAGES = new Set(["en", "hi", "es", "fr", "de", "ja", "ar", "zh", "pt", "id"]);
 
 function send(res, status, payload) {
@@ -94,10 +94,10 @@ export default async function handler(req, res) {
       'Return JSON only: {"advisory":"..."}'
     ].join("\n");
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent?key=" + encodeURIComponent(key),
+      "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
