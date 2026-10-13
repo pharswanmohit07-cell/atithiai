@@ -28,7 +28,7 @@ async function handleAltitudeRephrase(req, res) {
       JSON.stringify({ advisory, persona }),
     ].join("\\n");
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + encodeURIComponent(apiKey),
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -65,6 +65,9 @@ async function handleAltitudeRephrase(req, res) {
 
 const PLACE_BY_ID = new Map(PLACES.map((place) => [place.id, place]));
 const VALID_DISRUPTION_TYPES = new Set(["rain", "landslide", "roadblock"]);
+const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "")
+  ? process.env.GEMINI_MODEL
+  : "gemini-2.5-flash";
 
 function safeContext(input = {}) {
   const guestInput = input.guest && typeof input.guest === "object" ? input.guest : {};
@@ -245,10 +248,17 @@ function disruptionNote(context) {
 }
 
 function shouldShowPlaces(message) {
-  return /where|place|destination|visit|explore|recommend|suggest|crowd|quiet|offbeat|trip|travel|route|what can i see|what to do|map|nearby/i.test(message);
+  const normalized = String(message || "").toLowerCase();
+  const negatesSuggestions = /\b(?:don\x27t|do not|dont|never|no need to|stop)\b.{0,35}\b(?:show|suggest|recommend|display|find)\b.{0,25}\b(?:places|destinations|map|options)\b/i.test(normalized)
+    || /\b(?:don\x27t|do not|dont)\s+(?:show|suggest|recommend)\b/i.test(normalized);
+  if (negatesSuggestions) return false;
+  return /where|place|destination|visit|explore|recommend|suggest|crowd|quiet|offbeat|trip|travel|route|what can i see|what to do|map|nearby/i.test(normalized);
 }
 
 function safePlaceAction(rawAction, message, context) {
+  if (rawAction && !["none", "show_places"].includes(rawAction.type)) {
+    return { type: "none", placeIds: [] };
+  }
   const requested = rawAction?.type === "show_places" || shouldShowPlaces(message);
   if (!requested) return { type: "none", placeIds: [] };
   const allowedIds = new Set(context.lowCrowdPlaces.map((place) => place.id));
