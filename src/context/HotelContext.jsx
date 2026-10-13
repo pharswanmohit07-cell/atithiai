@@ -3,7 +3,18 @@ import { useDestination } from "./DestinationContext.jsx";
 
 const HotelContext = createContext(null);
 const PROFILE_KEY = "atithi-guest-preferences";
-const EMPTY_PREFERENCES = { language: "en", dietaryPreference: "No preference", travelParty: "Family" };
+const EMPTY_PREFERENCES = { language: "English", dietaryPreference: "No preference", travelParty: "Family" };
+const DIETARY_OPTIONS = ["No preference", "Vegetarian", "Vegan", "Pescatarian", "Halal", "Gluten-free", "Dairy-free", "Other — ask me"];
+const PARTY_OPTIONS = ["Family", "Solo", "Couple", "Friends", "Business"];
+
+function readPreferences() {
+  const saved = safeRead(PROFILE_KEY, {});
+  return {
+    language: typeof saved.language === "string" && saved.language.trim() ? (saved.language === "en" ? "English" : saved.language.trim().slice(0, 50)) : "English",
+    dietaryPreference: DIETARY_OPTIONS.includes(saved.dietaryPreference) ? saved.dietaryPreference : "No preference",
+    travelParty: PARTY_OPTIONS.includes(saved.travelParty) ? saved.travelParty : "Family",
+  };
+}
 
 function safeRead(key, fallback) {
   try {
@@ -31,7 +42,7 @@ export function HotelProvider({ children }) {
   const previousDestinationId = useRef(destination.id);
   const [itinerary, setItinerary] = useState(() => initialItinerary(destination));
   const [requests, setRequests] = useState([]);
-  const [preferences, setPreferences] = useState(() => ({ ...EMPTY_PREFERENCES, ...safeRead(PROFILE_KEY, {}) }));
+  const [preferences, setPreferences] = useState(readPreferences);
 
   useEffect(() => {
     if (previousDestinationId.current === destination.id) return;
