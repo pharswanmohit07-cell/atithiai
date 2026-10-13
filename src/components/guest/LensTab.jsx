@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AlertCircle, Camera, Check, Languages, LoaderCircle, MessageCircle, RotateCcw, Volume2, VolumeX } from "lucide-react";
-import { getSeedLensResult } from "../../data/lensCache.js";\nimport IconBadge from "../ui/IconBadge.jsx";
+import { getSeedLensResult } from "../../data/lensCache.js";
+import IconBadge from "../ui/IconBadge.jsx";
 import { useDestination } from "../../context/DestinationContext.jsx";
 import { useProfile } from "../../context/ProfileContext.jsx";
 
