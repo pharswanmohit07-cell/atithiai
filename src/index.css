@@ -303,7 +303,7 @@ button, [role="button"], a { touch-action: manipulation; }
   background: radial-gradient(ellipse at 50% 5%, rgb(251 191 36 / .18), transparent 52%),
     linear-gradient(135deg, #2E1065, #1A0B2E 75%);
 }
-.image-fallback-surface {
+.image-fallback-surface, .image-fallback-panel, .lens-sample-card {
   background: radial-gradient(ellipse at 30% 10%, rgb(251 191 36 / .2), transparent 55%),
     linear-gradient(135deg, #3B1D7A, #1A0B2E);
 }
@@ -368,3 +368,9 @@ html.tab-hidden *, html.tab-hidden *::before, html.tab-hidden *::after { animati
   button[aria-label], button[role="switch"] { min-width: 44px; }
 }
 @media (max-width: 767px) { .chat-composer { padding-bottom: env(safe-area-inset-bottom); } }
+
+.image-card-media { transition: transform 500ms ease, filter 500ms ease; }
+@media (hover: hover) {
+  .image-card:hover .image-card-media { transform: scale(1.06); }
+  .image-card:not(.image-card-selected):hover .image-card-media { filter: brightness(1); }
+}
