@@ -1,39 +1,46 @@
 import React, { createContext, useCallback, useContext, useState } from "react";
-import { MOCK_GUESTS, MOCK_STAFF } from "../data/guests.js";
 
 const AuthContext = createContext(null);
-const STORAGE_KEY = "atithi-auth";
+const STORAGE_KEY = "atithi-demo-profile";
+const ALLOWED_ROLES = ["guest", "manager"];
+const ALLOWED_PERSONAS = ["Guest (Family)", "Guest (Solo)", "Hotel Manager"];
 
-function initialUser() {
+function readUser() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const user = JSON.parse(saved);
-      if (user && ["guest", "staff"].includes(user.role) && user.name) return user;
-    }
-  } catch { /* Invalid demo-auth data is ignored. */ }
-  if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1") {
-    return window.location.pathname === "/admin" || window.location.pathname === "/staff-login"
-      ? { role: "staff", name: MOCK_STAFF[0].name }
-      : { role: "guest", name: MOCK_GUESTS[0].name, room: MOCK_GUESTS[0].room, stayId: MOCK_GUESTS[0].stayId };
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !ALLOWED_ROLES.includes(parsed.role) || !ALLOWED_PERSONAS.includes(parsed.persona)) return null;
+    return {
+      role: parsed.role,
+      persona: parsed.persona,
+      name: typeof parsed.name === "string" ? parsed.name.slice(0, 80) : "Demo guest",
+    };
+  } catch {
+    return null;
   }
-  return null;
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(initialUser);
-  const login = useCallback((nextUser) => {
-    const safeUser = nextUser?.role === "staff"
-      ? { role: "staff", name: String(nextUser.name || "Atithi staff") }
-      : { role: "guest", name: String(nextUser.name || "Guest"), room: String(nextUser.room || ""), stayId: String(nextUser.stayId || "") };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser));
+  const [user, setUser] = useState(readUser);
+
+  const login = useCallback((profile) => {
+    const manager = profile?.role === "manager" || profile?.persona === "Hotel Manager";
+    const safeUser = {
+      role: manager ? "manager" : "guest",
+      persona: manager ? "Hotel Manager" : profile?.persona === "Guest (Solo)" ? "Guest (Solo)" : "Guest (Family)",
+      name: String(profile?.name || (manager ? "Hotel Manager (demo)" : "Demo guest")).slice(0, 80),
+    };
     setUser(safeUser);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(safeUser)); } catch { /* The selected demo role remains available in memory. */ }
     return safeUser;
   }, []);
+
   const logout = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
     setUser(null);
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* In-memory logout still proceeds. */ }
   }, []);
+
   return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
 }
 
