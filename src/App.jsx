@@ -874,6 +874,7 @@ function HomeTab({
             persona={persona}
             onReroute={onRouteReroute}
             onKeepWaiting={onKeepWaiting}
+            detourVillage={detourVillage}
           />
         )}
         <ActionsTakenByAtithi actions={routeActions} />
@@ -1947,7 +1948,7 @@ function AdminDashboard({
         </section>
         <div className="mb-8 space-y-6">
           <RouteMap selectedWaypointId={selectedWaypointId} setSelectedWaypointId={setSelectedWaypointId} disruptions={disruptions} detourVillage={detourVillage} height={420} />
-          {routeGuardDisruption && <RouteGuardCard disruption={routeGuardDisruption} currentWaypoint={selectedWaypoint} nearestSafe={nearestSafeVillages} persona={persona} onReroute={onRouteReroute} onKeepWaiting={onKeepWaiting} />}
+          {routeGuardDisruption && <RouteGuardCard disruption={routeGuardDisruption} currentWaypoint={selectedWaypoint} nearestSafe={nearestSafeVillages} persona={persona} onReroute={onRouteReroute} onKeepWaiting={onKeepWaiting} detourVillage={detourVillage} />}
           <ActionsTakenByAtithi actions={routeActions} />
         </div>
         <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">

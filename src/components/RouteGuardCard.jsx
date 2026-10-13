@@ -49,7 +49,7 @@ export default function RouteGuardCard({
   persona,
   onReroute,
   onKeepWaiting,
-  detourVillage = null;
+  detourVillage = null,
 }) {
   const fallbackAdvisory = useMemo(
     () => getFallbackAdvisory(disruption, currentWaypoint, nearestSafe),
