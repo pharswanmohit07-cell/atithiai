@@ -6,21 +6,21 @@ import { getAdvisory, getSleepingAscentPerDay } from "../lib/altitude.js";
 const RISK_STYLES = {
   low: {
     label: "Low caution",
-    color: "#15803d",
+    color: "rgb(var(--teal-rgb))",
     text: "text-emerald-800 dark:text-emerald-200",
     pill: "bg-emerald-100 dark:bg-emerald-950/50",
     bar: "bg-emerald-600",
   },
   moderate: {
     label: "Moderate caution",
-    color: "#b45309",
+    color: "rgb(var(--saffron-rgb))",
     text: "text-amber-800 dark:text-amber-200",
     pill: "bg-amber-100 dark:bg-amber-950/50",
     bar: "bg-amber-500",
   },
   high: {
     label: "High caution",
-    color: "#be123c",
+    color: "rgb(var(--coral-rgb))",
     text: "text-rose-800 dark:text-rose-200",
     pill: "bg-rose-100 dark:bg-rose-950/50",
     bar: "bg-rose-600",
@@ -65,7 +65,7 @@ function ElevationProfile({ currentIndex, currentElevation, riskColor }) {
         {chart.points.map((point) => (
           <g key={point.id}>
             <line x1={point.x} x2={point.x} y1={point.y + 8} y2="145" stroke="currentColor" strokeOpacity={point.index === currentIndex ? ".3" : ".12"} strokeDasharray="2 4"/>
-            <circle cx={point.x} cy={point.y} r={point.index === currentIndex ? 10 : 4.5} fill={point.index === currentIndex ? riskColor : "#64748b"} stroke="var(--surface)" strokeWidth={point.index === currentIndex ? 3 : 1.5}/>
+            <circle cx={point.x} cy={point.y} r={point.index === currentIndex ? 10 : 4.5} fill={point.index === currentIndex ? riskColor : "var(--text-muted)"} stroke="var(--surface)" strokeWidth={point.index === currentIndex ? 3 : 1.5}/>
             {point.index === currentIndex && <text x={point.x} y={point.y - 15} textAnchor="middle" fontSize="10" fontWeight="800" fill={riskColor}>{currentElevation} m</text>}
             <text x={point.x} y="160" textAnchor="middle" fontSize="9" fill="currentColor" fontWeight={point.index === currentIndex ? "800" : "500"} opacity={point.index === currentIndex ? "1" : ".72"}>{point.name.length > 13 ? point.name.split(" ")[0] : point.name}</text>
             <text x={point.x} y="174" textAnchor="middle" fontSize="8" fill="currentColor" opacity=".65">{point.elevationM.toLocaleString("en-IN")} m</text>
