@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
-  Activity, BedDouble, Bot, CalendarClock, Check, ChefHat, ChevronRight,
+  Activity, BedDouble, Bot, CalendarClock, Check, ChefHat, ChevronRight, Compass,
   CircleDollarSign, Clock3, MessageCircle, RotateCcw, Settings2, ShieldAlert,
   Sparkles, Users, X,
 } from "lucide-react";
@@ -9,7 +9,7 @@ import { useDestination } from "../context/DestinationContext.jsx";
 import { useHotelContext } from "../context/HotelContext.jsx";
 import ThemeToggle from "./ui/ThemeToggle.jsx";
 
-const ACTIVE = new Set(["Pending human review", "Awaiting hotel approval", "Waiting for team", "Counter-offer sent"]);
+const ACTIVE = new Set(["Pending human review", "Awaiting hotel approval", "Awaiting partner confirmation (demo)", "Awaiting kitchen confirmation (demo)", "Waiting for team", "Counter-offer sent"]);
 const APPROVED_FLEX = new Set(["Approved by hotel", "Auto-approved (demo)"]);
 const APPROVED_EXPERIENCE = new Set(["Approved by staff", "Approved by hotel", "Reviewed by staff", "Auto-approved (demo)"]);
 const EXCLUDED_URGENT = new Set(["Approved by staff", "Declined by staff", "Approved by hotel", "Declined by hotel", "Staff takeover active", "Reviewed by staff"]);
@@ -41,6 +41,7 @@ function isExperience(request) {
 function labelRequest(request) {
   if (request.type === "flex_stay") return request.kind === "early" ? "Early check-in" : "Late check-out";
   if (request.type === "human_handoff") return "Human handoff";
+  if (request.type === "food_order") return "Kitchen request";
   if (isExperience(request)) return "Experience booking inquiry";
   if (request.priority === "urgent") return "Urgent request";
   return request.category || "Guest request";
@@ -167,6 +168,7 @@ export default function AdminDashboard({ onSwitch }) {
   };
   const changeHostPick=(key,value)=>updateFlexSettings({hostPicks:{[key]:value}});
   const changeHostNote=(key,value)=>updateFlexSettings({hostPickNotes:{[key]:value}});
+  const updateExperiencePick=(experience,patch)=>updateFlexSettings({hostExperiencePicks:{[experience.id]:{...(flexSettings.hostExperiencePicks?.[experience.id]||{enabled:true,note:experience.hostNote||""}),...patch}}});
 
   return <main className="min-h-screen bg-bg text-text">
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 backdrop-blur sm:px-6">
@@ -208,11 +210,19 @@ export default function AdminDashboard({ onSwitch }) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-muted">Earliest early check-in<input type="time" value={flexSettings.cutoffs.earlyEarliest} onChange={(e)=>updateFlexSettings({cutoffs:{...flexSettings.cutoffs,earlyEarliest:e.target.value}})} className="mt-1 min-h-10 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"/></label><label className="text-xs font-semibold text-muted">Latest late check-out<input type="time" value={flexSettings.cutoffs.lateLatest} onChange={(e)=>updateFlexSettings({cutoffs:{...flexSettings.cutoffs,lateLatest:e.target.value}})} className="mt-1 min-h-10 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"/></label></div>
           <div className="rounded-xl border border-border bg-bg p-3"><Toggle checked={flexSettings.autoApproveEnabled} onChange={(value)=>updateFlexSettings({autoApproveEnabled:value})} label="Auto-approve under X" note="OFF by default. Demo-only; this does not operate live inventory or payments."/><label className="mt-3 block text-xs font-semibold text-muted">Threshold ({destination.currency.code})<input type="number" min="0" value={flexSettings.autoApproveUnder} onChange={(e)=>updateFlexSettings({autoApproveUnder:Math.max(0,Number(e.target.value)||0)})} className="mt-1 min-h-10 w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text sm:max-w-xs"/></label></div>
           <div><h3 className="flex items-center gap-2 text-sm font-bold"><ChefHat size={17}/>Chef's special</h3><p className="mt-1 text-xs text-muted">Saved text for later guest food-discovery features; it does not confirm live availability.</p><textarea value={flexSettings.chefSpecial} onChange={(e)=>updateFlexSettings({chefSpecial:e.target.value})} maxLength={500} rows={3} className="mt-2 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"/></div>
-          <div><h3 className="text-sm font-bold">Host picks</h3><p className="mt-1 text-xs text-muted">These switches and notes are persisted for future guest recommendations.</p><div className="mt-3 space-y-3">
+          <div><h3 className="text-sm font-bold">Host picks</h3><p className="mt-1 text-xs text-muted">These switches and notes are persisted for guest recommendations.</p><div className="mt-3 space-y-3">
             <div><Toggle checked={flexSettings.hostPicks.localExperiences} onChange={(value)=>changeHostPick("localExperiences",value)} label="Recommend local experiences" note="Destination-pack demo listings only."/><label className="mt-2 block text-xs font-semibold text-muted">Experience note<textarea value={flexSettings.hostPickNotes.localExperiences} onChange={(e)=>changeHostNote("localExperiences",e.target.value)} maxLength={300} rows={2} className="mt-1 w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm font-normal text-text"/></label></div>
             <div><Toggle checked={flexSettings.hostPicks.localFood} onChange={(value)=>changeHostPick("localFood",value)} label="Recommend local food" note="Use destination-pack dishes and confirm ingredients/allergens."/><label className="mt-2 block text-xs font-semibold text-muted">Food note<textarea value={flexSettings.hostPickNotes.localFood} onChange={(e)=>changeHostNote("localFood",e.target.value)} maxLength={300} rows={2} className="mt-1 w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm font-normal text-text"/></label></div>
             <div><Toggle checked={flexSettings.hostPicks.quieterPlaces} onChange={(value)=>changeHostPick("quieterPlaces",value)} label="Prioritize quieter places" note="Use estimated quieter-place tags from the destination pack."/></div>
             <label className="block text-xs font-semibold text-muted">Quieter-place note<textarea value={flexSettings.hostPickNotes.quieterPlaces} onChange={(e)=>changeHostNote("quieterPlaces",e.target.value)} maxLength={300} rows={2} className="mt-1 w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm font-normal text-text"/></label>
+          </div>
+          <div className="rounded-xl border border-border bg-bg p-3">
+            <div className="flex items-start gap-2"><Compass size={17} className="mt-0.5 text-brand dark:text-saffron"/><div><h3 className="text-sm font-bold">Edit individual Host's Picks</h3><p className="mt-1 text-xs leading-relaxed text-muted">Toggle destination-pack listings and personalize the note guests see. These are demo listings, not verified partner inventory.</p></div></div>
+            <div className="mt-3 space-y-3">{destination.experiences.map((experience)=><div key={experience.id} className="rounded-xl border border-border bg-surface p-3">
+              <Toggle checked={flexSettings.hostExperiencePicks?.[experience.id]?.enabled !== false} onChange={(value)=>updateExperiencePick(experience,{enabled:value})} label={experience.name} note={experience.partner+" · "+(experience.category||"Local experience")}/>
+              <label className="mt-2 block text-xs font-semibold text-muted">Personal host note<textarea value={flexSettings.hostExperiencePicks?.[experience.id]?.note ?? experience.hostNote ?? ""} onChange={(e)=>updateExperiencePick(experience,{note:e.target.value})} maxLength={300} rows={2} className="mt-1 w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm font-normal text-text"/></label>
+            </div>)}</div>
+          </div>
           </div></div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"><p className="max-w-2xl text-xs leading-relaxed text-muted">Reset clears demo requests, shared conversation, activity history and saved settings for all destination packs in this browser.</p><button type="button" onClick={resetDemoData} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-rose-300 px-4 py-3 text-sm font-bold text-rose-800 dark:border-rose-900 dark:text-rose-200"><RotateCcw size={15}/>Reset demo data</button></div>
         </div>}
