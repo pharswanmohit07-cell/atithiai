@@ -241,7 +241,7 @@ export default function AtithiAI() {
     weather, weatherSource, weatherObservation, weatherLoading, weatherError,
     manualRainOverride, toggleManualRainOverride,
     disruptions, simulateLandslide, clearDemoEvents,
-    rescuePassContext, updateRescuePassAltitude,
+    updateRescuePassAltitude,
   } = useAppContext();
   const location = useLocation();
   const navigate = useNavigate();
@@ -554,7 +554,6 @@ export default function AtithiAI() {
           onRouteReroute={handleRouteReroute}
           onKeepWaiting={handleKeepWaiting}
           onAltitudeAdvisoryChange={updateRescuePassAltitude}
-          rescuePassContext={rescuePassContext}
           lowCrowdPlaces={lowCrowdContext}
           actionsLog={actionsLog}
           crowdSelectionIds={crowdSelectionIds}
@@ -782,7 +781,7 @@ function GuestApp(props) {
 function HomeTab({
   guest, persona, preferences, weather, weatherSource, selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weatherObservation, weatherLoading, weatherError,
   disruptions = [], actionsLog = [], routeGuardDisruption, nearestSafeVillages = [], routeSegment = [], detourVillage, routeActions = [], onRouteReroute, onKeepWaiting,
-  onAltitudeAdvisoryChange, rescuePassContext,
+  onAltitudeAdvisoryChange,
   guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
   itinerary, showAIIntervention, isResolving, acceptAlternative, keepOriginal, addRequest, setActiveTab,
 }) {

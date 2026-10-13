@@ -43,7 +43,11 @@ export function getAdvisory({ elevation, ascentPerDay = 0, persona = null } = {}
   if (personaNeedsExtraCaution(persona)) {
     const originalLevel = level;
     level = RISK_ORDER[Math.min(RISK_ORDER.length - 1, RISK_ORDER.indexOf(level) + 1)];
-    reasons.push(`Pilgrim profile (${persona?.age ?? 62} years, BP demo tag) raises displayed caution from ${originalLevel} to ${level}; this is a conservative interface modifier, not an individual medical assessment.`);
+    if (level !== originalLevel) {
+      reasons.push(`Pilgrim profile (${persona?.age ?? 62} years, BP demo tag) raises displayed caution from ${originalLevel} to ${level}; this is a conservative interface modifier, not an individual medical assessment.`);
+    } else {
+      reasons.push(`Pilgrim profile (${persona?.age ?? 62} years, BP demo tag) adds extra caution; the displayed level is already at the high maximum. This is not an individual medical assessment.`);
+    }
     actions.push("Use a gentler pace, take breaks, and seek personal medical advice before continuing to higher elevations.");
   }
 

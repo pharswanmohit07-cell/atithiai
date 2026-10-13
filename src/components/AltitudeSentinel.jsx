@@ -127,14 +127,11 @@ export default function AltitudeSentinel({
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
       body: JSON.stringify({
-        message: baseText,
-        context: {
-          advisory: baseText,
-          persona: {
-            id: persona?.id || "unknown",
-            name: persona?.name || "Traveller",
-            language,
-          },
+        advisory: baseText,
+        persona: {
+          id: persona?.id || "unknown",
+          name: persona?.name || "Traveller",
+          language,
         },
       }),
     })
