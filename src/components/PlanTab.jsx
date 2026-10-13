@@ -615,7 +615,7 @@ export default function PlanTab() {
       <div className="flex items-center gap-3"><IconBadge icon={CalendarDays} tone="gold"/><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Your personal plan · {destination.city}</p><h1 className="deck-heading mt-1 font-display text-4xl">A day with space to wander.</h1></div></div>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/80">A rules-based day plan that adapts to your travel pace, preferences and destination weather. Nothing is booked.</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={generatePlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-slate-900"><Sparkles size={16}/>Plan my day</button>
+        <button type="button" onClick={generatePlan} className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold"><Sparkles size={16}/>Plan my day</button>
         <button type="button" onClick={shareDay} disabled={!itinerary.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold disabled:opacity-50"><Share2 size={15}/>Share my day</button>
         <button type="button" onClick={resetPlan} disabled={!itinerary.length && !changeLog.length && !activeDisruption} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold disabled:opacity-50"><RotateCcw size={15}/>Reset plan</button>
       </div>
