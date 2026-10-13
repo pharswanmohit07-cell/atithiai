@@ -18,15 +18,15 @@
   place-items: center;
   border: 2px solid white;
   border-radius: 9999px;
-  background: #344f78;
+  background: rgb(var(--indigo-rgb));
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.28);
   color: white;
   font: 800 12px/1 "Manrope", sans-serif;
 }
 
 .route-guard-waypoint-marker.is-current {
-  background: #b45309;
-  box-shadow: 0 0 0 5px rgb(245 158 11 / 0.28), 0 2px 8px rgb(0 0 0 / 0.28);
+  background: rgb(var(--saffron-rgb));
+  box-shadow: 0 0 0 5px rgb(var(--saffron-rgb) / 0.28), 0 2px 8px rgb(0 0 0 / 0.28);
   animation: route-guard-pulse 1.6s ease-out infinite;
 }
 
@@ -37,7 +37,7 @@
   place-items: center;
   border: 2px solid white;
   border-radius: 9px;
-  background: #15803d;
+  background: rgb(var(--teal-rgb));
   box-shadow: 0 2px 8px rgb(0 0 0 / 0.24);
   color: white;
   font: 800 12px/1 "Manrope", sans-serif;
@@ -52,9 +52,9 @@
   display: inline-block;
   margin-bottom: 5px;
   border-radius: 9999px;
-  background: rgb(var(--coral-rgb) / 0.16);
-  padding: 3px 7px;
-  color: #991b1b;
+  background: linear-gradient(115deg, #ab352e, #d95f36);
+  padding: 4px 9px;
+  color: #fff;
   font-size: 9px;
   font-weight: 900;
   letter-spacing: .08em;
@@ -69,18 +69,18 @@
   display: inline-block;
   width: 20px;
   height: 0;
-  border-top: 3px solid #405b83;
+  border-top: 3px solid rgb(var(--indigo-rgb));
 }
 .route-guard-legend-line.blocked {
   border-top: 3px dashed rgb(var(--coral-rgb));
 }
 .route-guard-legend-line.detour {
-  border-top: 3px dashed #16a34a;
+  border-top: 3px dashed rgb(var(--teal-rgb));
 }
 
 @keyframes route-guard-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px rgb(245 158 11 / 0.22), 0 2px 8px rgb(0 0 0 / 0.28); }
-  50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgb(245 158 11 / 0.08), 0 2px 8px rgb(0 0 0 / 0.28); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px rgb(var(--saffron-rgb) / 0.22), 0 2px 8px rgb(0 0 0 / 0.28); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgb(var(--saffron-rgb) / 0.08), 0 2px 8px rgb(0 0 0 / 0.28); }
 }
 
 @media (prefers-reduced-motion: reduce) {
