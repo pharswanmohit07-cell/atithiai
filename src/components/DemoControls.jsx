@@ -13,6 +13,10 @@ export default function DemoControls({
   onClearDemoEvents,
   isOpen,
   setIsOpen,
+  cachedDemoMode = false,
+  setCachedDemoMode = () => {},
+  onResetDemo,
+  isDemoMode = false,
 }) {
   return (
     <>
@@ -36,6 +40,18 @@ export default function DemoControls({
           <span className="flex items-center gap-2"><Mountain size={16} className="text-accent-text"/> Simulate ascent · Demo event</span>
           <span className="rounded-full bg-amber-100 px-2 py-1 text-[8px] font-extrabold uppercase text-amber-900 dark:bg-amber-950/50 dark:text-amber-200">{selectedWaypoint?.name || "Current waypoint"}</span>
         </button>
+        <button
+          type="button"
+          aria-pressed={cachedDemoMode}
+          onClick={() => setCachedDemoMode(!cachedDemoMode)}
+          className={`flex w-full items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-xs font-semibold transition ${cachedDemoMode ? "border-amber-500 bg-amber-50 text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100" : "border-border bg-surface text-text hover:bg-surface-2"}`}
+        >
+          <span>
+            <span className="block">Demo mode: use cached results</span>
+            <span className="mt-1 block text-[10px] font-normal opacity-80">{cachedDemoMode ? "AI requests are bypassed; local fallbacks are used." : "Use AI when available; local fallbacks remain available."}</span>
+          </span>
+          <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-extrabold ${cachedDemoMode ? "bg-amber-200 text-amber-950 dark:bg-amber-900 dark:text-amber-100" : "bg-surface-2 text-muted"}`}>{cachedDemoMode ? "ON" : "OFF"}</span>
+        </button>
         <div className="border-t border-border pt-3">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">Route Guard · Demo event</p>
           <button type="button" onClick={onSimulateLandslide} className="flex w-full items-center justify-between gap-3 rounded-xl border border-rose-300 bg-surface px-3 py-3 text-left text-xs font-semibold text-text hover:bg-surface-2 dark:border-rose-900">
@@ -45,7 +61,15 @@ export default function DemoControls({
           <button type="button" onClick={onClearDemoEvents} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2.5 text-xs font-bold text-text hover:bg-border">
             <RotateCcw size={14}/> Clear / reset demo events
           </button>
-          <p className="mt-2 text-[9px] leading-relaxed text-muted">Alt+R triggers the landslide demo while ?demo=1 is present. Reset clears demo events and the rain override; live weather alerts remain automatic.</p>
+          {isDemoMode && <div className="mt-3 rounded-xl border border-border bg-surface-2 p-3 text-[10px] leading-relaxed text-text">
+            <p className="font-bold">Keyboard shortcuts · ?demo=1</p>
+            <p className="mt-1"><kbd className="rounded border border-border bg-surface px-1 py-0.5">Alt+R</kbd> Simulate landslide</p>
+            <p className="mt-1"><kbd className="rounded border border-border bg-surface px-1 py-0.5">Alt+P</kbd> Open Rescue Pass preview</p>
+          </div>}
+          <button type="button" onClick={onResetDemo} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-rose-300 bg-surface px-3 py-2.5 text-xs font-bold text-rose-800 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-200 dark:hover:bg-rose-950/30">
+            <RotateCcw size={14}/> Reset demo (clear local data)
+          </button>
+          <p className="mt-2 text-[9px] leading-relaxed text-muted">Reset clears saved demo preferences and reloads the current demo route. Live weather may still be fetched when cached demo mode is off.</p>
         </div>
       </div>
     </>
