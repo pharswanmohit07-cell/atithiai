@@ -754,15 +754,9 @@ function GuestApp(props) {
 
 function HomeTab({
   guest, persona, preferences, weather, weatherSource, selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weatherObservation, weatherLoading, weatherError,
-  disruptions = [], actionsLog = [], guardianDisruption, affectedStop,
-  guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
-  itinerary,
-  showAIIntervention,
-  isResolving,
-  acceptAlternative,
-  keepOriginal,
-  addRequest,
-  setActiveTab,
+  disruptions = [], actionsLog = [], routeGuardDisruption, nearestSafeVillages = [], routeSegment = [], detourVillage, routeActions = [], onRouteReroute, onKeepWaiting,
+  guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
+  itinerary, showAIIntervention, isResolving, acceptAlternative, keepOriginal, addRequest, setActiveTab,
 }) {
   const [tripStoryOpen, setTripStoryOpen] = useState(false);
   const currentPlan = itinerary.find((item) => item.status === "current");
@@ -844,6 +838,44 @@ function HomeTab({
           {weatherError && <p role="status" className="mt-3 text-xs text-amber-700 dark:text-amber-300">{weatherError}</p>}
           <p className="mt-3 text-[9px] leading-relaxed text-muted">Weather data informs planning but cannot confirm road access, landslides or safe travel. Check current local authority advice.</p>
         </section>
+
+        <RouteMap
+          selectedWaypointId={selectedWaypointId}
+          setSelectedWaypointId={setSelectedWaypointId}
+          disruptions={disruptions}
+          detourVillage={detourVillage}
+          height={340}
+        />
+
+        {routeGuardDisruption && (
+          <motion.div
+            role="alert"
+            initial={{ opacity: 0.35 }}
+            animate={{ opacity: [1, 0.55, 1] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+            className="flex items-start gap-3 rounded-2xl border border-amber-400 bg-amber-50 p-4 shadow-sm dark:border-amber-800 dark:bg-amber-950/30"
+          >
+            <ShieldAlert size={20} className="mt-0.5 shrink-0 text-amber-700 dark:text-amber-300" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2"><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-amber-900 dark:text-amber-200">Route Guard · Next segment flagged</p>{routeGuardDisruption.source === "demo" && <span className="rounded-full bg-rose-100 px-2 py-1 text-[9px] font-extrabold text-rose-800 dark:bg-rose-950/60 dark:text-rose-200">DEMO EVENT</span>}</div>
+              <p className="mt-1 text-sm font-semibold text-text">{CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === routeSegment[0])?.name} → {CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === routeSegment[1])?.name}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted">This segment is highlighted for review. Pause and confirm conditions with current local authority guidance; the demo cannot verify road status.</p>
+            </div>
+          </motion.div>
+        )}
+
+        {routeGuardDisruption && (
+          <RouteGuardCard
+            disruption={routeGuardDisruption}
+            currentWaypoint={selectedWaypoint}
+            nearestSafe={nearestSafeVillages}
+            persona={persona}
+            onReroute={onRouteReroute}
+            onKeepWaiting={onKeepWaiting}
+          />
+        )}
+        <ActionsTakenByAtithi actions={routeActions} />
+
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setActiveTab("services")}
@@ -899,9 +931,7 @@ function HomeTab({
           )}
         </AnimatePresence>
 
-        {guardianDisruption && affectedStop && (
-          <GuardianCard disruption={guardianDisruption} itineraryItem={affectedStop} alternatives={guardianAlternatives} onAccept={onAcceptGuardianAlternative} />
-        )}
+        
         <ActionsTakenLog actions={actionsLog} compact />
 
         {currentPlan && (
