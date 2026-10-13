@@ -1,13 +1,14 @@
 import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight, BookmarkPlus, CalendarDays, Check, Compass, Heart,
-  Languages, MapPin, MessageCircle, Minus, Plus, Search, Send, ShieldAlert,
-  Sparkles, Sun, Users, Utensils, X
+  ArrowRight, CalendarDays, Check, Compass, Heart,
+  Languages, MapPin, MessageCircle, Plus, Send, ShieldAlert,
+  Sparkles, Sun, Users, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
 import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
+import DiscoverTab from "./components/DiscoverTab.jsx";
 import { useDestination } from "./context/DestinationContext.jsx";
 import { useTravelContext } from "./context/TravelContext.jsx";
 import { useProfile } from "./context/ProfileContext.jsx";
@@ -127,38 +128,6 @@ function PlaceCard({ place, destination, formatCurrency, inPlan, onAdd, onRemove
       <DemoNote />
     </motion.article>
   );
-}
-
-function ExperienceCard({ experience, destination, formatCurrency, onSave }) {
-  return <article className="flex min-w-0 flex-col rounded-2xl border border-border bg-bg p-4">
-    <div className="flex items-center justify-between gap-2"><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">{CATEGORY_LABELS[experience.category] || niceWord(experience.category)}</span>{experience.communityLed && <span className="text-[10px] font-bold text-accent-text">Community-led idea</span>}</div>
-    <h3 className="mt-3 font-serif text-xl leading-snug">{experience.title}</h3>
-    <p className="mt-2 text-sm leading-relaxed text-muted">{experience.localStory}</p>
-    <div className="mt-3 space-y-1 text-xs text-muted"><p>Demo host: <span className="font-semibold text-text">{experience.hostName}</span></p><p>{formatNumber(experience.durationMin, destination.locale)} min · {experience.rainFriendly ? "Rain-friendly" : "Weather dependent"}</p><p>Designed for: {experience.suitsWho.map(niceWord).join(", ")}</p></div>
-    <p className="mt-3 text-sm font-bold">{formatCurrency(experience.priceLocal)} <span className="text-[10px] font-normal text-muted">illustrative estimate</span></p>
-    <button type="button" onClick={() => onSave(experience)} className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold"><BookmarkPlus size={15}/> Save idea</button>
-    <DemoNote />
-  </article>;
-}
-
-function DishCard({ dish, destination, formatCurrencyRange, onSave }) {
-  const dietary = [
-    dish.diet.veg === true ? "Vegetarian" : null,
-    dish.diet.vegan === true ? "Vegan" : null,
-    dish.diet.nonVeg === true ? "Non-vegetarian" : null,
-    dish.diet.halal === true ? "Halal-tagged" : null,
-    dish.diet.glutenFree === true ? "Gluten-free-tagged" : null
-  ].filter(Boolean);
-  return <article className="rounded-2xl border border-border bg-bg p-4">
-    <div className="flex items-start justify-between gap-3"><h3 className="font-serif text-xl">{dish.name}</h3><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">Demo range</span></div>
-    <p className="mt-2 text-sm leading-relaxed text-muted">{dish.description}</p>
-    <p className="mt-2 text-xs text-muted">Try around: {dish.whereToEat}</p>
-    <p className="mt-2 text-xs">{dietary.length ? dietary.join(" · ") : "Dietary details uncertain — ask the cook"} · spice {formatNumber(dish.spiceLevel, destination.locale, { maximumFractionDigits: 0 })}/3</p>
-    <p className="mt-2 text-sm font-bold">{formatCurrencyRange(dish.priceRangeLocal[0], dish.priceRangeLocal[1])}</p>
-    <p className="mt-1 text-[10px] leading-relaxed text-muted">Best time: {niceWord(dish.bestTime)} · Recipe and allergen details vary.</p>
-    <button type="button" onClick={() => onSave(dish)} className="mt-3 min-h-10 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold">Save food idea</button>
-    <DemoNote />
-  </article>;
 }
 
 function WeatherPanel({ destination, weather, loading, error, formatNumber }) {
@@ -428,11 +397,6 @@ export default function AtithiAI() {
   const { profile } = useProfile();
   const [started, setStarted] = useState(readStarted);
   const [activeTab, setActiveTab] = useState("home");
-  const [placeQuery, setPlaceQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [hiddenOnly, setHiddenOnly] = useState(false);
-  const [showExperiences, setShowExperiences] = useState(true);
-  const [showDishes, setShowDishes] = useState(true);
   const [mapFocusId, setMapFocusId] = useState(null);
 
   useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);
@@ -454,22 +418,6 @@ export default function AtithiAI() {
         : profile.dailyBudget.amount
     }
   }), [profile, destination.currency.code]);
-  const filteredPlaces = useMemo(() => destination.places.filter((place) => {
-    const query = placeQuery.trim().toLowerCase();
-    return (!query || [place.name, place.localStory, place.category, ...place.tags].join(" ").toLowerCase().includes(query))
-      && (categoryFilter === "all" || place.category === categoryFilter)
-      && (!hiddenOnly || place.isHiddenGem);
-  }), [destination.places, placeQuery, categoryFilter, hiddenOnly]);
-
-  const saveIdea = (item, kind) => {
-    const title = kind === "experience" ? item.title : item.name;
-    const detail = kind === "experience"
-      ? item.localStory + " Demo host: " + item.hostName + ". Illustrative spend: " + formatCurrency(item.priceLocal) + "."
-      : item.description + " Suggested area: " + item.whereToEat + ". Illustrative price range: " + formatCurrency(item.priceRangeLocal[0]) + "–" + formatCurrency(item.priceRangeLocal[1]) + ".";
-    const request = addRequest({ title: title, category: kind === "experience" ? "Experience idea" : "Food idea", detail });
-    addChatMessage({ role: "assistant", text: t("requestCreated", getDefaultLanguage()) + " · " + request.title });
-  };
-
   const buildPlan = () => {
     const freeMinutes = profile.pace === "relaxed" ? 180 : profile.pace === "packed" ? 600 : 360;
     const selected = [];
@@ -527,21 +475,27 @@ export default function AtithiAI() {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><button type="button" onClick={() => setActiveTab("lens")} className="rounded-2xl border border-border bg-surface p-4 text-left hover:bg-surface-2"><Languages className="text-accent-text"/><h2 className="mt-2 font-serif text-xl">Translate what you see</h2><p className="mt-1 text-xs text-muted">Scan signs, menus and fare boards using Atithi Lens.</p></button><button type="button" onClick={() => setActiveTab("chat")} className="rounded-2xl border border-border bg-surface p-4 text-left hover:bg-surface-2"><MessageCircle className="text-accent-text"/><h2 className="mt-2 font-serif text-xl">Ask a travel question</h2><p className="mt-1 text-xs text-muted">Chat in your own language and explore ideas from this destination pack.</p></button></div>
       </div>}
 
-      {activeTab === "discover" && <section className="space-y-5">
-        <div className="overflow-hidden rounded-3xl p-5 text-white sm:p-7" style={{ background: "linear-gradient(125deg, #163e4b 0%, #28365c 55%, " + destination.themeColors.accent + " 100%)" }}><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Discover · {destination.city}</p><h1 className="mt-2 font-serif text-4xl">Go beyond the usual.</h1><p className="mt-2 max-w-2xl text-sm text-white/80">Find neighbourhood details, creative places, local food and slower ways to explore.</p></div>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Places and hidden corners</h2><p className="mt-1 text-xs text-muted">A curated starting point — current access, crowds and availability are not verified.</p></div><span className="rounded-full bg-surface-2 px-3 py-1.5 text-xs font-bold">{formatNumber(filteredPlaces.length, destination.locale)} places</span></div>
-          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto]"><label className="relative block"><Search size={15} className="pointer-events-none absolute left-3 top-3 text-muted"/><input value={placeQuery} onChange={(event)=>setPlaceQuery(event.target.value)} placeholder="Search stories, tags or places" className="min-h-10 w-full rounded-xl border border-border bg-bg pl-9 pr-3 py-2 text-sm"/></label><label className="flex items-center gap-2 rounded-xl border border-border bg-bg px-3 text-xs font-semibold"><span className="sr-only">Filter category</span><select value={categoryFilter} onChange={(event)=>setCategoryFilter(event.target.value)} className="min-h-10 w-full bg-transparent py-2"><option value="all">All categories</option>{CATEGORY_OPTIONS.map((category)=><option key={category} value={category}>{CATEGORY_LABELS[category]}</option>)}</select></label><label className="flex min-h-10 items-center gap-2 rounded-xl border border-border bg-bg px-3 text-xs font-semibold"><input type="checkbox" checked={hiddenOnly} onChange={(event)=>setHiddenOnly(event.target.checked)}/>Hidden-place picks</label></div>
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredPlaces.map((place)=><PlaceCard key={place.id} place={place} destination={destination} formatCurrency={formatCurrency} inPlan={planIds.has(place.id)} onAdd={addItineraryStop} onRemove={removeItineraryStop}/>)}</div>
-          {filteredPlaces.length===0 && <p className="mt-4 rounded-xl border border-dashed border-border p-5 text-sm text-muted">No places match those filters. Try another category or search.</p>}
-          <div id="destination-map-container" className="mt-5 overflow-hidden rounded-2xl border border-border"><Suspense fallback={<div className="map-empty min-h-64">Loading destination map…</div>}><DestinationMap destination={destination} height={320} focusPlaceId={mapFocusId}/></Suspense></div>
-          <DemoNote/>
-        </section>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><button type="button" onClick={()=>setShowExperiences((value)=>!value)} className="flex min-h-10 w-full items-center justify-between gap-3 text-left"><span><span className="block font-serif text-2xl">Local experiences</span><span className="mt-1 block text-xs text-muted">Small-group ideas, craft, food, culture and slow moments.</span></span>{showExperiences?<Minus size={17}/>:<Plus size={17}/>}</button>{showExperiences&&<div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{destination.experiences.map((experience)=><ExperienceCard key={experience.id} experience={experience} destination={destination} formatCurrency={formatCurrency} onSave={(item)=>saveIdea(item,"experience")}/>)}</div>}<DemoNote/></section>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><button type="button" onClick={()=>setShowDishes((value)=>!value)} className="flex min-h-10 w-full items-center justify-between gap-3 text-left"><span><span className="block font-serif text-2xl">Taste local</span><span className="mt-1 block text-xs text-muted">Dish stories and illustrative local spend ranges.</span></span>{showDishes?<Minus size={17}/>:<Plus size={17}/>}</button>{showDishes&&<div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{destination.dishes.map((dish)=><DishCard key={dish.id} dish={dish} destination={destination} formatNumber={formatNumber} formatCurrencyRange={(low,high)=>formatCurrency(low)+" – "+formatCurrency(high)} onSave={(item)=>saveIdea(item,"dish")}/>)}</div>}<DemoNote>Dietary tags and dishes are illustrative, recipes vary and allergens must be confirmed directly with a food provider.</DemoNote></section>
-      </section>}
+      {activeTab === "discover" && <DiscoverTab
+        destination={destination}
+        profile={rankProfile}
+        weather={weather}
+        itinerary={itinerary}
+        requests={requests}
+        addItineraryItem={addItineraryItem}
+        addRequest={addRequest}
+        onShowOnMap={showOnMap}
+        focusPlaceId={mapFocusId}
+      />}
 
       {activeTab === "plan" && <section className="space-y-4"><div className="rounded-3xl p-5 text-white sm:p-7" style={{background:"linear-gradient(125deg, #163e4b 0%, #28365c 55%, "+destination.themeColors.accent+" 100%)"}}><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Your personal plan</p><h1 className="mt-2 font-serif text-4xl">A day with space to wander.</h1><p className="mt-2 text-sm text-white/80">Choose places yourself or use a simple pack-based suggestion. Nothing is booked.</p><div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-slate-900"><Sparkles size={16}/>Suggest places</button><button type="button" onClick={clearItinerary} disabled={!itinerary.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/30 px-4 py-2 text-sm font-bold disabled:opacity-50"><X size={15}/>Clear plan</button></div></div>
           {itinerary.length ? <ol className="space-y-3">{itinerary.map((stop,index)=>{const kind=stop.itemType||"place";const collection=kind==="place"?destination.places:kind==="experience"?destination.experiences:destination.dishes;const item=collection.find((entry)=>entry.id===(stop.itemId||stop.placeId));if(!item)return null;const title=kind==="experience"?item.title:item.name;const note=item.localStory||item.description||stop.note||"";const bestTime=item.bestTime||stop.bestTime||"any";const duration=Number(item.durationMin)||Number(stop.durationMin)||0;const category=item.category||(kind==="dish"?"food":kind);const uniqueId=stop.id||kind+"-"+item.id;return <li key={uniqueId} className="flex gap-3 rounded-2xl border border-border bg-surface p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="font-serif text-xl">{title}</h2><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">{niceWord(bestTime)}</span><span className="rounded-full border border-border px-2 py-1 text-[9px] capitalize text-muted">{kind}</span></div><p className="mt-1 text-sm leading-relaxed text-muted">{note}</p>{duration>0&&<p className="mt-2 text-[10px] text-muted">{formatNumber(duration,destination.locale)} min · {niceWord(category)}</p>}{stop.reasons?.length>0&&<div className="mt-2 flex flex-wrap gap-1">{stop.reasons.slice(0,4).map((reason,reasonIndex)=><span key={reason+reasonIndex} className="rounded-full border border-border px-2 py-1 text-[9px] text-muted">{reason}</span>)}</div>}</div><button type="button" onClick={()=>removeItineraryStop(uniqueId)} aria-label={"Remove "+title} className="min-h-9 min-w-9 rounded-lg border border-border px-2"><X size={15}/></button></li>})}</ol> : <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center"><CalendarDays size={28} className="mx-auto text-muted"/><h2 className="mt-3 font-serif text-2xl">Your plan starts with curiosity.</h2><p className="mt-2 text-sm text-muted">Add places from Discover or ask for suggestions tailored to your interests and pace.</p><button type="button" onClick={()=>setActiveTab("discover")} className="mt-4 min-h-11 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white">Find places</button></div>}
+          <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-serif text-2xl">My requests</h2><span className="rounded-full border border-border px-2.5 py-1 text-[10px] font-bold">Demo only</span></div>
+            <p className="mt-1 text-xs text-muted">Experience requests are saved locally for your reference. No host is contacted and no booking is created.</p>
+            {requests.filter((request) => request.category === "Experience request (demo)").length
+              ? <div className="mt-3 space-y-2">{requests.filter((request) => request.category === "Experience request (demo)").map((request) => <article key={request.id} className="rounded-xl border border-border bg-bg p-3"><div className="flex flex-wrap items-start justify-between gap-2"><h3 className="text-sm font-bold">{request.title}</h3><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">Demo only</span></div><p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-muted">{request.detail}</p><time className="mt-2 block text-[10px] text-muted">{formatDate(request.createdAt, destination.locale, destination.timezone)}</time></article>)}</div>
+              : <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">No experience requests saved yet. You can save a demo request from Local Experiences.</p>}
+          </section>
           <DemoNote>Suggested times of day are approximate preferences, not opening-hour information or reservations.</DemoNote>
         </section>}
 

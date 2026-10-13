@@ -109,8 +109,8 @@ function scoreItem(item, kind, profile = {}, filters = {}, context = {}, spendSt
   const limit = durationLimit(profile, filters, context);
   const duration = clampNumber(kind === "place" ? item.durationMin : item.durationMin);
   const cap = hardBudget(filters);
-  const explicitDiet = filters?.diet && filters.diet !== "none" ? filters.diet : null;
-  const diet = explicitDiet || profile?.diet || "none";
+  const explicitDiet = filters && Object.hasOwn(filters, "diet") ? filters.diet : undefined;
+  const diet = explicitDiet !== undefined ? (explicitDiet || "none") : (profile?.diet || "none");
 
   // Hard constraints: reject first, then score survivors.
   if (kind !== "dish" && Array.isArray(filters?.categories) && filters.categories.length && !filters.categories.includes(item.category)) return null;
@@ -119,6 +119,7 @@ function scoreItem(item, kind, profile = {}, filters = {}, context = {}, spendSt
   if (duration !== null && duration > limit) return null;
   if (filters?.timeOfDay && !matchesTime(item, filters.timeOfDay)) return null;
   if (kind === "dish" && !matchesDiet(item, diet)) return null;
+  if (kind === "dish" && Number.isFinite(Number(filters?.maxSpiceLevel)) && filters.maxSpiceLevel !== null && Number(item.spiceLevel) > Number(filters.maxSpiceLevel)) return null;
 
   const tags = tagsOf(item);
   for (const interest of interestsOf(profile)) {
@@ -194,6 +195,10 @@ function scoreItem(item, kind, profile = {}, filters = {}, context = {}, spendSt
   if (rainy && (item.rainFriendly === true || item.indoor === true)) {
     score += 4;
     reasons.push(item.indoor === true ? "Indoor, good for rain" : "Rain-friendly option (estimated)");
+  }
+  if (kind === "dish" && rainy && item.warm === true) {
+    score += 3;
+    reasons.push("Warm dish suits rainy weather");
   }
   if (time && item.bestTime && matchesTime(item, time)) {
     score += 2;
