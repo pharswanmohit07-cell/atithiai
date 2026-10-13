@@ -312,6 +312,15 @@ input::placeholder, textarea::placeholder {
   letter-spacing: 0.08em;
 }
 
+
+.rescue-pass-toast {
+  border-color: var(--border) !important;
+  border-left: 4px solid rgb(var(--teal-rgb)) !important;
+  background: rgb(var(--surface-rgb) / 0.97) !important;
+  color: var(--text) !important;
+  box-shadow: 0 16px 40px rgb(var(--brand-rgb) / 0.24);
+}
+
 @media print {
   body { background: white !important; color: black !important; }
 }
