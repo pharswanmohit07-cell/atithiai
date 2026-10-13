@@ -1,0 +1,28 @@
+name: Source checks
+
+on:
+  push:
+    branches:
+      - "reposition/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint source and imports
+        run: npm run lint
+      - name: Build production assets
+        run: npm run build
