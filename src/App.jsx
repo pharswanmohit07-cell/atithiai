@@ -232,13 +232,14 @@ function HomeView({ user, destination, weather, weatherLoading, weatherError, it
 }
 
 function ProfileView({ user, preferences, updatePreferences, destination, selectDestination, destinations, cachedDemoMode, setCachedDemoMode, onSwitch }) {
+  const languageOptions = Array.from(new Set(["English", ...destination.primaryLanguages]));
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <h2 className="font-serif text-2xl">Guest profile</h2>
         <p className="mt-1 text-sm text-muted">{user?.persona || "Guest (Family)"} · Demo profile</p>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="text-xs font-semibold text-muted">Language preference<select value={preferences.language} onChange={(event) => updatePreferences({ language: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{Array.from(new Set(["English", ...destination.primaryLanguages])).map((language) => <option key={language} value={language}>{language}</option>)}</select></label>
+          <label className="text-xs font-semibold text-muted">Language preference<select value={preferences.language} onChange={(event) => updatePreferences({ language: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{!languageOptions.includes(preferences.language) && <option value={preferences.language}>{preferences.language}</option>}{languageOptions.map((language) => <option key={language} value={language}>{language}</option>)}</select></label>
           <label className="text-xs font-semibold text-muted">Dietary preference<select value={preferences.dietaryPreference} onChange={(event) => updatePreferences({ dietaryPreference: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{["No preference", "Vegetarian", "Vegan", "Pescatarian", "Halal", "Gluten-free", "Dairy-free", "Other — ask me"].map((item) => <option key={item}>{item}</option>)}</select></label>
           <label className="text-xs font-semibold text-muted sm:col-span-2">Travel party<select value={preferences.travelParty} onChange={(event) => updatePreferences({ travelParty: event.target.value })} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{["Family", "Solo", "Couple", "Friends", "Business"].map((item) => <option key={item}>{item}</option>)}</select></label>
         </div>
