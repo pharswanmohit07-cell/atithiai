@@ -1085,8 +1085,9 @@ function HomeTab({
                 <motion.div
                   key={item.id}
                   layout
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.07 }}
                   className="relative pl-6"
                 >
                   <div
@@ -1105,7 +1106,7 @@ function HomeTab({
                     className={`
                     rounded-2xl p-4 transition-all
                     ${item.status === "current" ? "bg-surface shadow-md border border-border" : ""}
-                    ${item.isVulnerableToWeather && weather === "rainy" ? "bg-red-50 border border-red-100" : ""}
+                    ${item.isVulnerableToWeather && weather === "rainy" ? "hazard-alert bg-red-50 border border-red-100" : ""}
                   `}
                   >
                     {item.dayLabel && item.dayLabel !== itinerary[index - 1]?.dayLabel && <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.14em] text-accent-text">{item.dayLabel}</p>}
@@ -1976,7 +1977,7 @@ function AdminDashboard({
             </h2>
             <div className="space-y-4">
               <div
-                className={`p-4 rounded-xl border ${isConflict ? "bg-red-50 border-red-100 dark:bg-rose-950/30 dark:border-rose-900/60" : isResolved ? "bg-surface-2 border-accent" : "border-border"}`}
+                className={`p-4 rounded-xl border ${isConflict ? "hazard-alert bg-red-50 border-red-100 dark:bg-rose-950/30 dark:border-rose-900/60" : isResolved ? "bg-surface-2 border-accent" : "border-border"}`}
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex gap-3 items-center">
