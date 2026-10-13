@@ -38,7 +38,7 @@ function nullableText(value, max = 100) {
   if (value === null || value === undefined || value === "") return null;
   return typeof value === "string" ? value.trim().slice(0, max) || null : null;
 }
-function escapeRegExp(value) { return String(value || "").replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"); }
+function escapeRegExp(value) { return String(value || "").split("").map((character) => "\\^$.*+?()[]{}|/".includes(character) ? "\\" + character : character).join(""); }
 function languageTag(value, message) {
   const input = cleanText(value, 45).replace(/_/g, "-");
   if (input && input.toLowerCase() !== "auto") {
