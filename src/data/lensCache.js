@@ -44,12 +44,14 @@ export function getSeedLensResult(sampleId, language = "en") {
       summary: "नमूना किराया बोर्ड में पहाड़ी क्षेत्र के कस्बों के बीच किराये दिखते हैं। राशि पढ़ी जा सकती है, लेकिन वाहन का प्रकार, वापसी और प्रतीक्षा शुल्क स्पष्ट नहीं हैं।",
       potentialConcerns: ["पूछें कि किराया पूरे वाहन के लिए है या प्रति यात्री।", "यात्रा से पहले टोल, पार्किंग, वापसी और प्रतीक्षा शुल्क की पुष्टि करें।"],
       nextStep: "यात्रा शुरू होने से पहले चालक से गंतव्य, शामिल खर्च और कुल राशि की पुष्टि करें।",
+      roughRange: "इस उदाहरण के लिए ₹900–₹1,600; वाहन, मौसम और शामिल खर्च के अनुसार बदलता है",
       explanation: "केवल तस्वीर से उचित किराया तय नहीं किया जा सकता; यह केवल एक सांकेतिक अनुमान है।",
     },
     "sample-menu": {
       summary: "नमूना मेन्यू में वेज थाली ₹180, आलू पराठा ₹90, चाय ₹30 और राजमा चावल ₹140 दिखते हैं। टैक्स और मात्रा स्पष्ट नहीं हैं।",
       potentialConcerns: ["पूछें कि टैक्स शामिल है या नहीं।", "ऑर्डर से पहले परोसने की मात्रा और अतिरिक्त शुल्क की पुष्टि करें।"],
       nextStep: "ऑर्डर करने से पहले दुकान से आइटम, मात्रा और अंतिम बिल की पुष्टि करें।",
+      roughRange: "साधारण थाली के लिए लगभग ₹150–₹250; स्थानीय कीमतें अलग हो सकती हैं",
       explanation: "यह सामान्य, गैर-आधिकारिक अनुमान है; स्थानीय कीमत सत्यापित नहीं है।",
     },
     "sample-temple": {
@@ -65,6 +67,7 @@ export function getSeedLensResult(sampleId, language = "en") {
     result.potentialConcerns = hindi.potentialConcerns;
     result.nextStep = hindi.nextStep;
     result.fairPrice.explanation = hindi.explanation;
+    if (hindi.roughRange) result.fairPrice.roughRange = hindi.roughRange;
   }
   return result;
 }
