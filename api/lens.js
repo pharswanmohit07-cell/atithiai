@@ -156,7 +156,8 @@ export default async function handler(req, res) {
     const nextStep = cleanString(parsed.nextStep, 400) || safeFallback.nextStep;
     const explanation = cleanString(fairInput.explanation, 240);
     const etiquetteNote = imageType === "temple" ? cleanString(parsed.etiquetteNote, 300) : "";
-    const textForClaimCheck = [summary, nextStep, explanation, roughRange, ...visiblePrices].join(" ");
+    const potentialConcerns = cleanArray(parsed.potentialConcerns, 8, 220);
+    const textForClaimCheck = [summary, nextStep, explanation, roughRange, etiquetteNote, ...visiblePrices, ...potentialConcerns].join(" ");
     if (!noOfficialRateClaims(textForClaimCheck)) {
       return send(res, 200, { ...safeFallback, sampleId, source: "safe-fallback" });
     }
@@ -164,7 +165,7 @@ export default async function handler(req, res) {
     return send(res, 200, {
       summary,
       visiblePrices,
-      potentialConcerns: cleanArray(parsed.potentialConcerns, 8, 220),
+      potentialConcerns,
       nextStep,
       imageType,
       priceVisible,
