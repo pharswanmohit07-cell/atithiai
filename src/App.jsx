@@ -427,6 +427,8 @@ export default function AtithiAI() {
     ? [CORRIDOR_WAYPOINTS[currentWaypointIndex].id, CORRIDOR_WAYPOINTS[currentWaypointIndex + 1].id]
     : [CORRIDOR_WAYPOINTS[CORRIDOR_WAYPOINTS.length - 2].id, CORRIDOR_WAYPOINTS[CORRIDOR_WAYPOINTS.length - 1].id];
   const routeGuardDisruption = disruptions.find((item) =>
+    item.source === "demo" && item.segment?.[0] === routeSegment[0] && item.segment?.[1] === routeSegment[1]
+  ) || disruptions.find((item) =>
     item.segment?.[0] === routeSegment[0] && item.segment?.[1] === routeSegment[1]
   ) || null;
   const nearestSafeVillages = useMemo(

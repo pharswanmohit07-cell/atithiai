@@ -49,6 +49,7 @@ export default function RouteGuardCard({
   persona,
   onReroute,
   onKeepWaiting,
+  detourVillage = null;
 }) {
   const fallbackAdvisory = useMemo(
     () => getFallbackAdvisory(disruption, currentWaypoint, nearestSafe),
@@ -166,6 +167,9 @@ export default function RouteGuardCard({
           <p className="mt-2 text-[9px] text-muted">{advisorySource === "assistant" ? "AI advisory · limited to supplied corridor context" : "Cached fallback advisory · available without AI"}</p>
         </div>
 
+        {detourVillage && <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs leading-relaxed text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-100">
+          <strong>Estimated demo detour selected:</strong> {detourVillage.name}. The dashed red segment remains flagged; the green map line is illustrative and does not confirm a road route or a booking.
+        </div>}
         <div>
           <div className="mb-3 flex items-start justify-between gap-2">
             <div><h3 className="font-serif text-lg text-text">Potential pause options</h3><p className="mt-1 text-[10px] leading-relaxed text-muted">Nearest ranked illustrative village areas. Not verified safe, real accommodation, or bookable.</p></div>
@@ -187,7 +191,7 @@ export default function RouteGuardCard({
                     <p className="mt-1 text-[9px] text-muted">{village.shortDesc} Not a real or bookable property.</p>
                   </div>
                 </div>
-                <button type="button" onClick={() => onReroute(village, disruption)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2.5 text-xs font-bold text-white hover:brightness-110"><Route size={14}/> Reroute to {village.name} <ArrowRight size={14}/></button>
+                <button type="button" disabled={Boolean(detourVillage)} onClick={() => onReroute(village, disruption)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2.5 text-xs font-bold text-white hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-55"><Route size={14}/>{detourVillage ? "Detour already selected" : `Reroute to ${village.name}`} <ArrowRight size={14}/></button>
               </article>
             ))}
             {nearestSafe.length === 0 && <p className="rounded-xl bg-surface-2 p-3 text-xs text-muted">No demo village area is available in the current data list.</p>}
