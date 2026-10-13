@@ -5,6 +5,7 @@ export default function DemoControls({
   appMode,
   setAppMode,
   weather,
+  isRainOverride = false,
   onToggleWeather,
   onDemoEvent,
   isOpen,
@@ -20,7 +21,7 @@ export default function DemoControls({
           <button onClick={() => setAppMode("guest")} className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${appMode==="guest"?"bg-surface text-text shadow-sm":"text-muted hover:text-text"}`}>Guest App</button>
           <button onClick={() => setAppMode("admin")} className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all ${appMode==="admin"?"bg-surface text-text shadow-sm":"text-muted hover:text-text"}`}>Admin</button>
         </div>
-        <button onClick={onToggleWeather} className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white transition-all ${weather==="sunny"?"bg-brand hover:brightness-110":"bg-sky-700 hover:bg-sky-800"}`}>{weather==="sunny"?<CloudRain size={16}/>:<Sun size={16}/>} {weather==="sunny"?"Simulate rain":"Reset weather"} <span className="text-[9px] font-normal opacity-80">Demo</span></button>
+        <button onClick={onToggleWeather} className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-white transition-all ${isRainOverride?"bg-sky-700 hover:bg-sky-800":"bg-brand hover:brightness-110"}`}>{isRainOverride?<Sun size={16}/>:<CloudRain size={16}/>} {isRainOverride?"Reset rain override":"Simulate rain"} <span className="text-[9px] font-normal opacity-80">Demo</span></button>
         <div className="border-t border-border pt-3">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">Demo event · Trip disruption</p>
           <button onClick={() => onDemoEvent("landslide")} className="flex w-full items-center justify-between rounded-xl border border-border bg-surface px-3 py-2.5 text-left text-xs font-semibold text-text hover:bg-surface-2"><span className="flex items-center gap-2"><Mountain size={16} className="text-rose-600"/> Simulate landslide</span><span className="rounded-full bg-rose-100 px-2 py-1 text-[9px] text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">Demo event</span></button>

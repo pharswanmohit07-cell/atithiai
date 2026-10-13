@@ -42,8 +42,8 @@ export function GuardianCard({ disruption, itineraryItem, alternatives = [], onA
                 <div className="min-w-0 flex-1">
                   <h4 className="font-semibold text-text">{place.name}</h4>
                   <p className="mt-1 text-xs leading-relaxed text-muted">{place.shortDesc}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2"><CrowdBadge place={place} score={score}/><span className="text-[10px] text-muted">~{place.travelMinutes} min travel · estimated</span></div>
-                  <p className="mt-2 text-[10px] font-semibold text-accent-text">₹{place.localSpendINR} local spend · estimated</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2"><CrowdBadge place={place} score={score}/>{place.isCorridorWaypoint ? <span className="text-[10px] font-semibold text-amber-700 dark:text-amber-300">Safety hold point · confirm locally</span> : <span className="text-[10px] text-muted">~{place.travelMinutes} min travel · estimated</span>}</div>
+                  <p className="mt-2 text-[10px] font-semibold text-accent-text">{place.isCorridorWaypoint ? "Not a destination recommendation or route clearance" : `₹${place.localSpendINR} local spend · estimated`}</p>
                 </div>
               </div>
               <button type="button" onClick={() => onAccept(itineraryItem, place, disruption)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2.5 text-xs font-semibold text-white hover:brightness-110">Accept reroute <ArrowRightLeft size={14}/></button>
