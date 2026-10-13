@@ -5,7 +5,7 @@ import { transform } from "esbuild";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const extensions = new Set([".js", ".jsx", ".mjs"]);
-const scanRoots = ["src", "api", "scripts"];
+const scanRoots = ["src", "api", "scripts", "netlify"];
 const candidates = [];
 const failures = [];
 
@@ -92,6 +92,8 @@ const checks = [
   [app.includes('/api/intent') && app.includes("rankPlaces") && app.includes("rankDishes") && app.includes("rankExperiences"), "Chat must parse intent and use deterministic ranking."],
   [intent.includes('req.method !== "POST"') && intent.includes('responseMimeType: "application/json"') && intent.includes("6500") && intent.includes("extractIntentFallback"), "Intent API must be POST-only, JSON mode, timed and have a friendly fallback."],
   [chat.includes("rankedItems") && chat.includes("wordCount(reply) > 70") && chat.includes("GEMINI_API_KEY") && chat.includes("const NO_RESULTS"), "Chat phrasing must be restricted to ranked items, under 70 words and safe when no items match."],
+  [!chat.includes('if (!rankedItems.length) return send(res, 200, { reply: fallbackReply(language, false)') && chat.includes("generalConversation: !hasRankedItems") && chat.includes("Respond naturally to greetings and small talk."), "Chat must use Gemini for greetings and general questions even when no ranked items are selected."],
+  [app.includes('response.headers.get("X-Atithi-Cache") === "demo"') && app.includes('reason: cachedDemoResponse ? "cached_demo_mode"'), "Chat must not display cached demo replies as live Gemini responses."],
   [[chat, intent, lens, planApi].every((source) => source.includes('thinkingLevel: "LOW"') && !source.includes('thinkingLevel: "low"')), "Gemini REST thinkingLevel values must use the uppercase enum."],
   [map.includes('const MAP_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"') && !map.includes("cartocdn.com") && map.includes("no API key required"), "The destination map must use keyless OpenStreetMap tiles with visible attribution."],
   [rankSource.includes("export function rankPlaces") && rankSource.includes("export function rankDishes") && rankSource.includes("export function rankExperiences") && rankSource.includes("reasons"), "All three pure ranking functions must return explainable reasons."],

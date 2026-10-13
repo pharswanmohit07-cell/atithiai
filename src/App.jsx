@@ -392,11 +392,12 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
         })
       });
       const payload = await response.json();
+      const cachedDemoResponse = response.headers.get("X-Atithi-Cache") === "demo";
       const usableReply = response.ok && typeof payload?.reply === "string" && payload.reply.trim() && payload.reply.trim().split(/\s+/).length <= 70;
       if (usableReply) reply = payload.reply.trim();
       setProviderStatus({
-        source: usableReply && payload?.source === "gemini" ? "gemini" : "fallback",
-        reason: typeof payload?.reason === "string" ? payload.reason : (usableReply ? "not_gemini" : "request_failed")
+        source: usableReply && !cachedDemoResponse && payload?.source === "gemini" ? "gemini" : "fallback",
+        reason: cachedDemoResponse ? "cached_demo_mode" : typeof payload?.reason === "string" ? payload.reason : (usableReply ? "not_gemini" : "request_failed")
       });
     } catch {
       setProviderStatus({

@@ -98,8 +98,8 @@ export default async function handler(req, res) {
   if (!message) return send(res, 200, { reply: fallbackReply("en"), source: "local-fallback" });
   const language = safeLanguage(body.replyLanguage, message);
   const rankedItems = canonicalItems(body.rankedItems, destination);
-  const fallback = fallbackReply(language, rankedItems.length > 0);
-  if (!rankedItems.length) return send(res, 200, { reply: fallbackReply(language, false), source: "local-fallback", reason: "no_ranked_items", language });
+  const hasRankedItems = rankedItems.length > 0;
+  const fallback = fallbackReply(language, hasRankedItems);
   if (!process.env.GEMINI_API_KEY) return send(res, 200, { reply: fallback, source: "local-fallback", reason: "missing_api_key", language });
 
   const controller = new AbortController();
@@ -107,11 +107,17 @@ export default async function handler(req, res) {
   try {
     const prompt = [
       "You are Atithi AI, a personalized travel companion for hidden places, local stories and experiences that make a destination feel personal.",
-      "Your task is only to phrase a helpful response using the provided rankedItems. The deterministic ranking engine already selected and ordered these items. Do not add, invent, suggest or mention any place, dish, experience, host or named venue that is not present in rankedItems.",
+      hasRankedItems
+        ? "Your task is only to phrase a helpful response using the provided rankedItems. The deterministic ranking engine already selected and ordered these items. Do not add, invent, suggest or mention any place, dish, experience, host or named venue that is not present in rankedItems."
+        : "The deterministic ranker returned no suggested items. You may still answer greetings, small talk, and questions about what Atithi AI can help with. For a recommendation request, do not invent or name places, dishes, or experiences; explain that no matching items were selected and ask how to refine the request.",
       "Never invent or claim current prices, opening hours, availability, travel times, bookings, partner relationships or live crowd conditions. Costs and stories are illustrative demo content. Weather supplied as context is the only live destination feed.",
-      "Reply in language " + language + " (BCP-47). Keep the full reply under 70 words. Be warm, concise and transparent that these are suggestions. If no listed item answers the question, say the pack has no verified answer and recommend checking locally.",
+      hasRankedItems
+        ? "Reply in language " + language + " (BCP-47). Keep the full reply under 70 words. Be warm, concise and transparent that these are suggestions. If no listed item answers the question, say the pack has no verified answer and recommend checking locally."
+        : "Reply in language " + language + " (BCP-47), under 70 words. Respond naturally to greetings and small talk. Explain Atithi AI can help with travel preferences, itinerary planning, food and experiences. If the message asks for destination recommendations but there are no ranked items, say no matching pack items were selected and ask one clarifying question. Never invent specific recommendations.",
       "Do not repeat the full item list if a concise introduction is enough. Do not output JSON or a numbered itinerary; the client renders ranked cards separately.",
       JSON.stringify({
+        intent: cleanText(body.intent, 40),
+        generalConversation: !hasRankedItems,
         travelerMessage: message,
         travelerPreferences: isPlainObject(body.profile) ? {
           interests: Array.isArray(body.profile.interests) ? body.profile.interests.filter((item) => typeof item === "string").slice(0, 7).map((item) => cleanText(item, 30)) : [],

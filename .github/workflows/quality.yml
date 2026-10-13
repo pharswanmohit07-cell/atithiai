@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - "reposition/**"
+      - "deploy/netlify-free"
   pull_request:
 
 permissions:
