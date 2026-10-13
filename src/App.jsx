@@ -487,7 +487,6 @@ export default function AtithiAI() {
           preferences={preferences}
           onSavePreferences={savePreferences}
           onOpenOnboarding={() => window.dispatchEvent(new Event("atithi:reopen-onboarding"))}
-          onSwitchPersona={handleSwitchPersona}
           weather={weather}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
@@ -522,7 +521,6 @@ export default function AtithiAI() {
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
           staffUser={user}
-          onSwitchPersona={handleSwitchPersona}
         />
       )}
 
@@ -783,13 +781,13 @@ function HomeTab({
           >
             <span>
               <span className="block text-[10px] uppercase tracking-wide text-accent-text">
-                At your service
+                Travel support
               </span>
               <span className="mt-1 block text-xs font-semibold text-text">
-                Room requests
+                Report a hazard
               </span>
             </span>
-            <IconBadge icon={BedDouble} tone="sky" size="sm" />
+            <IconBadge icon={ShieldAlert} tone="coral" size="sm" />
           </button>
           <button
             onClick={() => setActiveTab("ai")}
@@ -797,10 +795,10 @@ function HomeTab({
           >
             <span>
               <span className="block text-[10px] uppercase tracking-wide text-accent-text">
-                Your companion
+                Trip Guardian
               </span>
               <span className="mt-1 block text-xs font-semibold text-text">
-                Ask concierge
+                Ask about the route
               </span>
             </span>
             <IconBadge icon={Sparkles} tone="violet" size="sm" />
@@ -859,33 +857,21 @@ function HomeTab({
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-xl bg-surface/8 p-3">
-                  <p className="text-[9px] uppercase tracking-wide text-white/50">
-                    Your guide
-                  </p>
-                  <p className="mt-1 text-[11px] font-semibold">
-                    {currentPlan.host || "Your local host"}
-                  </p>
+                  <p className="text-[9px] uppercase tracking-wide text-white/55">Waypoint elevation</p>
+                  <p className="mt-1 text-[11px] font-semibold">{currentPlan.elevationM ?? selectedWaypoint?.elevationM ?? "—"} m · approx.</p>
                 </div>
                 <div className="rounded-xl bg-surface/8 p-3">
-                  <p className="text-[9px] uppercase tracking-wide text-white/50">
-                    Meet here
-                  </p>
-                  <p className="mt-1 text-[11px] font-semibold">
-                    {currentPlan.pickup || "Hotel lobby"}
-                  </p>
+                  <p className="text-[9px] uppercase tracking-wide text-white/55">Day segment</p>
+                  <p className="mt-1 text-[11px] font-semibold">{currentPlan.dayLabel || selectedWaypoint?.name || "Corridor route"}</p>
                 </div>
               </div>
               <button
-                onClick={() =>
-                  addRequest({
-                    title: "Tour pickup confirmation",
-                    category: "Valet / Transport",
-                    detail: `${currentPlan.pickup || "Hotel lobby"} · ${currentPlan.location || currentPlan.title}`,
-                  })
-                }
-                className="mt-3 flex w-full items-center justify-between rounded-xl bg-accent px-3.5 py-2.5 text-left text-[11px] font-bold text-text"
+                type="button"
+                disabled={!currentPlan.waypointId}
+                onClick={() => currentPlan.waypointId && setSelectedWaypointId(currentPlan.waypointId)}
+                className="mt-3 flex w-full items-center justify-between rounded-xl bg-accent px-3.5 py-2.5 text-left text-[11px] font-bold text-text disabled:opacity-50"
               >
-                Confirm my pickup <ChevronRight size={15} />
+                Use this waypoint for weather <ChevronRight size={15}/>
               </button>
             </div>
           </section>
@@ -1036,12 +1022,12 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
       <div className="mb-5 flex items-end justify-between">
         <div>
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-text">
-            The local edit · No. 05
+            Himalayan corridor · Local discovery
           </p>
           <h1 className="font-serif text-[34px] leading-none text-text">
             Discover
             <br />
-            <span className="italic">Dehradun.</span>
+            <span className="italic">Rishikesh to Kedarnath.</span>
           </h1>
         </div>
         <span className="mb-1 flex items-center gap-1 text-xs text-muted">
@@ -1086,7 +1072,7 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search destinations and experiences"
+          placeholder="Search corridor villages and destinations"
           className="w-full bg-surface border border-border rounded-xl py-2.5 pl-10 pr-3 text-sm outline-none focus:border-accent"
         />
       </label>
@@ -1134,6 +1120,41 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
           </div>
         )}
         <p className="mt-3 text-[9px] leading-relaxed text-muted">Crowd index, travel time and local-spend amounts are demo estimates, not live data. Check local conditions before travelling.</p>
+      </section>
+
+      <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Community-first travel</p>
+        <h2 className="mt-1 font-serif text-2xl text-text">Homestay village ideas</h2>
+        <p className="mt-2 text-xs leading-relaxed text-muted">These six entries are illustrative map-area concepts only. They are not verified accommodation providers, real properties, inventory, availability or bookable stays.</p>
+        <div className="mt-4 space-y-3">
+          {DEMO_HOMESTAYS.filter((village) => `${village.name} ${village.tags.join(" ")} ${village.shortDesc}`.toLowerCase().includes(search.toLowerCase())).map((village) => (
+            <article key={village.id} className="rounded-xl border border-border bg-bg p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0"><h3 className="text-sm font-semibold text-text">{village.name}</h3><p className="mt-1 text-xs leading-relaxed text-muted">{village.shortDesc}</p></div>
+                <span className="shrink-0 rounded-full border border-amber-300 bg-amber-100 px-2 py-1 text-[8px] font-extrabold uppercase tracking-wide text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">Demo listing</span>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">{village.tags.map((tag) => <span key={tag} className="rounded-full bg-surface-2 px-2 py-1 text-[9px] font-semibold text-muted">{tag}</span>)}</div>
+              <p className="mt-2 text-[10px] font-semibold text-accent-text">₹{village.localSpendINR.toLocaleString("en-IN")} · local spend demo estimate · approx. {village.elevationM} m</p>
+              <button type="button" onClick={() => setSelectedWaypointId(village.nearbyWaypointId)} className="mt-3 w-full rounded-lg bg-brand px-3 py-2.5 text-xs font-semibold text-white">Use nearby waypoint for weather</button>
+              <p className="mt-2 text-[9px] text-muted">Not a real property · not bookable · no host or rate verification</p>
+            </article>
+          ))}
+        </div>
+        <p className="mt-3 text-[10px] leading-relaxed text-muted">Travel-spend amounts are fictional demo estimates, not accommodation quotes or bookings.</p>
+      </section>
+
+      <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Char Dham-style corridor</p>
+        <h2 className="mt-1 font-serif text-2xl text-text">Route waypoints</h2>
+        <p className="mt-2 text-xs text-muted">Approximate positions and elevations for planning context; not turn-by-turn navigation or live road data.</p>
+        <div className="mt-3 space-y-2">
+          {CORRIDOR_WAYPOINTS.map((waypoint) => (
+            <button key={waypoint.id} type="button" onClick={() => setSelectedWaypointId(waypoint.id)} className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-bg p-3 text-left hover:bg-surface-2">
+              <span><span className="block text-xs font-semibold text-text">{waypoint.name}</span><span className="mt-0.5 block text-[9px] text-muted">{waypoint.segment} · {waypoint.lat.toFixed(4)}, {waypoint.lon.toFixed(4)}</span></span>
+              <span className="shrink-0 text-[10px] font-semibold text-accent-text">~{waypoint.elevationM} m</span>
+            </button>
+          ))}
+        </div>
       </section>
 
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
