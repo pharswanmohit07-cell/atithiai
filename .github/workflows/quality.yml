@@ -26,5 +26,7 @@ jobs:
         run: npm ci
       - name: Lint source and imports
         run: npm run lint
+      - name: Check optional image assets (warnings only)
+        run: npm run check:images
       - name: Build production assets
         run: npm run build
