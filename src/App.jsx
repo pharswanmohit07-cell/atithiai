@@ -87,7 +87,7 @@ function Header({ manager = false, onSwitch }) {
       </header>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border bg-bg px-4 py-2 text-xs text-muted sm:px-6">
         <span className="inline-flex items-center gap-1.5"><span className={"h-2 w-2 rounded-full " + (weather ? "bg-emerald-600" : "bg-amber-500")} />{weather ? "Live weather" : weatherLoading ? "Weather loading" : "Weather unavailable"}</span>
-        <span>{weather ? weather.temperatureC + "°C · " + weather.condition + (weather.windKmh == null ? "" : " · wind " + weather.windKmh + " km/h") : weatherError || "Only weather is live; hotel, partner, price and availability content is demo data."}</span>
+        <span>{weather ? formatLocaleNumber(weather.temperatureC,destination.locale) + "°C · " + weather.condition + (weather.windKmh == null ? "" : " · wind " + formatLocaleNumber(weather.windKmh,destination.locale) + " km/h") : weatherError || "Only weather is live; hotel, partner, price and availability content is demo data."}</span>
       </div>
     </>
   );

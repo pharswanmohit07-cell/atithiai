@@ -11,6 +11,14 @@ export const LENS_SAMPLE_CACHE = {
   },
   "sample-menu": {
     id: "sample-menu",
+    detectedLanguage: "English",
+    detectedText: "Sample soup — vegetables, broth. Sample rice bowl — ingredients vary.",
+    translation: "Sample soup — vegetables, broth. Sample rice bowl — ingredients vary.",
+    confidence: "medium",
+    dishes: [
+      { name: "Sample soup", explanation: "Illustrative menu text only. Ingredients and allergens are not confirmed.", dietGuess: "Unknown — confirm with staff", spiceGuess: "Unknown — confirm with staff" },
+      { name: "Sample rice bowl", explanation: "Illustrative menu text only. Ingredients and allergens are not confirmed.", dietGuess: "May be vegetarian; confirm with staff", spiceGuess: "Unknown — confirm with staff" }
+    ],
     imageType: "menu",
     summary: "This demo menu example shows how to check portion sizes, inclusions and extra charges before ordering. It is not a real restaurant menu.",
     visiblePrices: [],

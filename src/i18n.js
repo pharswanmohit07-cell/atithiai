@@ -74,6 +74,46 @@ const DICTIONARY = {
     flexAcknowledgement:"Je peux vérifier une option Flex Stay de démonstration. Consultez le calcul ci-dessous ; l’hôtel doit le confirmer.",
     emergencyNote:"Cette application ne peut pas dépêcher les services d’urgence. En cas de danger immédiat, appelez le numéro d’urgence local indiqué par l’hôtel.",
     humanDemo:"Aucun membre de l’équipe n’a encore rejoint la conversation ; il s’agit d’un transfert de démonstration."
+  },
+  de: {
+    chatTitle:"KI-Co-Host",replyLanguage:"Antwortsprache",detectLanguage:"Sprache meiner Nachricht erkennen",chatPlaceholder:"Frage zu deinem Aufenthalt…",send:"Senden",sending:"Wird gesendet…",talkHuman:"Mit einem Menschen sprechen",
+    chatHint:"Die KI kann Vorschläge machen, aber nichts bestätigen. Hotelpersonal bestätigt Buchungen, Gebühren und Verfügbarkeit.",
+    noText:"Der Text ist nicht klar lesbar. Bitte mache ein schärferes Foto.",dishDetails:"Gerichte",samplePhotos:"Vorschläge",
+    requestCreated:"Deine Anfrage wurde zur Prüfung an das Hotelteam weitergeleitet.",
+    askHotelPrice:"Ich habe die Frage an das Hotelteam weitergeleitet. Personal muss Gebühren, Buchungen und Verfügbarkeit bestätigen; es wurde nichts gebucht oder berechnet.",
+    flexAcknowledgement:"Ich kann eine Demo-Flex-Stay-Option prüfen. Bitte prüfe das angezeigte Angebot; das Hotel muss es bestätigen.",
+    emergencyNote:"Diese App kann keine Rettungsdienste alarmieren. Bei unmittelbarer Gefahr rufe die örtliche Notrufnummer an.",
+    humanDemo:"Das Hotelteam ist noch nicht beigetreten; dies ist eine Demo-Anfrage."
+  },
+  ja: {
+    chatTitle:"AIコンシェルジュ",replyLanguage:"返信言語",detectLanguage:"メッセージの言語を自動検出",chatPlaceholder:"滞在について質問する…",send:"送信",sending:"送信中…",talkHuman:"スタッフに相談",
+    chatHint:"AIは提案できますが確約はできません。予約、料金、空き状況はホテルスタッフが確認します。",
+    noText:"文字をはっきり読み取れません。ピントの合った写真をお試しください。",dishDetails:"料理の候補",samplePhotos:"おすすめ",
+    requestCreated:"ホテルスタッフの確認用にリクエストを追加しました。",
+    askHotelPrice:"ホテルスタッフに質問を送りました。料金、予約、空き状況はスタッフの確認が必要です。予約や請求は行われていません。",
+    flexAcknowledgement:"デモのFlex Stayオプションを確認できます。表示された内容を確認し、ホテルに最終確認してください。",
+    emergencyNote:"このアプリは緊急サービスを呼び出せません。差し迫った危険がある場合は現地の緊急番号に電話してください。",
+    humanDemo:"ホテルスタッフはまだチャットに参加していません。これはデモ依頼です。"
+  },
+  ar: {
+    chatTitle:"مساعد الفندق بالذكاء الاصطناعي",replyLanguage:"لغة الرد",detectLanguage:"اكتشاف لغة رسالتي",chatPlaceholder:"اسأل عن إقامتك…",send:"إرسال",sending:"جارٍ الإرسال…",talkHuman:"التحدث إلى موظف",
+    chatHint:"يمكن للذكاء الاصطناعي تقديم اقتراحات لا تأكيدها. يؤكد موظفو الفندق الحجوزات والرسوم والتوافر.",
+    noText:"تعذرت قراءة النص بوضوح. جرّب صورة أوضح.",dishDetails:"أطباق مقترحة",samplePhotos:"اقتراحات",
+    requestCreated:"أُضيف طلبك إلى قائمة مراجعة فريق الفندق.",
+    askHotelPrice:"أرسلت سؤالك إلى فريق الفندق. يجب أن يؤكد الموظفون الرسوم والحجوزات والتوافر؛ لم يتم الحجز أو الدفع.",
+    flexAcknowledgement:"يمكنني مراجعة خيار Flex Stay تجريبي. راجع العرض المعروض؛ يجب أن يؤكده الفندق.",
+    emergencyNote:"لا يستطيع هذا التطبيق إرسال خدمات الطوارئ. عند وجود خطر فوري، اتصل برقم الطوارئ المحلي.",
+    humanDemo:"لم ينضم أحد من فريق الفندق بعد؛ هذا طلب تجريبي."
+  },
+  zh: {
+    chatTitle:"AI酒店助手",replyLanguage:"回复语言",detectLanguage:"自动识别我的消息语言",chatPlaceholder:"询问您的住宿…",send:"发送",sending:"发送中…",talkHuman:"联系人工",
+    chatHint:"AI可以提供建议，但不能确认事项。预订、费用和可用性由酒店员工确认。",
+    noText:"无法清晰读取文字。请尝试更清晰、对焦准确的照片。",dishDetails:"菜品建议",samplePhotos:"建议",
+    requestCreated:"您的问题已加入酒店团队的审核队列。",
+    askHotelPrice:"我已将问题发送给酒店团队。费用、预订和可用性需要员工确认；目前没有预订或收费。",
+    flexAcknowledgement:"我可以查看演示版 Flex Stay 选项。请查看计算结果，最终需要酒店确认。",
+    emergencyNote:"此应用无法调度紧急服务。如有紧急危险，请拨打当地紧急电话号码。",
+    humanDemo:"酒店团队尚未加入聊天；这是一个演示请求。"
   }
 };
 
