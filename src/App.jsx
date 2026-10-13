@@ -7,9 +7,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
+import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
 import { useDestination } from "./context/DestinationContext.jsx";
 import { useTravelContext } from "./context/TravelContext.jsx";
-import { getDefaultLanguage, detectTextLanguage, LANGUAGE_OPTIONS, targetLanguageTag, t } from "./i18n.js";
+import { useProfile } from "./context/ProfileContext.jsx";
+import { rankPlaces, rankDishes, rankExperiences } from "./lib/rank.js";
+import { getDefaultLanguage, detectTextLanguage, languageBase, LANGUAGE_OPTIONS, targetLanguageTag, t } from "./i18n.js";
 
 const DestinationMap = lazy(() => import("./components/DestinationMap.jsx"));
 const TABS = [
@@ -44,6 +47,29 @@ function formatDate(value, locale, timezone) {
   try { return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone: timezone }).format(new Date(value)); }
   catch { return new Date(value).toISOString(); }
 }
+
+function formatPackMoney(value, destination) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "—";
+  try {
+    return new Intl.NumberFormat(destination.locale, {
+      style: "currency",
+      currency: destination.currency.code,
+      maximumFractionDigits: ["IDR", "JPY", "KRW", "VND", "CLP"].includes(destination.currency.code) ? 0 : 2
+    }).format(amount);
+  } catch {
+    return new Intl.NumberFormat(destination.locale, { maximumFractionDigits: 2 }).format(amount) + " " + destination.currency.code;
+  }
+}
+function destinationDaypart(timezone) {
+  try {
+    const hour = Number(new Intl.DateTimeFormat("en", { hour: "2-digit", hourCycle: "h23", timeZone: timezone }).format(new Date()));
+    return hour < 11 ? "morning" : hour < 16 ? "afternoon" : "evening";
+  } catch {
+    return "afternoon";
+  }
+}
+
 function niceWord(value) {
   return String(value || "").replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
@@ -167,12 +193,118 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
   </main>;
 }
 
-function ChatView({ destination, preferences, chatMessages, addChatMessage, addRequest }) {
+function fallbackIntent(text) {
+  const value = String(text || "").toLowerCase();
+  let intent = "other";
+  if (/\b(plan|itinerary|plan my day|day plan)\b/.test(value)) intent = "plan_day";
+  else if (/\b(food|dish|eat|menu|restaurant|vegan|vegetarian|spicy)\b/.test(value)) intent = "find_food";
+  else if (/\b(experience|workshop|class|guide|activity|craft|tour)\b/.test(value)) intent = "find_experience";
+  else if (/\b(help|support|lost|translate|emergency)\b/.test(value)) intent = "help";
+  else if (/\b(place|visit|see|hidden|quiet|crowded|nearby|viewpoint|museum|market|park|find|where)\b/.test(value)) intent = "find_place";
+  const categories = [];
+  const categoryPhrases = [
+    ["nature", /\b(nature|park|forest|garden|walk|hike|landscape)\b/],
+    ["market", /\b(market|bazaar|shopping)\b/],
+    ["cafe", /\b(cafe|café|coffee|tea)\b/],
+    ["culture", /\b(culture|history|heritage|museum|temple|music)\b/],
+    ["craft", /\b(craft|artisan|pottery|textile|tile|painting|woodcarving|ceramic)\b/],
+    ["viewpoint", /\b(view|viewpoint|sunset|overlook)\b/],
+    ["wellness", /\b(wellness|yoga|massage|relax|meditate)\b/]
+  ];
+  for (const [category, pattern] of categoryPhrases) if (pattern.test(value)) categories.push(category);
+  let diet = null;
+  if (/\bvegan\b/.test(value)) diet = "vegan";
+  else if (/\bvegetarian\b|\bveg\b/.test(value)) diet = "veg";
+  else if (/\bhalal\b/.test(value)) diet = "halal";
+  else if (/gluten[- ]?(free|aware)/.test(value)) diet = "gluten-aware";
+  else if (/\bnon[- ]?veg(etarian)?\b/.test(value)) diet = "non-veg";
+  const budgetMatch = value.match(/(?:under|below|less than|max|up to|budget of)\s*(?:₹|€|\$|£|¥|rp\.?\s*)?([\d][\d,.]*)/);
+  let maxBudgetLocal = null;
+  if (budgetMatch) {
+    const amount = Number(budgetMatch[1].replace(/,(?=\d{3}(?:\D|$))/g, "").replace(",", "."));
+    if (Number.isFinite(amount) && amount > 0) maxBudgetLocal = amount;
+  }
+  const timeOfDay = /\b(morning|breakfast|sunrise)\b/.test(value) ? "morning" : /\b(afternoon|lunch|noon)\b/.test(value) ? "afternoon" : /\b(evening|night|dinner|sunset)\b/.test(value) ? "evening" : null;
+  const durationMatch = value.match(/(\d+(?:\.\d+)?)\s*(hours?|hrs?|h\b|minutes?|mins?|m\b)/);
+  const durationMin = durationMatch ? Number(durationMatch[1]) * (/hour|hr|\bh\b/.test(durationMatch[2]) ? 60 : 1) : null;
+  return {
+    intent,
+    filters: {
+      categories, diet, maxBudgetLocal, timeOfDay,
+      mood: /\b(quiet|calm|peaceful|relaxed|slow)\b/.test(value) ? "quiet" : null,
+      avoidCrowds: /\b(avoid crowds|less crowded|not crowded|quiet|crowd-free)\b/.test(value) ? true : null,
+      indoorOnly: /\b(indoors?|inside|rainy day|rainy|rain|wet weather)\b/.test(value) ? true : null,
+      durationMin: Number.isFinite(durationMin) ? durationMin : null
+    },
+    language: targetLanguageTag(detectTextLanguage(text))
+  };
+}
+function resolveChatResult(destination, result) {
+  if (!result || typeof result.id !== "string") return null;
+  const collection = result.itemType === "place" ? destination.places : result.itemType === "experience" ? destination.experiences : result.itemType === "dish" ? destination.dishes : [];
+  const item = collection.find((entry) => entry.id === result.id);
+  if (!item) return null;
+  const title = result.itemType === "experience" ? item.title : item.name;
+  const description = item.localStory || item.description || "";
+  const price = result.itemType === "place"
+    ? item.avgSpendLocal > 0 ? "Illustrative spend: " + formatPackMoney(item.avgSpendLocal, destination) : "No spend estimate"
+    : result.itemType === "experience"
+      ? "Illustrative estimate: " + formatPackMoney(item.priceLocal, destination)
+      : Array.isArray(item.priceRangeLocal) ? "Demo range: " + formatPackMoney(item.priceRangeLocal[0], destination) + " – " + formatPackMoney(item.priceRangeLocal[1], destination) : "";
+  let mapPlace = result.itemType === "place" ? item : destination.places.find((place) => place.category === item.category);
+  if (!mapPlace && result.itemType === "dish") mapPlace = destination.places.find((place) => ["market", "cafe"].includes(place.category));
+  if (!mapPlace) mapPlace = destination.places[0];
+  return { ...item, id: item.id, itemType: result.itemType, title, description, price, reasons: result.reasons || [], score: result.score || 0, mapPlaceId: mapPlace?.id };
+}
+function localRankedReply(language, items) {
+  const base = languageBase(language);
+  const firstNames = items.slice(0, 2).map((item) => item.title).filter(Boolean).join(" and ");
+  const lead = {
+    en: "I ranked options against your preferences. These are demo ideas; confirm details locally.",
+    hi: "मैंने आपकी पसंद के अनुसार विकल्प क्रमबद्ध किए हैं। ये डेमो सुझाव हैं; स्थानीय रूप से पुष्टि करें।",
+    es: "He ordenado opciones según tus preferencias. Son ideas de demostración; verifica los detalles localmente.",
+    fr: "J’ai classé les options selon vos préférences. Ce sont des exemples ; vérifiez les détails sur place.",
+    de: "Ich habe passende Optionen nach deinen Vorlieben sortiert. Dies sind Demo-Ideen; prüfe Details vor Ort.",
+    ja: "好みに合わせて候補を並べました。デモ用の提案なので、詳細は現地で確認してください。",
+    ar: "رتبت الخيارات وفق تفضيلاتك. هذه اقتراحات تجريبية؛ تحقق من التفاصيل محليًا.",
+    zh: "我已按你的偏好排列候选项。这些是演示建议，请在当地确认详情。",
+    pt: "Ordenei as opções de acordo com as suas preferências. São ideias de demonstração; confirme os detalhes localmente.",
+    id: "Saya mengurutkan pilihan berdasarkan preferensi perjalanan Anda. Ini ide demo; verifikasi detailnya secara lokal."
+  }[base] || "I ranked options against your preferences. These are demo ideas; confirm details locally.";
+  if (!items.length) {
+    return {
+      en:"I couldn't find an option matching every filter in this destination pack. Try relaxing a constraint and verify details locally.",
+      hi:"इस डेस्टिनेशन पैक में सभी फ़िल्टर से मेल खाता विकल्प नहीं मिला। कोई फ़िल्टर ढीला करके स्थानीय रूप से पुष्टि करें।",
+      es:"No encontré una opción que cumpla todos los filtros. Prueba a relajar uno y verifica los detalles localmente.",
+      fr:"Aucune option ne correspond à tous les filtres. Essayez d’en assouplir un et vérifiez sur place.",
+      de:"Keine Option erfüllt alle Filter. Lockere einen Filter und prüfe die Details vor Ort.",
+      ja:"すべての条件に合う候補がありません。条件を緩めて現地で確認してください。",
+      ar:"لم أجد خيارًا يطابق جميع المرشحات. خفف أحد الشروط وتحقق محليًا.",
+      zh:"没有找到符合所有筛选条件的选项。请放宽一个条件并在当地确认。",
+      pt:"Não encontrei uma opção que corresponda a todos os filtros. Tente flexibilizar um e confirme localmente.",
+      id:"Tidak ada pilihan yang cocok dengan semua filter. Coba longgarkan satu kriteria dan verifikasi secara lokal."
+    }[base] || "I couldn't find an option matching every filter. Try relaxing a constraint and verify locally.";
+  }
+  return firstNames ? lead + " " + firstNames + "." : lead;
+}
+function ChatResultCard({ destination, result, added, onAdd, onShowMap }) {
+  const title = result.title;
+  const description = result.description;
+  return <article className="rounded-xl border border-border bg-bg p-3">
+    <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-serif text-lg leading-snug">{title}</h3><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold capitalize">{result.itemType}</span></div>
+    <p className="mt-1 text-xs leading-relaxed text-muted">{description}</p>
+    {result.price && <p className="mt-2 text-xs font-bold">{result.price} <span className="font-normal text-muted">· demo</span></p>}
+    {result.reasons.length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{result.reasons.slice(0, 4).map((reason, index) => <span key={reason + index} className="rounded-full border border-border bg-surface px-2 py-1 text-[9px] leading-relaxed text-muted">{reason}</span>)}</div>}
+    <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={onAdd} disabled={added} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{added ? <Check size={13}/> : <Plus size={13}/>} {added ? "Added to plan" : "Add to plan"}</button><button type="button" onClick={onShowMap} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-bold"><MapPin size={13}/>Show on map</button></div>
+  </article>;
+}
+function ChatView({ destination, weather, profile, chatMessages, addChatMessage, addRequest, addItineraryItem, onShowOnMap }) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [replyLanguage, setReplyLanguage] = useState(() => {
     try { return localStorage.getItem("atithi-chat-language") || "auto"; } catch { return "auto"; }
   });
+  const [addedResults, setAddedResults] = useState([]);
   const writeLanguage = (value) => {
     setReplyLanguage(value);
     try { localStorage.setItem("atithi-chat-language", value); } catch { /* Keep the selection for this session. */ }
@@ -184,60 +316,113 @@ function ChatView({ destination, preferences, chatMessages, addChatMessage, addR
     if (!message || sending) return;
     setDraft("");
     addChatMessage({ role: "guest", text: message });
-    const localLanguage = replyLanguage === "auto" ? detectTextLanguage(message) : replyLanguage;
-    let reply = localChatFallback(message, destination, localLanguage);
-    if (/(save|remember|add to (my )?trip|keep this|note this|guardar|recordar|enregistrer|merken|保存|记住|حفظ|सहेज)/i.test(message)) {
-      addRequest({ title: "Travel note from chat", category: "Chat idea", detail: message });
-      reply = t("requestCreated", localLanguage);
-    } else {
-      setSending(true);
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 7000);
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify({
-            message, destinationId: destination.id,
-            replyLanguage: replyLanguage === "auto" ? "auto" : targetLanguageTag(replyLanguage),
-            preferences: { ...preferences, language: localLanguage },
-            city: destination.city, country: destination.country, currency: destination.currency.code,
-            primaryLanguages: destination.primaryLanguages,
-            placeIds: destination.places.map((place) => place.id),
-            experienceIds: destination.experiences.map((experience) => experience.id),
-            dishIds: destination.dishes.map((dish) => dish.id)
-          })
-        });
-        let payload = null;
-        try { payload = await response.json(); } catch { payload = null; }
-        if (response.ok && typeof payload?.reply === "string" && payload.reply.trim()) reply = payload.reply.slice(0, 2200);
-      } catch {
-        // The local multilingual fallback is intentionally usable offline.
-      } finally {
-        window.clearTimeout(timeout);
-        setSending(false);
-      }
+    setSending(true);
+    const requestLanguage = replyLanguage === "auto" ? detectTextLanguage(message) : replyLanguage;
+    let parsedIntent = fallbackIntent(message);
+    const intentController = new AbortController();
+    const intentTimeout = window.setTimeout(() => intentController.abort(), 3000);
+    try {
+      const response = await fetch("/api/intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: intentController.signal,
+        body: JSON.stringify({
+          text: message,
+          city: destination.city,
+          country: destination.country,
+          currency: destination.currency.code,
+          languages: profile.languages
+        })
+      });
+      const payload = await response.json();
+      if (response.ok && payload && typeof payload.intent === "string" && payload.filters && typeof payload.filters === "object") parsedIntent = payload;
+    } catch {
+      // The local keyword extractor is used when intent parsing is offline or times out.
+    } finally {
+      window.clearTimeout(intentTimeout);
     }
-    addChatMessage({ role: "assistant", text: reply });
+
+    if (replyLanguage !== "auto") parsedIntent.language = targetLanguageTag(replyLanguage);
+    const filters = {
+      ...(parsedIntent.filters || {}),
+      diet: parsedIntent.filters?.diet && parsedIntent.filters.diet !== "none" ? parsedIntent.filters.diet : (profile.diet === "none" ? null : profile.diet),
+      avoidCrowds: parsedIntent.filters?.avoidCrowds ?? profile.avoidCrowds,
+      maxBudgetLocal: parsedIntent.filters?.maxBudgetLocal ?? null
+    };
+    const freeMinutes = profile.pace === "relaxed" ? 180 : profile.pace === "packed" ? 600 : 360;
+    const context = { weather, timeOfDay: filters.timeOfDay || destinationDaypart(destination.timezone), freeMinutes, budget: profile.dailyBudget.amount };
+    let ranked = [];
+    if (parsedIntent.intent === "find_food") ranked = rankDishes(destination.dishes, profile, filters, context);
+    else if (parsedIntent.intent === "find_experience") ranked = rankExperiences(destination.experiences, profile, filters, context);
+    else if (parsedIntent.intent === "find_place" || parsedIntent.intent === "plan_day") ranked = rankPlaces(destination.places, profile, filters, context);
+    else {
+      const placeResults = rankPlaces(destination.places, profile, filters, context).slice(0, 3);
+      const experienceResults = rankExperiences(destination.experiences, profile, filters, context).slice(0, 2);
+      ranked = [...placeResults, ...experienceResults].sort((a, b) => b.score - a.score);
+    }
+    ranked = ranked.slice(0, 5).map((item) => ({
+      ...item,
+      itemType: item.itemType || (parsedIntent.intent === "find_food" ? "dish" : parsedIntent.intent === "find_experience" ? "experience" : "place")
+    }));
+    const fallback = localRankedReply(requestLanguage, ranked.map((item) => ({
+      title: item.itemType === "experience" ? item.title : item.name
+    })));
+    let reply = fallback;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 7000);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          message,
+          destinationId: destination.id,
+          replyLanguage: replyLanguage === "auto" ? "auto" : targetLanguageTag(replyLanguage),
+          profile,
+          weather: weather?.source === "live" ? weather : null,
+          rankedItems: ranked.map((item) => ({ id: item.id, itemType: item.itemType, score: item.score, reasons: item.reasons })),
+          intent: parsedIntent.intent
+        })
+      });
+      const payload = await response.json();
+      if (response.ok && typeof payload?.reply === "string" && payload.reply.trim() && payload.reply.trim().split(/\s+/).length <= 70) reply = payload.reply.trim();
+    } catch {
+      // Show the same deterministic ranked cards with a local template reply.
+    } finally {
+      window.clearTimeout(timeout);
+      setSending(false);
+    }
+    addChatMessage({ role: "assistant", text: reply, intent: parsedIntent.intent, results: ranked });
+    if (/^(save|remember|add to (my )?trip|keep this|note this)$/i.test(message.trim())) {
+      addRequest({ title: "Travel note from chat", category: "Chat idea", detail: message });
+    }
   };
 
   return <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white"><MessageCircle size={19}/></span><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Ask about places, local stories, food and experiences.</p></div></div>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white"><MessageCircle size={19}/></span><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Tell Atithi what kind of place, food or experience you have in mind.</p></div></div>
       <label className="flex items-center gap-2 text-xs font-bold text-text">{t("replyLanguage", getDefaultLanguage())}<select value={replyLanguage} onChange={(event) => writeLanguage(event.target.value)} className="min-h-10 max-w-40 rounded-xl border border-border bg-bg px-2 py-2 text-xs"><option value="auto">{t("detectLanguage", getDefaultLanguage())}</option>{LANGUAGE_OPTIONS.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
     </div>
-    <div className="mt-4 max-h-[min(52vh,520px)] space-y-3 overflow-y-auto rounded-2xl bg-bg p-3" aria-live="polite">
-      {chatMessages.map((message) => <div key={message.id} className={"max-w-[94%] rounded-2xl px-3 py-3 text-sm leading-relaxed " + (message.role === "guest" ? "ml-auto text-white" : "border border-border bg-surface text-text")} style={message.role === "guest" ? { backgroundColor: destination.themeColors.accent } : undefined}><p className="whitespace-pre-wrap">{message.text}</p><time className="mt-1 block text-[9px] opacity-60">{formatDate(message.createdAt, destination.locale, destination.timezone)}</time></div>)}
+    <div className="mt-4 max-h-[min(62vh,640px)] space-y-3 overflow-y-auto rounded-2xl bg-bg p-3" aria-live="polite">
+      {chatMessages.map((message) => <div key={message.id} className={"max-w-[98%] rounded-2xl px-3 py-3 text-sm leading-relaxed " + (message.role === "guest" ? "ml-auto text-white" : "border border-border bg-surface text-text")} style={message.role === "guest" ? { backgroundColor: destination.themeColors.accent } : undefined}>
+        <p className="whitespace-pre-wrap">{message.text}</p><time className="mt-1 block text-[9px] opacity-60">{formatDate(message.createdAt, destination.locale, destination.timezone)}</time>
+        {message.role === "assistant" && Array.isArray(message.results) && message.results.length > 0 && <div className="mt-3 space-y-2">{message.results.map((reference) => {
+          const result = resolveChatResult(destination, reference);
+          if (!result) return null;
+          const key = reference.itemType + ":" + reference.id;
+          return <ChatResultCard key={key} destination={destination} result={result} added={addedResults.includes(key)} onAdd={() => { const stop = addItineraryItem(result, reference.itemType); if (stop) setAddedResults((current) => [...new Set([...current, key])]); }} onShowMap={() => result.mapPlaceId && onShowOnMap(result.mapPlaceId)}/>;
+        })}</div>}
+      </div>)}
       {sending && <p role="status" className="text-xs text-muted">{t("sending", getDefaultLanguage())}</p>}
     </div>
     <form onSubmit={submit} className="mt-3 flex gap-2"><input value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={1200} placeholder={t("chatPlaceholder", getDefaultLanguage())} className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm" aria-label={t("chatPlaceholder", getDefaultLanguage())}/><button type="submit" disabled={!draft.trim() || sending} aria-label={t("send", getDefaultLanguage())} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: destination.themeColors.accent }}><Send size={15}/><span className="hidden sm:inline">{t("send", getDefaultLanguage())}</span></button></form>
-    <DemoNote>AI replies use the selected destination pack. Verify local advice independently; no booking or service request is sent to an external provider.</DemoNote>
+    <DemoNote>Rank scores and reason chips come from deterministic rules. Stories, hosts and spending ranges are illustrative; only weather is live.</DemoNote>
   </section>;
 }
-
 export default function AtithiAI() {
   const { destination, destinations, selectDestination, weather, weatherLoading, weatherError, formatCurrency, formatNumber, emergencyNumber } = useDestination();
-  const { itinerary, addItineraryStop, removeItineraryStop, clearItinerary, requests, addRequest, chatMessages, addChatMessage, preferences, updatePreferences } = useTravelContext();
+  const { itinerary, addItineraryStop, addItineraryItem, removeItineraryStop, clearItinerary, requests, addRequest, chatMessages, addChatMessage } = useTravelContext();
+  const { profile } = useProfile();
   const [started, setStarted] = useState(readStarted);
   const [activeTab, setActiveTab] = useState("home");
   const [placeQuery, setPlaceQuery] = useState("");
@@ -245,10 +430,27 @@ export default function AtithiAI() {
   const [hiddenOnly, setHiddenOnly] = useState(false);
   const [showExperiences, setShowExperiences] = useState(true);
   const [showDishes, setShowDishes] = useState(true);
-  const [interestDraft, setInterestDraft] = useState("");
+  const [mapFocusId, setMapFocusId] = useState(null);
 
   useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);
+  useEffect(() => { setMapFocusId(null); }, [destination.id]);
+  useEffect(() => {
+    if (activeTab !== "discover" || !mapFocusId) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById("destination-map-container")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, mapFocusId]);
   const planIds = useMemo(() => new Set(itinerary.map((item) => item.placeId)), [itinerary]);
+  const rankProfile = useMemo(() => ({
+    ...profile,
+    dailyBudget: {
+      ...profile.dailyBudget,
+      amount: profile.dailyBudget.amount !== null && profile.dailyBudget.currencyCode !== destination.currency.code
+        ? null
+        : profile.dailyBudget.amount
+    }
+  }), [profile, destination.currency.code]);
   const filteredPlaces = useMemo(() => destination.places.filter((place) => {
     const query = placeQuery.trim().toLowerCase();
     return (!query || [place.name, place.localStory, place.category, ...place.tags].join(" ").toLowerCase().includes(query))
@@ -265,31 +467,28 @@ export default function AtithiAI() {
     addChatMessage({ role: "assistant", text: t("requestCreated", getDefaultLanguage()) + " · " + request.title });
   };
 
-  const buildPlan = async () => {
-    const weatherKind = weather?.kind || "unknown";
-    const timeOrder = { morning: 0, afternoon: 1, evening: 2, any: 3 };
-    const score = (place) => {
-      let value = place.isHiddenGem ? 3 : 0;
-      if (weatherKind === "rain" && place.rainFriendly) value += 3;
-      if (preferences.pace === "slow" && place.crowdLevel === "low") value += 3;
-      if (preferences.pace === "curious" && ["culture", "craft", "market"].includes(place.category)) value += 2;
-      if (preferences.interests.some((interest) => place.tags.some((tag) => tag.toLowerCase().includes(interest.toLowerCase())))) value += 4;
-      return value;
-    };
-    const selected = [...destination.places]
-      .filter((place) => !planIds.has(place.id))
-      .sort((a, b) => score(b) - score(a) || timeOrder[a.bestTime] - timeOrder[b.bestTime] || a.name.localeCompare(b.name))
-      .slice(0, Math.max(0, 5 - itinerary.length));
+  const buildPlan = () => {
+    const freeMinutes = profile.pace === "relaxed" ? 180 : profile.pace === "packed" ? 600 : 360;
+    const selected = [];
+    const maxStops = Math.min(5, Math.max(0, 12 - itinerary.length));
+    const used = new Set(planIds);
+    let remainingMinutes = freeMinutes;
+    while (selected.length < maxStops && remainingMinutes > 0) {
+      const next = rankPlaces(destination.places, rankProfile, {}, {
+        weather, timeOfDay: destinationDaypart(destination.timezone), freeMinutes: remainingMinutes, budget: rankProfile.dailyBudget.amount
+      }).find((place) => !used.has(place.id));
+      if (!next) break;
+      selected.push(next);
+      used.add(next.id);
+      remainingMinutes = Math.max(0, remainingMinutes - (Number(next.durationMin) || 45));
+    }
     selected.forEach(addItineraryStop);
     setActiveTab("plan");
   };
-
-  const addInterest = (event) => {
-    event.preventDefault();
-    const interest = interestDraft.trim().toLowerCase().slice(0, 32);
-    if (!interest) return;
-    updatePreferences({ interests: Array.from(new Set([...preferences.interests, interest])).slice(0, 10) });
-    setInterestDraft("");
+  const showOnMap = (placeId) => {
+    if (!destination.places.some((place) => place.id === placeId)) return;
+    setMapFocusId(placeId);
+    setActiveTab("discover");
   };
 
   const goStart = () => {
@@ -299,6 +498,7 @@ export default function AtithiAI() {
   };
 
   if (!started) return <WelcomeScreen destination={destination} destinations={destinations} selectDestination={selectDestination} onStart={goStart}/>;
+  if (!profile.onboardingComplete) return <ProfileOnboarding destination={destination} onFinish={() => setActiveTab("home")}/>;
 
   return <main className="min-h-screen bg-bg pb-[calc(5.75rem+env(safe-area-inset-bottom))] text-text">
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 shadow-sm backdrop-blur sm:px-6">
@@ -320,7 +520,7 @@ export default function AtithiAI() {
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-serif text-2xl">A few places to begin</h2><p className="mt-1 text-xs text-muted">A changing mix of well-known landmarks and quieter corners.</p></div><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">All places <ArrowRight size={14}/></button></div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">{[...destination.places].sort((a,b)=>Number(b.isHiddenGem)-Number(a.isHiddenGem)).slice(0,3).map((place)=><PlaceCard key={place.id} place={place} destination={destination} formatCurrency={formatCurrency} inPlan={planIds.has(place.id)} onAdd={addItineraryStop} onRemove={removeItineraryStop}/>)}</div><DemoNote/>
         </section>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Your plan</h2><p className="mt-1 text-xs text-muted">{formatNumber(itinerary.length, destination.locale)} places saved for this destination.</p></div><button type="button" onClick={() => setActiveTab("plan")} className="min-h-10 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white">Review plan</button></div>{itinerary.length > 0 ? <ol className="mt-3 space-y-2">{itinerary.slice(0,3).map((stop,index)=><li key={stop.placeId} className="flex items-center gap-3 rounded-xl bg-bg p-3"><span className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">{stop.title}</span><span className="block text-[10px] text-muted">{niceWord(stop.bestTime || "any")}</span></span><button type="button" onClick={()=>removeItineraryStop(stop.placeId)} className="min-h-9 rounded-lg border border-border px-2 text-xs">Remove</button></li>)}</ol> : <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">Save a place from Discover or build a suggested day to start your plan.</p>}</section>
+        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-serif text-2xl">Your plan</h2><p className="mt-1 text-xs text-muted">{formatNumber(itinerary.length, destination.locale)} places saved for this destination.</p></div><button type="button" onClick={() => setActiveTab("plan")} className="min-h-10 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white">Review plan</button></div>{itinerary.length > 0 ? <ol className="mt-3 space-y-2">{itinerary.slice(0,3).map((stop,index)=><li key={stop.id || stop.placeId} className="flex items-center gap-3 rounded-xl bg-bg p-3"><span className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><span className="min-w-0 flex-1"><span className="block text-sm font-bold">{stop.title}</span><span className="block text-[10px] text-muted">{niceWord(stop.bestTime || "any")}</span></span><button type="button" onClick={()=>removeItineraryStop(stop.id || stop.placeId)} className="min-h-9 rounded-lg border border-border px-2 text-xs">Remove</button></li>)}</ol> : <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">Save a place from Discover or build a suggested day to start your plan.</p>}</section>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><button type="button" onClick={() => setActiveTab("lens")} className="rounded-2xl border border-border bg-surface p-4 text-left hover:bg-surface-2"><Languages className="text-accent-text"/><h2 className="mt-2 font-serif text-xl">Translate what you see</h2><p className="mt-1 text-xs text-muted">Scan signs, menus and fare boards using Atithi Lens.</p></button><button type="button" onClick={() => setActiveTab("chat")} className="rounded-2xl border border-border bg-surface p-4 text-left hover:bg-surface-2"><MessageCircle className="text-accent-text"/><h2 className="mt-2 font-serif text-xl">Ask a travel question</h2><p className="mt-1 text-xs text-muted">Chat in your own language and explore ideas from this destination pack.</p></button></div>
       </div>}
 
@@ -330,7 +530,7 @@ export default function AtithiAI() {
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto]"><label className="relative block"><Search size={15} className="pointer-events-none absolute left-3 top-3 text-muted"/><input value={placeQuery} onChange={(event)=>setPlaceQuery(event.target.value)} placeholder="Search stories, tags or places" className="min-h-10 w-full rounded-xl border border-border bg-bg pl-9 pr-3 py-2 text-sm"/></label><label className="flex items-center gap-2 rounded-xl border border-border bg-bg px-3 text-xs font-semibold"><span className="sr-only">Filter category</span><select value={categoryFilter} onChange={(event)=>setCategoryFilter(event.target.value)} className="min-h-10 w-full bg-transparent py-2"><option value="all">All categories</option>{CATEGORY_OPTIONS.map((category)=><option key={category} value={category}>{CATEGORY_LABELS[category]}</option>)}</select></label><label className="flex min-h-10 items-center gap-2 rounded-xl border border-border bg-bg px-3 text-xs font-semibold"><input type="checkbox" checked={hiddenOnly} onChange={(event)=>setHiddenOnly(event.target.checked)}/>Hidden-place picks</label></div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{filteredPlaces.map((place)=><PlaceCard key={place.id} place={place} destination={destination} formatCurrency={formatCurrency} inPlan={planIds.has(place.id)} onAdd={addItineraryStop} onRemove={removeItineraryStop}/>)}</div>
           {filteredPlaces.length===0 && <p className="mt-4 rounded-xl border border-dashed border-border p-5 text-sm text-muted">No places match those filters. Try another category or search.</p>}
-          <div className="mt-5 overflow-hidden rounded-2xl border border-border"><Suspense fallback={<div className="map-empty min-h-64">Loading destination map…</div>}><DestinationMap destination={destination} height={320}/></Suspense></div>
+          <div id="destination-map-container" className="mt-5 overflow-hidden rounded-2xl border border-border"><Suspense fallback={<div className="map-empty min-h-64">Loading destination map…</div>}><DestinationMap destination={destination} height={320} focusPlaceId={mapFocusId}/></Suspense></div>
           <DemoNote/>
         </section>
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><button type="button" onClick={()=>setShowExperiences((value)=>!value)} className="flex min-h-10 w-full items-center justify-between gap-3 text-left"><span><span className="block font-serif text-2xl">Local experiences</span><span className="mt-1 block text-xs text-muted">Small-group ideas, craft, food, culture and slow moments.</span></span>{showExperiences?<Minus size={17}/>:<Plus size={17}/>}</button>{showExperiences&&<div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{destination.experiences.map((experience)=><ExperienceCard key={experience.id} experience={experience} destination={destination} formatCurrency={formatCurrency} onSave={(item)=>saveIdea(item,"experience")}/>)}</div>}<DemoNote/></section>
@@ -338,19 +538,13 @@ export default function AtithiAI() {
       </section>}
 
       {activeTab === "plan" && <section className="space-y-4"><div className="rounded-3xl p-5 text-white sm:p-7" style={{background:"linear-gradient(125deg, #163e4b 0%, #28365c 55%, "+destination.themeColors.accent+" 100%)"}}><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Your personal plan</p><h1 className="mt-2 font-serif text-4xl">A day with space to wander.</h1><p className="mt-2 text-sm text-white/80">Choose places yourself or use a simple pack-based suggestion. Nothing is booked.</p><div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-extrabold text-slate-900"><Sparkles size={16}/>Suggest places</button><button type="button" onClick={clearItinerary} disabled={!itinerary.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/30 px-4 py-2 text-sm font-bold disabled:opacity-50"><X size={15}/>Clear plan</button></div></div>
-          {itinerary.length ? <ol className="space-y-3">{itinerary.map((stop,index)=>{const place=destination.places.find((item)=>item.id===stop.placeId);if(!place)return null;return <li key={stop.placeId} className="flex gap-3 rounded-2xl border border-border bg-surface p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="font-serif text-xl">{place.name}</h2><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">{niceWord(place.bestTime)}</span></div><p className="mt-1 text-sm leading-relaxed text-muted">{place.localStory}</p><p className="mt-2 text-[10px] text-muted">{formatNumber(place.durationMin,destination.locale)} min · {niceWord(place.category)}</p></div><button type="button" onClick={()=>removeItineraryStop(place.id)} aria-label={"Remove "+place.name} className="min-h-9 min-w-9 rounded-lg border border-border px-2"><X size={15}/></button></li>})}</ol> : <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center"><CalendarDays size={28} className="mx-auto text-muted"/><h2 className="mt-3 font-serif text-2xl">Your plan starts with curiosity.</h2><p className="mt-2 text-sm text-muted">Add places from Discover or ask for suggestions tailored to your interests and pace.</p><button type="button" onClick={()=>setActiveTab("discover")} className="mt-4 min-h-11 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white">Find places</button></div>}
+          {itinerary.length ? <ol className="space-y-3">{itinerary.map((stop,index)=>{const kind=stop.itemType||"place";const collection=kind==="place"?destination.places:kind==="experience"?destination.experiences:destination.dishes;const item=collection.find((entry)=>entry.id===(stop.itemId||stop.placeId));if(!item)return null;const title=kind==="experience"?item.title:item.name;const note=item.localStory||item.description||stop.note||"";const bestTime=item.bestTime||stop.bestTime||"any";const duration=Number(item.durationMin)||Number(stop.durationMin)||0;const category=item.category||(kind==="dish"?"food":kind);const uniqueId=stop.id||kind+"-"+item.id;return <li key={uniqueId} className="flex gap-3 rounded-2xl border border-border bg-surface p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white" style={{backgroundColor:destination.themeColors.accent}}>{formatNumber(index+1,destination.locale)}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="font-serif text-xl">{title}</h2><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">{niceWord(bestTime)}</span><span className="rounded-full border border-border px-2 py-1 text-[9px] capitalize text-muted">{kind}</span></div><p className="mt-1 text-sm leading-relaxed text-muted">{note}</p>{duration>0&&<p className="mt-2 text-[10px] text-muted">{formatNumber(duration,destination.locale)} min · {niceWord(category)}</p>}{stop.reasons?.length>0&&<div className="mt-2 flex flex-wrap gap-1">{stop.reasons.slice(0,4).map((reason,reasonIndex)=><span key={reason+reasonIndex} className="rounded-full border border-border px-2 py-1 text-[9px] text-muted">{reason}</span>)}</div>}</div><button type="button" onClick={()=>removeItineraryStop(uniqueId)} aria-label={"Remove "+title} className="min-h-9 min-w-9 rounded-lg border border-border px-2"><X size={15}/></button></li>})}</ol> : <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center"><CalendarDays size={28} className="mx-auto text-muted"/><h2 className="mt-3 font-serif text-2xl">Your plan starts with curiosity.</h2><p className="mt-2 text-sm text-muted">Add places from Discover or ask for suggestions tailored to your interests and pace.</p><button type="button" onClick={()=>setActiveTab("discover")} className="mt-4 min-h-11 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white">Find places</button></div>}
           <DemoNote>Suggested times of day are approximate preferences, not opening-hour information or reservations.</DemoNote>
         </section>}
 
       {activeTab === "lens" && <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><LensTab onRequest={(request)=>addRequest({title:request.title,category:request.category,detail:request.detail})}/></section>}
-      {activeTab === "chat" && <ChatView key={destination.id} destination={destination} preferences={preferences} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest}/>}
-      {activeTab === "profile" && <section className="space-y-4">
-        <div className="rounded-3xl p-5 text-white sm:p-7" style={{background:"linear-gradient(125deg, #163e4b 0%, #28365c 55%, "+destination.themeColors.accent+" 100%)"}}><p className="text-xs font-bold uppercase tracking-[0.18em] text-white/70">Your travel style</p><h1 className="mt-2 font-serif text-4xl">Make it yours.</h1><p className="mt-2 text-sm text-white/80">Your preferences help shape suggestions on this device.</p></div>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Destination</h2><div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">{destinations.map((item)=><button key={item.id} type="button" onClick={()=>selectDestination(item.id)} aria-pressed={destination.id===item.id} className={"min-h-20 rounded-xl border p-3 text-left "+(destination.id===item.id?"border-current bg-surface-2":"border-border bg-bg")}><span className="block text-[10px] text-muted">{item.country}</span><span className="mt-1 block font-serif text-xl">{item.city}</span></button>)}</div></section>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Your pace</h2><label className="mt-3 block text-xs font-bold text-muted">Travel mood<select value={preferences.pace} onChange={(event)=>updatePreferences({pace:event.target.value})} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{PACE_OPTIONS.map((option)=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label className="mt-3 block text-xs font-bold text-muted">Food preference<select value={preferences.dietaryPreference} onChange={(event)=>updatePreferences({dietaryPreference:event.target.value})} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text">{DIET_OPTIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><form onSubmit={addInterest} className="mt-4"><label htmlFor="profile-interest" className="block text-xs font-bold text-muted">Interests — add one at a time</label><div className="mt-1 flex gap-2"><input id="profile-interest" value={interestDraft} maxLength={32} onChange={(event)=>setInterestDraft(event.target.value)} placeholder="e.g. ceramics, gardens, music" className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"/><button type="submit" className="min-h-11 rounded-xl bg-brand px-3 text-sm font-bold text-white">Add</button></div></form><div className="mt-3 flex flex-wrap gap-2">{preferences.interests.map((interest)=><button key={interest} type="button" onClick={()=>updatePreferences({interests:preferences.interests.filter((item)=>item!==interest)})} className="inline-flex min-h-8 items-center gap-1 rounded-full border border-border bg-bg px-3 py-1 text-xs">{interest}<X size={12}/></button>)}</div></section>
-        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Saved trip notes</h2>{requests.length ? <div className="mt-3 space-y-2">{requests.map((request)=><article key={request.id} className="rounded-xl border border-border bg-bg p-3"><div className="flex flex-wrap items-start justify-between gap-2"><h3 className="text-sm font-bold">{request.title}</h3><span className="rounded-full bg-surface-2 px-2 py-1 text-[10px] font-bold">{request.status}</span></div><p className="mt-1 text-xs text-muted">{request.category}</p><p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-muted">{request.detail}</p><time className="mt-2 block text-[10px] text-muted">{formatDate(request.createdAt,destination.locale,destination.timezone)}</time></article>)}</div> : <p className="mt-3 rounded-xl border border-dashed border-border p-4 text-sm text-muted">Save a Lens result, dish or experience to keep a note here.</p>}</section>
-        <p className="text-[10px] leading-relaxed text-muted">Your plan, chat and saved notes are stored locally in this browser. Switching destinations starts a fresh plan and conversation.</p>
-      </section>}
+      {activeTab === "chat" && <ChatView key={destination.id} destination={destination} weather={weather} profile={rankProfile} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest} addItineraryItem={addItineraryItem} onShowOnMap={showOnMap}/>}
+      {activeTab === "profile" && <ProfileTab destination={destination} destinations={destinations} selectDestination={selectDestination} requests={requests} formatDate={formatDate}/> }
     </div>
 
     <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface/95 px-1 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur">

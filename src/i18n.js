@@ -105,7 +105,9 @@ export const LANGUAGE_OPTIONS = Object.freeze([
   { code:"de",tag:"de-DE",label:"Deutsch" },
   { code:"ja",tag:"ja-JP",label:"日本語" },
   { code:"ar",tag:"ar",label:"العربية" },
-  { code:"zh",tag:"zh-CN",label:"中文" }
+  { code:"zh",tag:"zh-CN",label:"中文" },
+  { code:"pt",tag:"pt-PT",label:"Português" },
+  { code:"id",tag:"id-ID",label:"Bahasa Indonesia" }
 ]);
 
 export function languageBase(value) {
@@ -136,6 +138,8 @@ export function detectTextLanguage(value) {
   const lower = text.toLowerCase();
   if (/[ñ¿¡]/.test(lower) || /\b(que|por favor|gracias|dónde|cuánto|necesito|hola)\b/.test(lower)) return "es";
   if (/[àâçéèêëîïôùûüÿœ]/.test(lower) || /\b(bonjour|merci|combien|où|avec|pour)\b/.test(lower)) return "fr";
+  if (/[ãõ]/.test(lower) || /\b(obrigado|obrigada|por favor|onde|quanto|preciso|olá|não)\b/.test(lower)) return "pt";
+  if (/\b(yang|tidak|dengan|untuk|saya|bisa|terima kasih|berapa|selamat)\b/.test(lower)) return "id";
   if (/\b(der|die|das|und|ich|bitte|danke|wo|wie viel)\b/.test(lower)) return "de";
   return "en";
 }

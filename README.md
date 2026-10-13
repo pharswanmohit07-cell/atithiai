@@ -10,10 +10,21 @@ The current demonstration packs are Jaipur (India), Ubud (Bali, Indonesia) and L
 - **Discover:** browse 12 places, six experience ideas and ten local dishes for the selected pack. Place and experience listings carry a small Demo content note.
 - **Plan:** save places from Discover or make a pack-based suggested day. The plan and conversation reset when the destination changes.
 - **Atithi Lens:** scan a menu, fare board or notice, detect the text language, translate it, and optionally use speech playback. Menu notes are AI estimates. Price mode only works from amounts visibly readable in the image; it does not claim official rates or verified market prices.
-- **Chat:** ask questions in the language you write in, or choose a reply language in the chat header.
+- **Chat:** the intent parser interprets your message first; deterministic ranking then filters and scores pack items, and Gemini only phrases a response from the top five results. Ask in the language you write in or choose a reply language in the chat header.
 - **Save notes:** save Lens results, food ideas and experience ideas into local travel notes.
 - **Live weather:** see the latest available Open-Meteo observation for the selected pack's approximate coordinates and timezone.
 
+## Personalization and ranking
+
+The first visit after the welcome screen offers four swipeable profile steps: interests, food/spice/budget, pace/party/crowd preference, and languages. Profile edits are validated and saved as JSON in localStorage with safe parsing. The Profile tab remains editable at any time; up to three languages can be selected.
+
+Each chat message follows a fixed pipeline:
+
+1. `POST /api/intent` extracts intent and filters from the traveler's text. It does not recommend items. If it times out or fails, the client uses a simple English keyword extractor.
+2. `src/lib/rank.js` applies hard constraints (for example, diet, explicit local-currency budget caps, indoor-only requests and available duration) before scoring eligible places, dishes or experiences. Every result contains a numeric score and human-readable reasons.
+3. `POST /api/chat` receives up to five canonical pack entries and their ranking reasons. Gemini may phrase a short answer from that list; the client independently renders result cards, reason chips, Add to plan and Show on map actions.
+
+Scores are deterministic and are not a guarantee of fit. Crowd levels, local stories, diet flags and budget values come from curated demonstration packs and should be verified locally.
 ## Technology
 
 - Vite, React 18, React Router and Tailwind CSS 3
