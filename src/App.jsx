@@ -985,7 +985,8 @@ function HomeTab({
           </div>
           <button type="button" onClick={() => setActiveTab("discover")} className="mt-3 w-full rounded-xl bg-brand px-4 py-3 text-xs font-bold text-white">Explore village areas</button>
         </section>
-            <TripStoryModal
+      </div>
+      <TripStoryModal
         open={tripStoryOpen}
         onClose={() => setTripStoryOpen(false)}
         guest={guest}
