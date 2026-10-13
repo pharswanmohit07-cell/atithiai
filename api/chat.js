@@ -99,8 +99,8 @@ export default async function handler(req, res) {
   const language = safeLanguage(body.replyLanguage, message);
   const rankedItems = canonicalItems(body.rankedItems, destination);
   const fallback = fallbackReply(language, rankedItems.length > 0);
-  if (!rankedItems.length) return send(res, 200, { reply: fallbackReply(language, false), source: "local-fallback", language });
-  if (!process.env.GEMINI_API_KEY) return send(res, 200, { reply: fallback, source: "local-fallback", language });
+  if (!rankedItems.length) return send(res, 200, { reply: fallbackReply(language, false), source: "local-fallback", reason: "no_ranked_items", language });
+  if (!process.env.GEMINI_API_KEY) return send(res, 200, { reply: fallback, source: "local-fallback", reason: "missing_api_key", language });
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6500);
@@ -151,14 +151,31 @@ export default async function handler(req, res) {
         })
       }
     );
-    if (!response.ok) throw new Error("Chat service unavailable");
+    if (!response.ok) {
+      const status = response.status;
+      const reason = status === 400 ? "provider_http_400"
+        : status === 401 ? "provider_http_401"
+        : status === 403 ? "provider_http_403"
+        : status === 404 ? "provider_http_404"
+        : status === 429 ? "provider_http_429"
+        : status >= 500 ? "provider_http_5xx"
+        : "provider_http_" + status;
+      // Log only the provider status, never the request URL or API key.
+      console.error("[api/chat] Gemini provider returned HTTP", status, "model", GEMINI_MODEL);
+      return send(res, 200, { reply: fallback, source: "local-fallback", reason, language });
+    }
     const payload = await response.json();
     const raw = payload?.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text;
     const reply = cleanText(raw, 1400);
     if (!reply || wordCount(reply) > 70 || mentionsUnrankedKnownItem(reply, rankedItems, destination)) throw new Error("Reply was incomplete, too long or mentioned an unranked pack item");
     return send(res, 200, { reply, source: "gemini", language });
-  } catch {
-    return send(res, 200, { reply: fallback, source: "local-fallback", language });
+  } catch (error) {
+    const reason = controller.signal.aborted ? "timeout"
+      : String(error?.message || "").startsWith("Reply was incomplete") ? "response_rejected"
+      : "provider_error";
+    // Keep logs useful while excluding the secret, prompt, and traveler message.
+    console.error("[api/chat] Gemini fallback reason:", reason);
+    return send(res, 200, { reply: fallback, source: "local-fallback", reason, language });
   } finally {
     clearTimeout(timeout);
   }

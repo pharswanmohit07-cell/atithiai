@@ -9,7 +9,7 @@ import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
 import DemoModeBar from "./components/DemoModeBar.jsx";
-import { demoFetch } from "./lib/demoCache.js";
+import { demoFetch, isCachedDemoMode } from "./lib/demoCache.js";
 import ProfileTab, { ProfileOnboarding } from "./components/ProfileTab.jsx";
 import DiscoverTab from "./components/DiscoverTab.jsx";
 import PlanTab from "./components/PlanTab.jsx";
@@ -273,6 +273,28 @@ function ChatResultCard({ destination, result, added, onAdd, onShowMap }) {
     <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={onAdd} disabled={added} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{added ? <Check size={13}/> : <Plus size={13}/>} {added ? "Added to plan" : "Add to plan"}</button><button type="button" onClick={onShowMap} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-bold"><MapPin size={13}/>Show on map</button></div>
   </article>;
 }
+function chatFallbackMessage(reason) {
+  const messages = {
+    cached_demo_mode: "Cached demo mode is enabled, so this message did not call Gemini. Turn it off in the Demo Mode bar and retry.",
+    no_ranked_items: "No matching items were selected from this destination pack. Try asking for places, food, or experiences.",
+    missing_api_key: "GEMINI_API_KEY is missing from this deployment. Add it to Vercel Preview and redeploy.",
+    provider_http_400: "Gemini rejected the request (HTTP 400). Check the model name and API request.",
+    provider_http_401: "Google rejected the key (HTTP 401). Use a valid Google AI Studio Gemini API key, then redeploy.",
+    provider_http_403: "Google denied the request (HTTP 403). Check API-key restrictions and Gemini API access.",
+    provider_http_404: "Gemini model was not found (HTTP 404). Set GEMINI_MODEL to gemini-2.5-flash and redeploy.",
+    provider_http_429: "Gemini quota or rate limit was reached (HTTP 429). Check usage and limits in AI Studio.",
+    provider_http_5xx: "Gemini returned a temporary server error. Retry shortly.",
+    timeout: "Gemini took too long to respond. Retry, and check provider availability if it continues.",
+    request_timeout: "The browser timed out waiting for the chat API. Retry once.",
+    network_error: "The browser could not reach /api/chat. Check this deployment and the Network panel.",
+    request_failed: "The chat API returned an error response. Inspect the /api/chat request in DevTools.",
+    response_rejected: "Gemini responded, but the app rejected the response format. Retry with a shorter question.",
+    provider_error: "The Gemini request failed. Check the /api/chat response reason in DevTools.",
+    not_gemini: "The API returned a fallback response instead of a Gemini-generated response."
+  };
+  return messages[reason] || messages.provider_error;
+}
+
 function ChatView({ destination, weather, profile, chatMessages, addChatMessage, addRequest, addItineraryItem, onShowOnMap, initialPrompt, onPrefillConsumed }) {
   const [draft, setDraft] = useState("");
   useEffect(() => {
@@ -281,6 +303,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     onPrefillConsumed?.();
   }, [initialPrompt, onPrefillConsumed]);
   const [sending, setSending] = useState(false);
+  const [providerStatus, setProviderStatus] = useState({ source: "unknown", reason: "" });
   const [replyLanguage, setReplyLanguage] = useState(() => {
     try { return localStorage.getItem("atithi-chat-language") || "auto"; } catch { return "auto"; }
   });
@@ -294,6 +317,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     event.preventDefault();
     const message = draft.trim().slice(0, 1200);
     if (!message || sending) return;
+    setProviderStatus({ source: "checking", reason: "" });
     setDraft("");
     addChatMessage({ role: "guest", text: message });
     setSending(true);
@@ -368,9 +392,18 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
         })
       });
       const payload = await response.json();
-      if (response.ok && typeof payload?.reply === "string" && payload.reply.trim() && payload.reply.trim().split(/\s+/).length <= 70) reply = payload.reply.trim();
+      const usableReply = response.ok && typeof payload?.reply === "string" && payload.reply.trim() && payload.reply.trim().split(/\s+/).length <= 70;
+      if (usableReply) reply = payload.reply.trim();
+      setProviderStatus({
+        source: usableReply && payload?.source === "gemini" ? "gemini" : "fallback",
+        reason: typeof payload?.reason === "string" ? payload.reason : (usableReply ? "not_gemini" : "request_failed")
+      });
     } catch {
-      // Show the same deterministic ranked cards with a local template reply.
+      setProviderStatus({
+        source: "fallback",
+        reason: isCachedDemoMode() ? "cached_demo_mode" : controller.signal.aborted ? "request_timeout" : "network_error"
+      });
+      // Keep deterministic ranked cards visible while reporting why Gemini did not answer.
     } finally {
       window.clearTimeout(timeout);
       setSending(false);
@@ -385,6 +418,13 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><IconBadge icon={MessageCircle} tone="teal" /><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Tell Atithi what kind of place, food or experience you have in mind.</p></div></div>
       <label className="flex items-center gap-2 text-xs font-bold text-text">{t("replyLanguage", getDefaultLanguage())}<select value={replyLanguage} onChange={(event) => writeLanguage(event.target.value)} className="min-h-10 max-w-40 rounded-xl border border-border bg-bg px-2 py-2 text-xs"><option value="auto">{t("detectLanguage", getDefaultLanguage())}</option>{LANGUAGE_OPTIONS.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
     </div>
+    {providerStatus.source !== "unknown" && <div role="status" className={"mb-3 rounded-xl border px-3 py-2 text-xs leading-relaxed " + (providerStatus.source === "gemini" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100" : providerStatus.source === "checking" ? "border-border bg-bg text-muted" : "border-amber-500/40 bg-amber-500/10 text-amber-100")}>
+      {providerStatus.source === "checking"
+        ? "Checking live Gemini response…"
+        : providerStatus.source === "gemini"
+          ? "Gemini connected — this reply was generated by Gemini."
+          : <><strong>Local fallback active:</strong> {chatFallbackMessage(providerStatus.reason)}</>}
+    </div>}
     <div className="mt-4 max-h-[min(62vh,640px)] space-y-3 overflow-y-auto rounded-2xl bg-bg p-3" aria-live="polite">
       {chatMessages.map((message) => <div key={message.id} className={"max-w-[98%] rounded-2xl px-3 py-3 text-sm leading-relaxed " + (message.role === "guest" ? "ml-auto text-white" : "border border-border bg-surface text-text")} style={message.role === "guest" ? { backgroundColor: destination.themeColors.accent } : undefined}>
         <p className="whitespace-pre-wrap">{message.text}</p><time className="mt-1 block text-[9px] opacity-60">{formatDate(message.createdAt, destination.locale, destination.timezone)}</time>
