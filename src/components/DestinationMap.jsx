@@ -4,9 +4,8 @@ import { LocateFixed, Plus, Check } from "lucide-react";
 import { useTheme } from "../context/ThemeContext.jsx";
 
 const FALLBACK_CENTER = [0, 0];
-const LIGHT_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-const DARK_TILES = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+const MAP_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 const CATEGORY_RADIUS = {
   viewpoint: 8, market: 6, cafe: 5, culture: 7, nature: 8, craft: 6, wellness: 6
 };
@@ -60,7 +59,7 @@ export default function DestinationMap({
     <div className="flex flex-wrap items-center justify-between gap-3 p-3">
       <div>
         <h2 className="font-serif text-xl">Explore the map</h2>
-        <p className="text-[10px] text-muted">OpenStreetMap / CARTO tiles · no API key required · map tiles need connectivity</p>
+        <p className="text-[10px] text-muted">OpenStreetMap tiles · no API key required · internet connection needed</p>
       </div>
       <div className="flex items-center gap-2">
         <button type="button" onClick={() => setLocateRequest((value) => value + 1)} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border bg-bg px-3 py-2 text-xs font-bold"><LocateFixed size={14}/>Locate me</button>
@@ -70,7 +69,7 @@ export default function DestinationMap({
     <MapContainer center={validCenter} zoom={12} scrollWheelZoom={false} style={{ height, width: "100%" }} key={destination.id}>
       <MapFocus destination={destination} focusPlaceId={focusPlaceId}/>
       <LocateUser requestNumber={locateRequest} onLocated={setUserPosition}/>
-      <TileLayer attribution={TILE_ATTRIBUTION} url={isDark ? DARK_TILES : LIGHT_TILES} subdomains={isDark ? "abcd" : "abc"}/>
+      <TileLayer attribution={TILE_ATTRIBUTION} url={MAP_TILES} className={isDark ? "atithi-dark-tiles" : ""}/>
       {destination.places.map((place) => {
         const alreadyPlanned = planned.has(place.id) || planned.has("place-" + place.id);
         const radius = (CATEGORY_RADIUS[place.category] || 6) + (place.isHiddenGem ? 1 : 0);
