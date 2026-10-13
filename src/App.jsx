@@ -1744,12 +1744,18 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
 // --- ADMIN DASHBOARD ---
 // Keeping the Admin Dashboard intact for the Demo controller
 function AdminDashboard({
-  weather, itinerary, showAIIntervention, staffUser, onLogout,
+  weather, itinerary, staffUser, persona, onSwitchPersona,
+  selectedWaypoint, selectedWaypointId, setSelectedWaypointId,
+  weatherObservation, weatherLoading, weatherError,
   disruptions = [], actionsLog = [], redirectionsCount = 0, localSpendRedirected = 0, requests = [],
   guardianDisruption, affectedStop, guardianAlternatives = [], onAcceptGuardianAlternative,
 }) {
-  const isConflict = disruptions.some((event) => itinerary.some((item) => item.placeId && event.affectedPlaceIds.includes(item.placeId)));
+  const isConflict = disruptions.some((event) => itinerary.some((item) => {
+    const stopId = item.waypointId || item.placeId;
+    return stopId && event.affectedPlaceIds.includes(stopId);
+  }));
   const isResolved = itinerary.some((item) => item.guardianAdjusted || item.aiAdjusted);
+  const weatherSourceLabel = weather === "rainy" ? "Rain signal / override" : weatherObservation ? "Live signal" : "No observation";
 
   return (
     <div className="min-h-screen flex bg-surface-2">
@@ -1773,7 +1779,7 @@ function AdminDashboard({
             tone="coral"
           />
           <SidebarItem icon={Bell} label="Guardian actions" count={actionsLog.length} tone="sky" />
-          <SidebarItem icon={CalendarDays} label="Bookings" tone="violet" />
+          <SidebarItem icon={CalendarDays} label="Corridor waypoints" tone="violet" />
         </div>
       </div>
 
@@ -1797,13 +1803,14 @@ function AdminDashboard({
                   Weather signal
                 </span>
                 <span className="text-sm font-medium capitalize text-text">
-                  {weather} (Detecting Context)
+                  {weatherObservation ? `${weatherObservation.temperatureC}°C · ${weatherObservation.condition}` : weatherLoading ? "Updating live weather…" : "Weather unavailable"}
                 </span>
+                <span className="mt-0.5 block text-[10px] text-muted">{selectedWaypoint?.name || "Rudraprayag"} · {weatherSourceLabel(weather, weatherObservation)}</span>
               </div>
             </div>
             <ThemeToggle compact />
-            <span className="hidden text-xs text-muted lg:inline">Signed in as {staffUser?.name || "Staff"}</span>
-            <button type="button" onClick={onLogout} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-2"><LogOut size={15}/> Log out</button>
+            <span className="hidden text-xs text-muted lg:inline">{persona?.name || staffUser?.name || "Tourism Officer"} · Demo profile</span>
+            <button type="button" onClick={onSwitchPersona} className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-text hover:bg-surface-2"><Users size={15}/> Switch persona</button>
           </div>
         </header>
 
@@ -1826,6 +1833,24 @@ function AdminDashboard({
           />
         </div>
 
+        <section className="mb-8 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Open-Meteo · Current conditions</p><h2 className="mt-1 font-serif text-2xl text-text">{selectedWaypoint?.name || "Rudraprayag"}</h2><p className="mt-1 text-xs text-muted">Approx. {selectedWaypoint?.elevationM ?? 895} m · planning coordinates/elevation approximate</p></div>
+            <span className="rounded-full bg-surface-2 px-2.5 py-1.5 text-[10px] font-semibold text-muted">{weatherLoading ? "Updating…" : "Selected waypoint"}</span>
+          </div>
+          <label className="mt-4 block max-w-xl text-xs font-semibold text-muted">Weather waypoint
+            <select value={selectedWaypointId} onChange={(event) => setSelectedWaypointId(event.target.value)} className="mt-2 block w-full rounded-xl border border-border bg-bg px-3 py-3 text-sm text-text">
+              {CORRIDOR_WAYPOINTS.map((waypoint) => <option key={waypoint.id} value={waypoint.id}>{waypoint.name} · approx. {waypoint.elevationM} m</option>)}
+            </select>
+          </label>
+          {weatherObservation && <div className="mt-4 grid max-w-xl grid-cols-3 gap-3">
+            <div className="rounded-xl bg-surface-2 p-3"><p className="text-[10px] text-muted">Temperature</p><p className="mt-1 font-semibold text-text">{weatherObservation.temperatureC}°C</p><p className="text-[9px] text-muted">Feels {weatherObservation.apparentTemperatureC ?? "—"}°C</p></div>
+            <div className="rounded-xl bg-surface-2 p-3"><p className="text-[10px] text-muted">Rainfall</p><p className="mt-1 font-semibold text-text">{weatherObservation.rainMm.toFixed(1)} mm</p><p className="text-[9px] text-muted">Current reading</p></div>
+            <div className="rounded-xl bg-surface-2 p-3"><p className="text-[10px] text-muted">Wind</p><p className="mt-1 font-semibold text-text">{weatherObservation.windSpeedKmh ?? "—"} km/h</p></div>
+          </div>}
+          {weatherError && <p role="status" className="mt-3 text-xs text-amber-700 dark:text-amber-300">{weatherError}</p>}
+          <p className="mt-3 text-[10px] leading-relaxed text-muted">Weather informs planning; it does not verify route openings, landslides or travel safety. Confirm current local authority advisories.</p>
+        </section>
         <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
           <DestinationOverview redirectionsCount={redirectionsCount} localSpendRedirected={localSpendRedirected} actions={actionsLog} />
           <div className="space-y-6">
@@ -1836,7 +1861,7 @@ function AdminDashboard({
         <div className="grid grid-cols-3 gap-6">
           <div className="col-span-2 bg-surface rounded-2xl shadow-sm border border-border p-6">
             <h2 className="text-lg font-serif mb-4 flex items-center gap-2">
-              <IconBadge icon={User} tone="teal" size="sm" /> Live Guest Activity
+              <IconBadge icon={User} tone="teal" size="sm" /> Corridor Safety Activity
             </h2>
             <div className="space-y-4">
               <div
@@ -1849,9 +1874,9 @@ function AdminDashboard({
                     </div>
                     <div>
                       <h3 className="font-medium text-text">
-                        {staffUser?.role === "guest" ? staffUser.name : "Traveler overview"}{" "}
+                        {persona?.name || staffUser?.name || "Traveler overview"}{" "}
                         <span className="text-xs font-normal text-muted bg-surface-2 px-2 py-0.5 rounded ml-2">
-                          {staffUser?.role === "guest" ? "Room " + staffUser.room : "Regional demo"}
+                          {persona?.role === "staff" ? "Tourism Officer · demo" : "Guest persona · demo"}
                         </span>
                       </h3>
                       <p className="text-xs text-muted">
