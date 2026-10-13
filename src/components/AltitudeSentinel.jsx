@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Activity, AlertTriangle, ArrowUpRight, PhoneCall } from "lucide-react";
 import { CORRIDOR_WAYPOINTS } from "../data/corridor.js";
 import { getAdvisory, getSleepingAscentPerDay } from "../lib/altitude.js";
+import { useAppContext } from "../context/AppContext.jsx";
 
 const RISK_STYLES = {
   low: {
@@ -84,6 +85,7 @@ export default function AltitudeSentinel({
   setSelectedWaypointId,
   onAdvisoryChange,
 }) {
+  const { cachedDemoMode } = useAppContext();
   const currentIndex = Math.max(0, CORRIDOR_WAYPOINTS.findIndex((waypoint) => waypoint.id === selectedWaypointId));
   const currentWaypoint = selectedWaypoint || CORRIDOR_WAYPOINTS[currentIndex];
   const nextWaypoint = CORRIDOR_WAYPOINTS[currentIndex + 1] || null;
@@ -116,6 +118,10 @@ export default function AltitudeSentinel({
     setCalmText(baseText);
     setTextSource("rule-based");
     setIsRephrasing(false);
+    if (cachedDemoMode) {
+      setTextSource("cached rule-based fallback");
+      return undefined;
+    }
     const controller = new AbortController();
     let active = true;
     const timeout = setTimeout(() => controller.abort(), 2800);
@@ -160,7 +166,7 @@ export default function AltitudeSentinel({
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [baseText, persona?.id, persona?.name]);
+  }, [baseText, persona?.id, persona?.name, cachedDemoMode]);
 
   const riskStyle = RISK_STYLES[advisory.level] || RISK_STYLES.low;
   const sliderValue = String(currentIndex);
