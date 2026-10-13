@@ -1,4 +1,4 @@
-import { isBodyTooLarge, isPlainObject } from "./_shared.js";
+import { isBodyTooLarge, isPlainObject } from "../src/lib/apiHardening.js";
 
 const MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "")
   ? process.env.GEMINI_MODEL
