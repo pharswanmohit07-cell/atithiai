@@ -456,6 +456,7 @@ function GuestApp(props) {
                   requests={props.requests}
                   onRequest={props.addRequest}
                   setActiveTab={setActiveTab}
+                  room={props.guest?.room}
                 />
               </motion.div>
             )}
@@ -1274,7 +1275,7 @@ function AITab({ onRequest, guest, preferences, weather }) {
   );
 }
 
-function ServicesTab({ requests, onRequest, setActiveTab }) {
+function ServicesTab({ requests, onRequest, setActiveTab, room }) {
   const services = [
     {
       icon: BedDouble,
@@ -1330,7 +1331,7 @@ function ServicesTab({ requests, onRequest, setActiveTab }) {
           ? `Wake-up call · ${form.get("time")}`
           : selectedService,
       category: selectedService,
-      detail: `${form.get("detail") || "Requested for Room 402"} · ${form.get("time")}`,
+      detail: `${form.get("detail") || `Requested for Room ${room || "—"}`} · ${form.get("time")}`,
     });
     setConfirmation(`${selectedService} request sent`);
     setSelectedService(null);
@@ -1642,7 +1643,7 @@ function ProfileTab({ guest, preferences, onSavePreferences, onOpenOnboarding, o
             Guest since · 2022
           </span>
           <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#E7C99C]">
-            No. 00402 · Dehradun
+            No. {String(guest?.room || "—").padStart(5, "0")} · Dehradun
           </span>
         </div>
       </div>
@@ -1666,7 +1667,7 @@ function ProfileTab({ guest, preferences, onSavePreferences, onOpenOnboarding, o
               Room
             </p>
             <p className="mt-1 text-xs font-semibold text-text">
-              402 Suite
+              {guest?.room || "—"} Suite
             </p>
           </div>
           <div className="px-3">
