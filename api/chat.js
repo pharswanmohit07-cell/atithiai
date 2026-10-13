@@ -1,5 +1,6 @@
 import { getDestinationById } from "../src/data/destinations/index.js";
 import { detectTextLanguage, languageBase, targetLanguageTag } from "../src/i18n.js";
+import { isBodyTooLarge, isPlainObject } from "./_shared.js";
 
 const GEMINI_MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "") ? process.env.GEMINI_MODEL : "gemini-2.5-flash";
 const ITEM_TYPES = new Set(["place", "experience", "dish"]);
@@ -89,8 +90,9 @@ function fallbackReply(language, hasItems = true) {
   return FALLBACKS[base] || FALLBACKS.en;
 }
 export default async function handler(req, res) {
-  if (req.method !== "POST") return send(res, 405, { error: "Use POST to send a travel question." });
-  const body = req.body && typeof req.body === "object" ? req.body : {};
+  if (req.method !== "POST") { res.setHeader("Allow", "POST"); return send(res, 405, { error: "Use POST to send a travel question." }); }
+  if (isBodyTooLarge(req, req.body, 24 * 1024)) return send(res, 413, { error: "Request is too large. Shorten your travel question and try again." });
+  const body = isPlainObject(req.body) ? req.body : {};
   const message = cleanText(body.message, 1200);
   const destination = getDestinationById(cleanText(body.destinationId, 50));
   if (!message) return send(res, 200, { reply: fallbackReply("en"), source: "local-fallback" });
@@ -111,7 +113,19 @@ export default async function handler(req, res) {
       "Do not repeat the full item list if a concise introduction is enough. Do not output JSON or a numbered itinerary; the client renders ranked cards separately.",
       JSON.stringify({
         travelerMessage: message,
-        travelerPreferences: body.profile && typeof body.profile === "object" ? body.profile : {},
+        travelerPreferences: isPlainObject(body.profile) ? {
+          interests: Array.isArray(body.profile.interests) ? body.profile.interests.filter((item) => typeof item === "string").slice(0, 7).map((item) => cleanText(item, 30)) : [],
+          diet: cleanText(body.profile.diet, 30),
+          pace: cleanText(body.profile.pace, 20),
+          travelParty: cleanText(body.profile.travelParty, 20),
+          avoidCrowds: body.profile.avoidCrowds === true,
+          languages: Array.isArray(body.profile.languages) ? body.profile.languages.filter((item) => typeof item === "string").slice(0, 3).map((item) => cleanText(item, 12)) : [],
+          dailyBudget: isPlainObject(body.profile.dailyBudget) ? {
+            level: cleanText(body.profile.dailyBudget.level, 12),
+            amount: Number.isFinite(Number(body.profile.dailyBudget.amount)) ? Math.max(0, Math.min(1e12, Number(body.profile.dailyBudget.amount))) : null,
+            currencyCode: /^[A-Z]{3}$/.test(cleanText(body.profile.dailyBudget.currencyCode, 3).toUpperCase()) ? cleanText(body.profile.dailyBudget.currencyCode, 3).toUpperCase() : null
+          } : null
+        } : {},
         destination: {
           city: destination.city,
           country: destination.country,
