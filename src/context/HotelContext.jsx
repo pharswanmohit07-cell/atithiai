@@ -47,8 +47,9 @@ function readFlexSettings(destination) {
     late: late.map((t,i) => ({ until: validTime(t.until) ? t.until : (base.flexTiers.late[i]?.until || base.flexTiers.late[base.flexTiers.late.length-1].until), fee: Number.isFinite(Number(t.fee)) && Number(t.fee)>=0 ? Number(t.fee) : (base.flexTiers.late[i]?.fee || 0) })),
   }, cutoffs: { earlyEarliest: validTime(saved?.cutoffs?.earlyEarliest) ? saved.cutoffs.earlyEarliest : base.cutoffs.earlyEarliest, lateLatest: validTime(saved?.cutoffs?.lateLatest) ? saved.cutoffs.lateLatest : base.cutoffs.lateLatest }, autoApproveEnabled: saved.autoApproveEnabled === true, autoApproveUnder: Number.isFinite(Number(saved.autoApproveUnder)) && Number(saved.autoApproveUnder)>=0 ? Number(saved.autoApproveUnder) : 0 };
 }
-function readRequests(id) { const v = safeRead(REQUESTS_KEY(id), []); return Array.isArray(v) ? v.filter((r) => r && r.destinationId === id && typeof r.id === "string").slice(0,80) : []; }
-function readChatMessages(id) { const v = safeRead(CHAT_KEY(id), null); return Array.isArray(v) ? v.filter((m) => m && typeof m.text === "string").slice(-100) : [{ id:"welcome-"+id, role:"assistant", text:"Welcome. I’m your hotel co-host for this demo stay. Ask about local experiences, food, weather or a request for the team.", createdAt:new Date().toISOString() }]; }
+function safeReadArray(key, fallback) { try { const parsed = JSON.parse(localStorage.getItem(key) || "null"); return Array.isArray(parsed) ? parsed : fallback; } catch { return fallback; } }
+function readRequests(id) { const v = safeReadArray(REQUESTS_KEY(id), []); return Array.isArray(v) ? v.filter((r) => r && r.destinationId === id && typeof r.id === "string").slice(0,80) : []; }
+function readChatMessages(id) { const v = safeReadArray(CHAT_KEY(id), null); return Array.isArray(v) ? v.filter((m) => m && typeof m.text === "string").slice(-100) : [{ id:"welcome-"+id, role:"assistant", text:"Welcome. I’m your hotel co-host for this demo stay. Ask about local experiences, food, weather or a request for the team.", createdAt:new Date().toISOString() }]; }
 
 function initialItinerary(destination) {
   return destination.places.slice(0, 4).map((place, index) => ({
