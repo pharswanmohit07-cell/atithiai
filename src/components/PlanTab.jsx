@@ -264,7 +264,7 @@ export default function PlanTab() {
   const generatePlan = useCallback(() => {
     const maxStops = targetCount;
     const mealIndex = Math.max(1, Math.floor(maxStops / 2) - 1);
-    const experienceIndex = pace === "balanced" ? 1 : pace === "packed" ? 2 : -1;
+    const experienceIndex = pace === "relaxed" ? 0 : pace === "balanced" ? 2 : 1;
     const used = new Set();
     const stops = [];
     let spend = 0;
