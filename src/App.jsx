@@ -266,7 +266,7 @@ export default function AtithiAI() {
           time: item.time,
           title: place?.name || item.title,
           desc: item.desc || place?.description || "A thoughtfully selected experience for your day.",
-          location: place?.location || "The Aranya House",
+          location: place?.location || "Corridor waypoint",
           icon: dining ? Utensils : tags.includes("nature") ? MapPin : Compass,
           type: dining ? "dining" : "activity",
           status: index === 0 ? "current" : "upcoming",
@@ -758,6 +758,24 @@ function HomeTab({
       </div>
 
       <div className="px-5 py-5 space-y-6 sm:px-6">
+        <section className="mb-1 rounded-2xl border border-border bg-surface p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.15em] text-accent-text">Open-Meteo · Current conditions</p><h2 className="mt-1 font-serif text-xl text-text">{selectedWaypoint?.name || "Rudraprayag"}</h2><p className="mt-1 text-[10px] text-muted">Approx. {selectedWaypoint?.elevationM ?? 895} m · coordinates/elevation are approximate</p></div>
+            <span className="rounded-full bg-surface-2 px-2 py-1 text-[9px] font-semibold text-muted">{weatherLoading ? "Updating…" : weatherSource === "demo" ? "Manual rain override" : "Live signal"}</span>
+          </div>
+          <label className="mt-3 block text-[10px] font-semibold text-muted">Select corridor waypoint
+            <select value={selectedWaypointId} onChange={(event) => setSelectedWaypointId(event.target.value)} className="mt-1.5 block w-full rounded-xl border border-border bg-bg px-3 py-3 text-sm font-medium text-text">
+              {CORRIDOR_WAYPOINTS.map((waypoint) => <option key={waypoint.id} value={waypoint.id}>{waypoint.name} · approx. {waypoint.elevationM} m</option>)}
+            </select>
+          </label>
+          {weatherObservation && <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="rounded-xl bg-surface-2 p-2.5"><p className="text-[9px] text-muted">Temperature</p><p className="mt-1 text-sm font-bold text-text">{weatherObservation.temperatureC}°C</p><p className="text-[9px] text-muted">Feels {weatherObservation.apparentTemperatureC ?? "—"}°C</p></div>
+            <div className="rounded-xl bg-surface-2 p-2.5"><p className="text-[9px] text-muted">Rainfall</p><p className="mt-1 text-sm font-bold text-text">{weatherObservation.rainMm.toFixed(1)} mm</p><p className="text-[9px] text-muted">Current</p></div>
+            <div className="rounded-xl bg-surface-2 p-2.5"><p className="text-[9px] text-muted">Wind</p><p className="mt-1 text-sm font-bold text-text">{weatherObservation.windSpeedKmh ?? "—"}</p><p className="text-[9px] text-muted">km/h</p></div>
+          </div>}
+          {weatherError && <p role="status" className="mt-3 text-xs text-amber-700 dark:text-amber-300">{weatherError}</p>}
+          <p className="mt-3 text-[9px] leading-relaxed text-muted">Weather data informs planning but cannot confirm road access, landslides or safe travel. Check current local authority advice.</p>
+        </section>
         <div className="grid grid-cols-2 gap-2.5">
           <button
             onClick={() => setActiveTab("services")}
@@ -817,81 +835,6 @@ function HomeTab({
           <GuardianCard disruption={guardianDisruption} itineraryItem={affectedStop} alternatives={guardianAlternatives} onAccept={onAcceptGuardianAlternative} />
         )}
         <ActionsTakenLog actions={actionsLog} compact />
-
-        <AnimatePresence>
-          {showAIIntervention && disruptions.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0, y: 20 }}
-              animate={{ opacity: 1, height: "auto", y: 0 }}
-              exit={{ opacity: 0, height: 0, scale: 0.95 }}
-              className="bg-brand rounded-2xl overflow-hidden shadow-xl"
-            >
-              <div className="p-5 border-b border-white/10">
-                <div className="flex items-center gap-2 text-amber-400 mb-3">
-                  <IconBadge icon={CloudRain} tone="coral" size="sm" pulse />
-                  <span className="text-sm font-medium tracking-wide uppercase">
-                    Weather Alert
-                  </span>
-                </div>
-                <p className="text-white text-lg font-serif mb-2 leading-snug">
-                  Rain is expected around 4:00 PM.
-                </p>
-                <p className="text-white/70 text-sm">
-                  Your outdoor Botanical Garden Walk will be affected. I've
-                  found suitable indoor alternatives based on your preference
-                  for Cultural and Wellness activities.
-                </p>
-              </div>
-
-              <div className="p-5 bg-[#252525] space-y-3">
-                {isResolving ? (
-                  <div className="py-8 flex flex-col items-center justify-center text-white/70">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1.5,
-                        ease: "linear",
-                      }}
-                    >
-                      <IconBadge icon={Sparkles} tone="violet" size="md" />
-                    </motion.div>
-                    <p className="mt-3 text-sm">Updating your itinerary...</p>
-                  </div>
-                ) : (
-                  <>
-                    {AI_ALTERNATIVES.map((alt) => (
-                      <button
-                        key={alt.id}
-                        onClick={() => acceptAlternative(alt)}
-                        className="w-full text-left bg-surface/5 hover:bg-surface/10 border border-white/10 rounded-xl p-4 transition-colors group flex items-start gap-4"
-                      >
-                        <IconBadge icon={alt.icon} tone={alt.id === "alt_1" ? "sky" : "violet"} size="md" className="shrink-0" />
-                        <div>
-                          <h4 className="text-white font-medium mb-1">
-                            {alt.title}
-                          </h4>
-                          <p className="text-white/50 text-xs mb-2">
-                            {alt.desc}
-                          </p>
-                          <span className="text-[10px] uppercase tracking-wider text-accent-text font-semibold bg-accent/10 px-2 py-1 rounded">
-                            {alt.match}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                    <button
-                      onClick={keepOriginal}
-                      className="w-full text-center text-white/50 text-sm py-2 mt-2 hover:text-white transition-colors"
-                    >
-                      Keep original plan
-                    </button>
-                  </>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {currentPlan && (
           <section className="overflow-hidden rounded-2xl bg-brand text-white shadow-[0_14px_28px_rgba(31,48,40,0.14)]">
@@ -958,7 +901,7 @@ function HomeTab({
 
           <div className="relative border-l-2 border-border ml-4 space-y-8 pb-4">
             <AnimatePresence>
-              {itinerary.map((item) => (
+              {itinerary.map((item, index) => (
                 <motion.div
                   key={item.id}
                   layout
@@ -985,6 +928,7 @@ function HomeTab({
                     ${item.isVulnerableToWeather && weather === "rainy" ? "bg-red-50 border border-red-100" : ""}
                   `}
                   >
+                    {item.dayLabel && item.dayLabel !== itinerary[index - 1]?.dayLabel && <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.14em] text-accent-text">{item.dayLabel}</p>}
                     <p
                       className={`text-xs font-semibold tracking-wider mb-1 ${
                         item.status === "completed"
@@ -1041,40 +985,16 @@ function HomeTab({
           </button>
         </motion.section>
 
-        <div className="pt-4 border-t border-border">
-          <h2 className="font-serif text-2xl text-text mb-4">
-            Local food & rest
-          </h2>
-          <div className="bg-surface rounded-2xl p-5 shadow-sm border border-border">
-            <div className="w-full h-32 rounded-xl bg-[url('https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center mb-4" />
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-medium text-lg">Saffron Heritage Room</h3>
-              <span className="bg-brand text-white text-xs px-2 py-1 rounded">
-                Booked
-              </span>
-            </div>
-            <p className="text-sm text-muted mb-4 border-l-2 border-accent pl-3 italic">
-              "Recommended because you prefer quiet, vegetarian fine-dining.
-              Chef Anand has prepared a custom tasting menu."
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() =>
-                  addRequest({
-                    title: "Saffron tasting menu",
-                    category: "In-Room Dining",
-                    detail: "Vegetarian tasting menu for tonight at 7:30 PM",
-                  })
-                }
-                className="flex-1 bg-surface-2 text-text text-sm py-2 rounded-lg font-medium hover:bg-border transition-colors"
-              >
-                View Custom Menu
-              </button>
-            </div>
+        <section className="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Local economy · demo village ideas</p>
+          <h2 className="mt-1 font-serif text-2xl text-text">Travel with local value.</h2>
+          <p className="mt-2 text-xs leading-relaxed text-muted">Explore six illustrative homestay-village areas. Every card is marked Demo listing: these are not real properties, not verified accommodation and not bookable.</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {DEMO_HOMESTAYS.slice(0, 2).map((village) => <div key={village.id} className="rounded-xl border border-border bg-bg p-3"><span className="inline-flex rounded-full bg-amber-100 px-2 py-1 text-[8px] font-bold uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Demo listing</span><h3 className="mt-2 text-xs font-semibold text-text">{village.name}</h3><p className="mt-1 text-[10px] text-muted">₹{village.localSpendINR} local spend · demo estimate</p></div>)}
           </div>
-        </div>
-      </div>
-      <TripStoryModal
+          <button type="button" onClick={() => setActiveTab("discover")} className="mt-3 w-full rounded-xl bg-brand px-4 py-3 text-xs font-bold text-white">Explore village areas</button>
+        </section>
+            <TripStoryModal
         open={tripStoryOpen}
         onClose={() => setTripStoryOpen(false)}
         guest={guest}
@@ -1174,9 +1094,9 @@ function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend 
       <section className="mb-5 rounded-2xl border border-border bg-surface p-4 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Dehradun + Mussoorie</p>
-            <h2 className="mt-1 font-serif text-2xl text-text">Regional destinations</h2>
-            <p className="mt-1 text-xs text-muted">Explore places before you go.</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-text">Regional destinations</p>
+            <h2 className="mt-1 font-serif text-2xl text-text">Local alternatives</h2>
+            <p className="mt-1 text-xs text-muted">Curated Dehradun and Mussoorie suggestions; verify conditions before travel.</p>
           </div>
           <div role="group" aria-label="Destination view" className="flex rounded-xl border border-border bg-surface-2 p-1">
             {["list", "map"].map((mode) => (
