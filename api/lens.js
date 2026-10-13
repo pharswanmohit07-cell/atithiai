@@ -143,7 +143,7 @@ export default async function handler(req, res) {
               translation: { type: "STRING", nullable: true }, explanation: { type: "STRING" },
               tips: { type: "ARRAY", items: { type: "STRING" } },
               confidence: { type: "STRING", enum: ["low", "medium", "high"] },
-              dishes: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, explanation: { type: "STRING" }, dietGuess: { type: "STRING" }, spiceGuess: { type: "STRING" } }, required: ["name", "explanation", "dietGuess", "spiceGuess"] },
+              dishes: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, explanation: { type: "STRING" }, dietGuess: { type: "STRING" }, spiceGuess: { type: "STRING" } }, required: ["name", "explanation", "dietGuess", "spiceGuess"] } },
               transport: { type: "OBJECT", properties: { summary: { type: "STRING" }, priceNote: { type: "STRING", nullable: true }, verdict: { type: "STRING", enum: VALID_VERDICTS } }, required: ["summary", "priceNote", "verdict"] }
             },
             required: ["whatIsThis", "detectedLanguage", "translation", "explanation", "tips", "confidence"]
