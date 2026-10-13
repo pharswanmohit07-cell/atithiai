@@ -119,7 +119,7 @@ export default function RouteMap({
                 <Popup>
                   <div className="route-guard-map-popup">
                     <strong>{index + 1}. {waypoint.name}</strong>
-                    {isCurrent && <span className="mt-1 block font-bold text-amber-700">Traveler's current waypoint</span>}
+                    {isCurrent && <span className="mt-1 block font-bold text-amber-700 dark:text-amber-300">Traveler's current waypoint</span>}
                     <span className="mt-1 block">Elevation: approx. {waypoint.elevationM} m</span>
                     <span className="block text-xs">{waypoint.desc}</span>
                     <span className="mt-1 block text-xs">{waypoint.lat.toFixed(4)}, {waypoint.lon.toFixed(4)} · approximate coordinates</span>
