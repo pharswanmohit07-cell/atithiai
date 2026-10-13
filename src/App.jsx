@@ -1170,7 +1170,7 @@ function HomeTab({
           <h2 className="mt-1 font-serif text-2xl text-text">Travel with local value.</h2>
           <p className="mt-2 text-xs leading-relaxed text-muted">Explore six illustrative homestay-village areas. Every card is marked Demo listing: these are not real properties, not verified accommodation and not bookable.</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {DEMO_HOMESTAYS.slice(0, 2).map((village) => <div key={village.id} className="rounded-xl border border-border bg-bg p-3"><span className="inline-flex rounded-full bg-amber-100 px-2 py-1 text-[8px] font-bold uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">Demo listing</span><h3 className="mt-2 text-xs font-semibold text-text">{village.name}</h3><p className="mt-1 text-[10px] text-muted">₹{village.localSpendINR} local spend · demo estimate</p></div>)}
+            {DEMO_HOMESTAYS.slice(0, 2).map((village) => <div key={village.id} className="rounded-xl border border-border bg-bg p-3"><span className="demo-badge">Demo listing</span><h3 className="mt-2 text-xs font-semibold text-text">{village.name}</h3><p className="mt-1 text-[10px] text-muted">₹{village.localSpendINR} local spend · demo estimate</p></div>)}
           </div>
           <button type="button" onClick={() => setActiveTab("discover")} className="mt-3 w-full rounded-xl bg-brand px-4 py-3 text-xs font-bold text-white">Explore village areas</button>
         </section>
@@ -1783,7 +1783,7 @@ function ProfileTab({ guest, persona, onUpdateHealthTags, onSwitchPersona }) {
       <section className="profile-pass relative mb-6 overflow-hidden rounded-2xl p-5 text-white shadow-lg">
         <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-white/65">Atithi AI · Demo persona</p>
         <div className="mt-5 flex items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7C99C]/60 bg-surface/5 font-serif text-2xl text-accent">{guest?.name?.trim()?.[0]?.toUpperCase() || "P"}</div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-accent/60 bg-surface/5 font-serif text-2xl text-accent">{guest?.name?.trim()?.[0]?.toUpperCase() || "P"}</div>
           <div><h2 className="font-serif text-[25px] leading-none">{persona?.name || guest?.name || "Traveller"}</h2><p className="mt-2 text-xs text-white/75">{persona?.age ? `Age ${persona.age} · group ${persona.ageGroup}` : persona?.description || "Regional safety overview"}</p><p className="mt-1 text-[10px] text-white/65">{persona?.fitnessProfile || "Health-aware travel profile"}</p></div>
         </div>
         <p className="mt-5 border-t border-white/15 pt-3 text-[10px] leading-relaxed text-white/75">Demo profile only · health tags are not a medical record or medical advice.</p>
@@ -1954,7 +1954,7 @@ function AdminDashboard({
               const from = CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === event.segment?.[0]);
               const to = CORRIDOR_WAYPOINTS.find((waypoint) => waypoint.id === event.segment?.[1]);
               return <article key={event.id} className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-border bg-bg p-3">
-                <div><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold capitalize text-text">{event.type} · {from?.name || "Waypoint"} → {to?.name || "Waypoint"}</h3>{event.source === "demo" ? <span className="rounded-full bg-rose-100 px-2 py-1 text-[8px] font-extrabold text-rose-800 dark:bg-rose-950/50 dark:text-rose-200">DEMO EVENT</span> : <span className="rounded-full bg-emerald-100 px-2 py-1 text-[8px] font-bold text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200">LIVE WEATHER</span>}</div><p className="mt-1 text-[10px] text-muted">Severity: {event.severity} · Detected: {event.detectedAt ? new Date(event.detectedAt).toLocaleString() : "Not available"}</p></div>
+                <div><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold capitalize text-text">{event.type} · {from?.name || "Waypoint"} → {to?.name || "Waypoint"}</h3>{event.source === "demo" ? <span className="demo-badge">DEMO EVENT</span> : <span className="rounded-full bg-emerald-100 px-2 py-1 text-[8px] font-bold text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-200">LIVE WEATHER</span>}</div><p className="mt-1 text-[10px] text-muted">Severity: {event.severity} · Detected: {event.detectedAt ? new Date(event.detectedAt).toLocaleString() : "Not available"}</p></div>
               </article>;
             })}</div>}
         </section>
