@@ -1,11 +1,9 @@
-# Atithi Lens sample photos
+# Optional sample images
 
-Atithi Lens expects these bundled sample image paths:
+Atithi Lens can use three optional sample photographs:
 
-- `sample-taxi.jpg` — taxi fare board with example prices
-- `sample-menu.jpg` — menu with clearly visible prices
-- `sample-temple.jpg` — temple visitor notice board (no clear price)
+- `public/samples/generic-menu.jpg` — a menu for Menu mode
+- `public/samples/fare-board.jpg` — a fare board for Price mode
+- `public/samples/notice-sign.jpg` — a public notice for Scan mode
 
-Replace/add the JPEG files at these exact paths. They are illustrative sample assets, not photographs of official tariffs, real businesses, or current prices.
-
-The UI includes a seeded, labelled demo result for each sample so the sample action still works if an image asset or analysis service is unavailable. Real image scans use `/api/lens`; successful sample results are cached in localStorage by sample ID.
+Until an image is added, its sample button shows a cached illustrative result from `src/data/lensCache.js`. Cached content is not a real sign, menu, quotation or current local instruction.

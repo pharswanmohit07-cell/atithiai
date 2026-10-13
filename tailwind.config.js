@@ -19,19 +19,19 @@ export default {
         brand: "rgb(var(--brand-rgb) / <alpha-value>)",
         indigo: "rgb(var(--indigo-rgb) / <alpha-value>)",
         accent: "rgb(var(--accent-rgb) / <alpha-value>)",
-        saffron: "rgb(var(--saffron-rgb) / <alpha-value>)",
+        amber: "rgb(var(--amber-rgb) / <alpha-value>)",
         coral: "rgb(var(--coral-rgb) / <alpha-value>)",
         teal: "rgb(var(--teal-rgb) / <alpha-value>)",
         "accent-text": "rgb(var(--accent-text-rgb) / <alpha-value>)",
       },
       backgroundImage: {
         "sunrise": "linear-gradient(120deg, rgb(var(--brand-rgb)) 0%, rgb(var(--indigo-rgb)) 58%, rgb(var(--coral-rgb)) 120%)",
-        "sunrise-warm": "linear-gradient(120deg, rgb(var(--saffron-rgb)) 0%, rgb(var(--coral-rgb)) 100%)",
-        "mountain-haze": "radial-gradient(ellipse at 10% 0%, rgb(var(--saffron-rgb) / 0.18), transparent 38%), radial-gradient(ellipse at 90% 35%, rgb(var(--teal-rgb) / 0.18), transparent 42%)",
+        "sunrise-warm": "linear-gradient(120deg, rgb(var(--amber-rgb)) 0%, rgb(var(--coral-rgb)) 100%)",
+        "destination-haze": "radial-gradient(ellipse at 10% 0%, rgb(var(--amber-rgb) / 0.18), transparent 38%), radial-gradient(ellipse at 90% 35%, rgb(var(--teal-rgb) / 0.18), transparent 42%)",
       },
       boxShadow: {
         glow: "0 10px 28px rgb(var(--brand-rgb) / 0.22)",
-        "glow-saffron": "0 8px 24px rgb(var(--saffron-rgb) / 0.25)",
+        "glow-amber": "0 8px 24px rgb(var(--amber-rgb) / 0.25)",
         glass: "0 16px 40px rgb(11 29 43 / 0.12)",
       },
       minHeight: {
