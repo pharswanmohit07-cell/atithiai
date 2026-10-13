@@ -1,3 +1,5 @@
+import { isBodyTooLarge, isPlainObject } from "./_shared.js";
+
 const MODEL = /^[A-Za-z0-9._-]+$/.test(process.env.GEMINI_MODEL || "")
   ? process.env.GEMINI_MODEL
   : "gemini-2.5-flash";
@@ -41,9 +43,10 @@ function wordCount(value) {
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
-    return send(res, 405, { advisory: "" });
+    return send(res, 405, { error: "Use POST to request a travel advisory.", advisory: "" });
   }
-  const body = req.body && typeof req.body === "object" && !Array.isArray(req.body) ? req.body : {};
+  if (isBodyTooLarge(req, req.body, 24 * 1024)) return send(res, 413, { error: "Request is too large. Shorten the planning request and try again.", advisory: "" });
+  const body = isPlainObject(req.body) ? req.body : {};
   if (body.mode !== "advisory") return send(res, 200, { advisory: fallback(body.language, body.affectedStop?.title, body.disruption?.source === "demo") });
 
   const languageInput = cleanString(body.language, 45).replace(/_/g, "-");
