@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AlertCircle, Languages, LoaderCircle, RefreshCw, Upload, Volume2 } from "lucide-react";
 import { getSeedLensResult } from "../../data/lensCache.js";
+import { useAppContext } from "../../context/AppContext.jsx";
 
 const CACHE_PREFIX = "atithi-lens-sample:";
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -157,6 +158,7 @@ function verdictLabel(verdict, copy) {
 }
 
 export default function LensTab({ selectedWaypoint, persona, onRequest }) {
+  const { cachedDemoMode } = useAppContext();
   const [language, setLanguage] = useState("en");
   const [lensImage, setLensImage] = useState(null);
   const [lensResult, setLensResult] = useState(null);
@@ -202,6 +204,14 @@ export default function LensTab({ selectedWaypoint, persona, onRequest }) {
 
   const analyzeImage = async (image, sampleId = null, lang = language) => {
     if (!image?.base64) return;
+    if (cachedDemoMode) {
+      requestIdRef.current += 1;
+      if (sampleId && showSampleCache(sampleId, lang)) return;
+      setLensResult(null);
+      setLensLoading(false);
+      setLensError("Demo mode is enabled. Uploaded images are not analysed; choose a sample to see a cached demo result.");
+      return;
+    }
     const requestId = ++requestIdRef.current;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
@@ -254,6 +264,11 @@ export default function LensTab({ selectedWaypoint, persona, onRequest }) {
     setLastSampleId(sample.id);
     setReported(false);
     setSampleImageErrors((previous) => ({ ...previous, [sample.id]: false }));
+    if (cachedDemoMode) {
+      showSampleCache(sample.id);
+      setLensImage(null);
+      return;
+    }
     try {
       const response = await fetch(sample.src, { cache: "no-cache" });
       if (!response.ok) throw new Error("Sample image asset isn't available yet.");
