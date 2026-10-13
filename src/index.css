@@ -175,3 +175,60 @@ textarea::placeholder {
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* React Leaflet map surfaces respect the app's semantic theme tokens. */
+.atithi-places-map,
+.atithi-places-map .leaflet-container {
+  color: var(--text);
+  background: var(--bg);
+  font-family: "Manrope", sans-serif;
+}
+.atithi-places-map .leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+.atithi-places-map .leaflet-popup-content-wrapper,
+.atithi-places-map .leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--text);
+}
+.atithi-places-map .leaflet-popup-content-wrapper {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgb(0 0 0 / 0.16);
+}
+.atithi-places-map .leaflet-popup-content {
+  margin: 12px;
+  line-height: 1.45;
+}
+.atithi-places-map .leaflet-popup-close-button {
+  color: var(--text-muted) !important;
+}
+.atithi-places-map .leaflet-control-zoom a {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+.atithi-places-map .leaflet-control-attribution {
+  background: rgb(var(--surface-rgb) / 0.8);
+  color: var(--text-muted);
+  font-size: 9px;
+}
+.atithi-places-map .leaflet-control-attribution a {
+  color: var(--accent-text);
+}
+.atithi-places-map .atithi-locate-control {
+  margin-top: 10px;
+  margin-right: 10px;
+}
+.atithi-places-map .atithi-map-popup {
+  color: var(--text);
+}
+.dark .atithi-places-map .leaflet-tile-pane {
+  filter: invert(0.88) hue-rotate(180deg) brightness(0.78) contrast(0.92) saturate(0.72);
+}
+.dark .atithi-places-map .leaflet-control-attribution {
+  background: rgb(var(--surface-rgb) / 0.9);
+}
