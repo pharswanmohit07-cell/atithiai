@@ -2056,7 +2056,7 @@ function SidebarItem({ icon: Icon, label, active, count, alert, tone = "teal" })
         </span>
       )}
       {alert && (
-        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+        <span className="w-2 h-2 rounded-full bg-coral animate-pulse"></span>
       )}
     </button>
   );
@@ -2073,12 +2073,12 @@ function StatCard({ title, value, trend, alert, icon = LayoutDashboard, tone = "
       </div>
       <div className="flex items-end justify-between">
         <span
-          className={`text-3xl font-serif ${alert ? "text-red-600" : "text-text"}`}
+          className={`text-3xl font-serif ${alert ? "text-rose-700 dark:text-rose-300" : "text-text"}`}
         >
           {value}
         </span>
         <span
-          className={`text-xs font-medium px-2 py-1 rounded-md ${alert ? "bg-red-50 text-red-600" : "bg-surface-2 text-muted"}`}
+          className={`text-xs font-medium px-2 py-1 rounded-md ${alert ? "bg-coral/15 text-rose-800 dark:bg-coral/15 dark:text-rose-200" : "bg-surface-2 text-muted"}`}
         >
           {trend}
         </span>
