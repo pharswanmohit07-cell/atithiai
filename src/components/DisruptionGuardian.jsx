@@ -145,7 +145,8 @@ export function BeatCrowdsPanel({ search = "", onAddPlace, isWeekend = false, se
 
 export function StaffRequestsPanel({ requests = [] }) {
   const staffRequests = requests
-    .filter((request) => ["Trip Guardian", "Price Lens"].includes(request.category))
+    .filter((request) => ["Trip Guardian", "Price Lens", "Emergency"].includes(request.category))
+    .sort((first, second) => Number(second.priority === "urgent") - Number(first.priority === "urgent"))
     .slice(0, 10);
   return (
     <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm">
