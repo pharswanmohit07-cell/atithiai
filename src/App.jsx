@@ -465,6 +465,15 @@ export default function AtithiAI() {
       {appMode === "guest" ? (
         <GuestApp
           guest={user}
+          persona={persona}
+          onUpdateHealthTags={updateHealthTags}
+          onSwitchPersona={handleSwitchPersona}
+          selectedWaypoint={selectedWaypoint}
+          selectedWaypointId={selectedWaypointId}
+          setSelectedWaypointId={setSelectedWaypointId}
+          weatherObservation={weatherObservation}
+          weatherLoading={weatherLoading}
+          weatherError={weatherError}
           disruptions={disruptions}
           lowCrowdPlaces={lowCrowdContext}
           actionsLog={actionsLog}
@@ -478,7 +487,7 @@ export default function AtithiAI() {
           preferences={preferences}
           onSavePreferences={savePreferences}
           onOpenOnboarding={() => window.dispatchEvent(new Event("atithi:reopen-onboarding"))}
-          onLogout={handleLogout}
+          onSwitchPersona={handleSwitchPersona}
           weather={weather}
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
@@ -492,6 +501,14 @@ export default function AtithiAI() {
         />
       ) : (
         <AdminDashboard
+          persona={persona}
+          onSwitchPersona={handleSwitchPersona}
+          selectedWaypoint={selectedWaypoint}
+          selectedWaypointId={selectedWaypointId}
+          setSelectedWaypointId={setSelectedWaypointId}
+          weatherObservation={weatherObservation}
+          weatherLoading={weatherLoading}
+          weatherError={weatherError}
           disruptions={disruptions}
           actionsLog={actionsLog}
           redirectionsCount={redirectionsCount}
@@ -505,7 +522,7 @@ export default function AtithiAI() {
           itinerary={itinerary}
           showAIIntervention={showAIIntervention}
           staffUser={user}
-          onLogout={handleLogout}
+          onSwitchPersona={handleSwitchPersona}
         />
       )}
 
@@ -566,7 +583,7 @@ function GuestApp(props) {
                 exit="exit"
                 className="h-full"
               >
-                <DiscoverTab onRequest={props.addRequest} onAddPlace={props.onAddPlaceToItinerary} crowdSelectionIds={props.crowdSelectionIds} isWeekend={props.isWeekend} />
+                <DiscoverTab onRequest={props.addRequest} onAddPlace={props.onAddPlaceToItinerary} crowdSelectionIds={props.crowdSelectionIds} isWeekend={props.isWeekend} setSelectedWaypointId={props.setSelectedWaypointId} />
               </motion.div>
             )}
             {activeTab === "ai" && (
@@ -602,7 +619,7 @@ function GuestApp(props) {
                   requests={props.requests}
                   onRequest={props.addRequest}
                   setActiveTab={setActiveTab}
-                  room={props.guest?.room}
+                  selectedWaypoint={props.selectedWaypoint}
                 />
               </motion.div>
             )}
@@ -615,7 +632,7 @@ function GuestApp(props) {
                 exit="exit"
                 className="h-full"
               >
-                <ProfileTab guest={props.guest} preferences={props.preferences} onSavePreferences={props.onSavePreferences} onOpenOnboarding={props.onOpenOnboarding} onLogout={props.onLogout} />
+                <ProfileTab guest={props.guest} persona={props.persona} onUpdateHealthTags={props.onUpdateHealthTags} onSwitchPersona={props.onSwitchPersona} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -668,7 +685,7 @@ function GuestApp(props) {
 // --- TAB COMPONENTS ---
 
 function HomeTab({
-  guest, preferences, weather,
+  guest, persona, preferences, weather, selectedWaypoint, selectedWaypointId, setSelectedWaypointId, weatherObservation, weatherLoading, weatherError,
   disruptions = [], actionsLog = [], guardianDisruption, affectedStop,
   guardianAlternatives = [], onAcceptGuardianAlternative, crowdSelectionIds = [],
   itinerary,
@@ -696,10 +713,10 @@ function HomeTab({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
-                The Aranya House
+                CHAR DHAM-STYLE CORRIDOR
               </p>
               <p className="mt-1 text-xs text-white/85">
-                Monday · October 5, 2026
+                {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -724,7 +741,7 @@ function HomeTab({
             </h1>
             <div className="mt-5 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium backdrop-blur">
-                Suite {guest?.room || "—"} · Luxury
+                {persona?.age ? `Age ${persona.age} · ${persona.ageGroup}` : "Regional safety overview"}
               </span>
               <span className="flex items-center gap-1.5 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[10px] font-medium backdrop-blur">
                 {weather === "sunny" ? (
@@ -732,8 +749,8 @@ function HomeTab({
                 ) : (
                   <IconBadge icon={CloudRain} tone="sky" size="sm" className="!h-7 !w-7 rounded-full" />
                 )}
-                {weather === "sunny" ? "24° · Clear" : "19° · Rain"}{" "}
-                <span className="text-white/60">Dehradun</span>
+                {weatherObservation ? `${weatherObservation.temperatureC}°C · ${weatherObservation.condition}` : weatherLoading ? "Checking live weather…" : weather === "sunny" ? "Weather unavailable" : "Rain override"}{" "}
+                <span className="text-white/60">{selectedWaypoint?.name || "Rudraprayag"}</span>
               </span>
             </div>
           </div>
@@ -935,7 +952,7 @@ function HomeTab({
           <div className="flex justify-between items-end mb-6">
             <h2 className="font-serif text-2xl text-text">Today's route</h2>
             <span className="text-sm font-medium text-muted">
-              October 5, 2026
+              {itinerary.length} route stops
             </span>
           </div>
 
@@ -1070,7 +1087,7 @@ function HomeTab({
   );
 }
 
-function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend = false }) {
+function DiscoverTab({ onRequest, onAddPlace, crowdSelectionIds = [], isWeekend = false, setSelectedWaypointId }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [selected, setSelected] = useState(null);
