@@ -4,9 +4,21 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./AppRouter.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
-import { AppProvider } from "./context/AppContext.jsx";
+import { DestinationProvider } from "./context/DestinationContext.jsx";
+import { HotelProvider } from "./context/HotelContext.jsx";
 import "leaflet/dist/leaflet.css";
 import "./index.css";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
- <React.StrictMode><ThemeProvider><AuthProvider><AppProvider><BrowserRouter><App/></BrowserRouter></AppProvider></AuthProvider></ThemeProvider></React.StrictMode>
+  <React.StrictMode>
+    <ThemeProvider>
+      <AuthProvider>
+        <DestinationProvider>
+          <HotelProvider>
+            <BrowserRouter><App /></BrowserRouter>
+          </HotelProvider>
+        </DestinationProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </React.StrictMode>,
 );
