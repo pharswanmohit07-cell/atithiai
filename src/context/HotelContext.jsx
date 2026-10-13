@@ -10,6 +10,7 @@ const PARTY_OPTIONS = ["Family", "Solo", "Couple", "Friends", "Business"];
 function readPreferences() {
   const saved = safeRead(PROFILE_KEY, {});
   return {
+    ...EMPTY_PREFERENCES,
     language: typeof saved.language === "string" && saved.language.trim() ? (saved.language === "en" ? "English" : saved.language.trim().slice(0, 50)) : "English",
     dietaryPreference: DIETARY_OPTIONS.includes(saved.dietaryPreference) ? saved.dietaryPreference : "No preference",
     travelParty: PARTY_OPTIONS.includes(saved.travelParty) ? saved.travelParty : "Family",
