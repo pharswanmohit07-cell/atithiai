@@ -13,6 +13,9 @@ import StayPass from "./components/StayPass.jsx";
 import LensTab from "./components/guest/LensTab.jsx";
 import DiscoverTab from "./components/guest/DiscoverTab.jsx";
 import { getFreeTimeMinutes, rankDishes, rankExperiences } from "./lib/rank.js";
+import DemoControls from "./components/DemoControls.jsx";
+import DisruptionCare from "./components/guest/DisruptionCare.jsx";
+import { deriveLiveWeatherDisruptions, makeDemoDisruption } from "./lib/disruptions.js";
 import FlexStayCard from "./components/guest/FlexStayCard.jsx";
 import AdminDashboard from "./components/AdminDashboard.jsx";
 import { detectChatIntent } from "./lib/chatIntents.js";
@@ -182,7 +185,7 @@ function ServiceView({ destination, formatCurrency, addRequest }) {
   );
 }
 
-function HomeView({ user, destination, weather, weatherLoading, weatherError, itinerary, removeItineraryStop, buildItinerary, addRequest, preferences, cachedDemoMode }) {
+function HomeView({ user, destination, weather, weatherLoading, weatherError, itinerary, setItinerary, disruptions, demoMode, removeItineraryStop, buildItinerary, addRequest, preferences, cachedDemoMode }) {
   return (
     <div className="space-y-4">
       <section className="overflow-hidden rounded-3xl bg-sunrise p-5 text-white shadow-lg sm:p-7">
@@ -191,6 +194,8 @@ function HomeView({ user, destination, weather, weatherLoading, weatherError, it
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/80">Discover what to do, ask for help and plan around the guest’s preferences. Staff confirm availability, fees and bookings.</p>
         <button type="button" onClick={buildItinerary} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-bold text-teal-950">{cachedDemoMode ? "Build local itinerary" : "Refresh suggested itinerary"} <ArrowRight size={16} /></button>
       </section>
+      <DemoControls />
+      <DisruptionCare destination={destination} weather={weather} itinerary={itinerary} setItinerary={setItinerary} preferences={preferences} disruptions={disruptions} demoMode={demoMode} />
       <FlexStayCard destination={destination} user={user} />
       <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-accent-text">Live weather · Open-Meteo</p><h2 className="mt-1 font-serif text-2xl">{weather ? weather.condition : weatherLoading ? "Getting current weather…" : "Weather unavailable"}</h2></div><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-2 text-accent-text"><Globe2 size={21} /></span></div>
@@ -239,12 +244,27 @@ function ProfileView({ user, preferences, updatePreferences, destination, select
 export default function AtithiAI({ mode = "guest" }) {
   const { user, logout } = useAuth();
   const { destination, destinations, selectDestination, formatCurrency, weather, weatherLoading, weatherError, cachedDemoMode, setCachedDemoMode } = useDestination();
-  const { itinerary, requests, addRequest, preferences, updatePreferences, addItineraryStop, removeItineraryStop, setItinerary } = useHotelContext();
+  const { itinerary, requests, addRequest, preferences, updatePreferences, addItineraryStop, removeItineraryStop, setItinerary, disruptions, addDisruption, syncLiveWeatherDisruptions } = useHotelContext();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("home");
   const [planLoading, setPlanLoading] = useState(false);
+  const demoMode = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1";
 
   useEffect(() => { setActiveTab("home"); }, [destination.id]);
+  useEffect(() => {
+    if (weather?.source === "live") syncLiveWeatherDisruptions(deriveLiveWeatherDisruptions(destination, weather));
+  }, [destination, weather, syncLiveWeatherDisruptions]);
+  useEffect(() => {
+    if (!demoMode) return undefined;
+    const onKeyDown = (event) => {
+      if (!event.altKey || String(event.key || "").toLowerCase() !== "r") return;
+      event.preventDefault();
+      const item = makeDemoDisruption({ type: "strike", destination, itinerary });
+      if (item) addDisruption(item);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [demoMode, destination, itinerary, addDisruption]);
 
   const switchPersona = () => {
     logout();
@@ -291,7 +311,7 @@ export default function AtithiAI({ mode = "guest" }) {
       <OfflineBanner />
       <Header onSwitch={switchPersona} />
       <div className="mx-auto max-w-3xl space-y-4 px-4 py-5 sm:px-6 sm:py-7">
-        {activeTab === "home" && <HomeView user={user} destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} itinerary={itinerary} removeItineraryStop={removeItineraryStop} buildItinerary={buildItinerary} addRequest={addRequest} preferences={preferences} cachedDemoMode={cachedDemoMode} />}
+        {activeTab === "home" && <HomeView user={user} destination={destination} weather={weather} weatherLoading={weatherLoading} weatherError={weatherError} itinerary={itinerary} setItinerary={setItinerary} disruptions={disruptions} demoMode={demoMode} removeItineraryStop={removeItineraryStop} buildItinerary={buildItinerary} addRequest={addRequest} preferences={preferences} cachedDemoMode={cachedDemoMode} />}
         {activeTab === "map" && <Suspense fallback={<div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-border bg-surface text-sm text-muted"><LoaderCircle className="mr-2 animate-spin" size={18} />Loading destination map…</div>}><DestinationMap destination={destination} height={420} /></Suspense>}
         {activeTab === "services" && <ServiceView destination={destination} formatCurrency={formatCurrency} addRequest={addRequest} />}
         {activeTab === "discover" && <div className="space-y-4"><DiscoverTab destination={destination} weather={weather} preferences={preferences} itinerary={itinerary} addItineraryStop={addItineraryStop} addRequest={addRequest} formatCurrency={formatCurrency} />
