@@ -13,6 +13,15 @@ const destination = {
   greeting: "Find the small details that make Jaipur yours.",
   // Double-check this number before travel or real deployment.
   emergencyNumber: "112",
+  // Verify these phrases with a native speaker before publishing.
+  phraseLanguage: "Hindi",
+  phrases: [
+    { english: "Hello", local: "नमस्ते", pronunciation: "nuh-muh-stay" },
+    { english: "Thank you", local: "धन्यवाद", pronunciation: "dhun-yuh-vaad" },
+    { english: "Please", local: "कृपया", pronunciation: "krip-yaa" },
+    { english: "Excuse me", local: "माफ़ कीजिए", pronunciation: "maaf kee-jee-ye" },
+    { english: "How much is this?", local: "यह कितने का है?", pronunciation: "yeh kit-nay kaa hai" }
+  ],
   themeColors: { accent: "#C65E4B", accentSoft: "#F8E7E0" },
   places: [
     { id:"hawamahal",name:"Hawa Mahal",lat:26.9239,lon:75.8267,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"Its many small windows are commonly associated with allowing royal women to observe street life from within the palace. The façade is one of Jaipur’s best-known examples of Rajput and Mughal-influenced design.",rainFriendly:true,indoor:true,bestTime:"morning",avgSpendLocal:250,durationMin:60,tags:["architecture","heritage","photography"] },
