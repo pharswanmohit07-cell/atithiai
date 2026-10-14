@@ -47,3 +47,11 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run browser runtime smoke matrix
         run: npm run test:runtime
+      - name: Upload runtime screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mentor-feedback-runtime-screenshots
+          path: artifacts/screenshots/*.png
+          if-no-files-found: warn
+          retention-days: 7
