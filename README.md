@@ -1,10 +1,10 @@
-# Atithi AI — Go beyond the usual
+# Atithi AI: Travel planning for Jaipur, Ubud and Lisbon
 
-> **Live demo:** [atithiai-omega.vercel.app](https://atithiai-omega.vercel.app/)
->
 > **Project repository:** [pharswanmohit07-cell/atithiai](https://github.com/pharswanmohit07-cell/atithiai)
 >
-> This is the traveler-facing Atithi AI prototype (not the similarly named hotel guest-services project).
+> This is the traveler-facing Atithi AI prototype, not the similarly named hotel guest-services project.
+>
+> **Launch status: not ready.** An owner-controlled custom domain must be connected and the updated production deployment must be verified before launch.
 >
 > **Build checks:** GitHub Actions runs source checks, the optional image audit, and the production build on pushes to `main` and pull requests.
 
