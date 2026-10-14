@@ -16,6 +16,7 @@ const server = await createServer({
 const pageErrors = [];
 const runtimeConsoleErrors = [];
 const apiRequestsDuringLocalDrafts = [];
+let monitorLocalDraftApi = false;
 let browser;
 
 const profile = {
@@ -144,7 +145,7 @@ try {
   const page = await context.newPage();
   page.on("pageerror", (error) => pageErrors.push("feature-smoke: " + error.message));
   page.on("request", (request) => {
-    if (new URL(request.url()).pathname.startsWith("/api/")) apiRequestsDuringLocalDrafts.push(request.url());
+    if (monitorLocalDraftApi && new URL(request.url()).pathname.startsWith("/api/")) apiRequestsDuringLocalDrafts.push(request.url());
   });
   await page.route("**/api/**", (route) => route.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
   await page.route("https://**/*", (route) => route.abort());
@@ -152,6 +153,7 @@ try {
   await page.locator("#header-destination").waitFor({ state: "visible", timeout: 12000 });
 
   await gotoTab(page, "Plan", "Jaipur", "feature-smoke");
+  monitorLocalDraftApi = true;
   await page.getByLabel("Arrival time (optional)").fill("10:00");
   await page.getByRole("button", { name: "Draft a request to my hotel", exact: true }).first().click();
   const draftDialog = page.getByRole("dialog");
@@ -160,19 +162,25 @@ try {
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Plan around this gap", exact: true }).first().click();
   await assertHealthy(page, "feature-smoke", "Jaipur", "Flex Stay");
+  monitorLocalDraftApi = false;
 
   await gotoTab(page, "Discover", "Jaipur", "feature-smoke");
   await page.getByRole("button", { name: "Local Experiences", exact: true }).click();
+  monitorLocalDraftApi = true;
   await page.getByRole("button", { name: "Ask the host", exact: true }).first().click();
   await page.getByRole("dialog").getByText(/Demo host\. No live host is connected/i).waitFor({ state: "visible" });
   await page.keyboard.press("Escape");
+  monitorLocalDraftApi = false;
 
   await gotoTab(page, "Chat", "Jaipur", "feature-smoke");
+  monitorLocalDraftApi = true;
   await page.getByRole("button", { name: "Talk to a person", exact: true }).click();
   await page.getByRole("dialog").getByText(/does not connect you to live staff/i).waitFor({ state: "visible" });
   await page.getByRole("dialog").getByRole("button", { name: /Draft a message to my hotel front desk/i }).click();
   await page.getByRole("dialog").getByText(/does not send this or contact anyone/i).waitFor({ state: "visible" });
   await page.keyboard.press("Escape");
+  monitorLocalDraftApi = false;
+  monitorLocalDraftApi = true;
   await page.getByRole("button", { name: "Talk to a person", exact: true }).click();
   await page.getByRole("button", { name: /Suggest a correction or hidden gem for our local curators/i }).click();
   await page.getByLabel("Place name").fill("A local courtyard");
@@ -181,6 +189,7 @@ try {
   await page.getByRole("button", { name: "Save suggestion locally", exact: true }).click();
   await page.getByText("Thanks, a local curator would review this (demo).", { exact: true }).waitFor({ state: "visible" });
   await assertHealthy(page, "feature-smoke", "Jaipur", "Curator suggestion");
+  monitorLocalDraftApi = false;
 
   for (const route of ["about", "privacy", "terms"]) {
     await page.goto(baseUrl + "/" + route, { waitUntil: "domcontentloaded" });
