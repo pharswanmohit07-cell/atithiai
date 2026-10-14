@@ -268,6 +268,11 @@ body::after {
 .toast-surface { border-color: rgb(251 191 36 / .56); }
 .deck-heading::after { background: linear-gradient(90deg,#FB4F6E 0%,#FBBF24 100%); width: 4.25rem; }
 .bottom-nav-glass { border-color: rgb(255 255 255 / .12); background: rgb(var(--surface-rgb) / .86); backdrop-filter: blur(18px) saturate(145%); }
+.bottom-nav-glass { position: fixed; z-index: 50; left: .75rem; right: .75rem; bottom: calc(env(safe-area-inset-bottom) + .4rem); border-radius: 1rem; padding: .375rem; }
+@media (min-width: 640px) and (max-width: 1023px) {
+  .bottom-nav-glass { left: 50%; right: auto; width: min(46rem, calc(100% - 2rem)); transform: translateX(-50%); }
+  #root .app-content { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
+}
 .bottom-nav-item[aria-current="page"] { color: #FDE68A; }
 .nav-active-pill { background: linear-gradient(120deg,rgb(251 191 36 / .16),rgb(251 79 110 / .1)); }
 @media (min-width: 1024px) {
@@ -276,16 +281,22 @@ body::after {
   .bottom-nav-item { min-height: 4.25rem; flex: none; width: 100%; padding: .4rem .2rem; }
   .bottom-nav-label { font-size: 9px; }
   .bottom-nav-item > span { gap: .35rem; }
-  .app-home-hero { min-height: 20rem; padding: clamp(2rem,4vw,3.25rem); }
+  #root .app-home-hero { min-height: 20rem; padding: clamp(2rem,4vw,3.25rem); }
 }
-@media (max-width: 1023px) { .bottom-nav-glass { left: .75rem; right: .75rem; } }
+
+@media (min-width: 1024px) {
+  .bottom-nav-item.bottom-nav-item { min-height: 4.25rem; flex: none; width: 100%; padding: .4rem .2rem; }
+}
+@media (min-width: 1024px) {
+  #root .app-content { padding-right: max(6.5rem, calc(env(safe-area-inset-right) + 6rem)); }
+}
 @media (max-width: 639px) {
   .welcome-hero,.welcome-hero-inner { min-height: auto; }
-  .welcome-hero-inner { padding-top: 2rem; padding-bottom: 1.5rem; }
+  #root .welcome-hero-inner { padding-top: 2rem; padding-bottom: 1.5rem; }
   .welcome-hero-art img { object-position: 56% center; }
   .welcome-hero-overlay { background: linear-gradient(90deg,rgb(26 11 46 / .91),rgb(26 11 46 / .76)),linear-gradient(0deg,rgb(26 11 46 / .65),transparent 60%); }
   .destination-card-top,.destination-card-middle,.destination-card-bottom { transform: none; }
-  .image-card { min-height: 9.25rem; }
+  #root .image-card { min-height: 9.25rem; }
 }
 @media (prefers-reduced-motion: reduce) { .welcome-fireflies,.hero-shimmer::after { display: none !important; } }
 

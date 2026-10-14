@@ -607,7 +607,7 @@ export default function AtithiAI() {
     </div>
 
     <footer className="app-footer mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 pb-24 pt-3 text-[10px] text-muted"><span>Built by TeamBTC</span><span className="demo-badge">Demo content</span></footer>
-    <nav aria-label="Main navigation" className="bottom-nav-glass fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.4rem)] z-50 rounded-2xl px-1.5 pt-1.5 pb-1.5 sm:inset-x-1/2 sm:w-[min(46rem,calc(100%-2rem))] sm:-translate-x-1/2">
+    <nav aria-label="Main navigation" className="bottom-nav-glass">
        <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><motion.button key={id} type="button" whileTap={disableMotion ? undefined : reduceMotionSafeTap} onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<motion.span className="relative z-10" animate={activeTab===id&&!disableMotion?{y:[0,-2,0]}:{y:0}} transition={{duration:disableMotion?0:0.28}}><Icon size={18}/></motion.span><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></motion.button>)}</div>
      </nav>
   </main>;
