@@ -1,3 +1,4 @@
+/* global document, window, localStorage */
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
