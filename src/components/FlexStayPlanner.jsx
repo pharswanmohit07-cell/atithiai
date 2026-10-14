@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Clock3, Copy, Hotel, Route } from "lucide-react";
+import { Clock3, Hotel, Route } from "lucide-react";
 import { buildRequestDraft, computeGaps } from "../lib/flexStay.js";
 import { useProfile } from "../context/ProfileContext.jsx";
 import DraftSheet, { DRAFT_LANGUAGES } from "./ui/DraftSheet.jsx";
@@ -55,7 +55,8 @@ function formatGap(minutes, locale) {
 }
 
 export default function FlexStayPlanner({ destination, profile, onPlanAroundGap }) {
-  const activeProfile = profile || useProfile().profile;
+  const contextProfile = useProfile().profile;
+  const activeProfile = profile || contextProfile;
   const [form, setForm] = useState(readForm);
   const [sheet, setSheet] = useState(null);
   const preferredLanguage = DRAFT_LANGUAGES.some((item) => item.value === activeProfile?.languages?.[0]) ? activeProfile.languages[0] : "en";
@@ -83,7 +84,7 @@ export default function FlexStayPlanner({ destination, profile, onPlanAroundGap 
     setSheet({ ...sheet, language, message: buildRequestDraft({ kind: sheet.kind, time, hotelName: form.hotelName, language }) });
   };
 
-  const timeField = (field, label, value, required = false) => <label className="block min-w-0 text-xs font-bold text-muted">
+  const timeField = (field, label, value) => <label className="block min-w-0 text-xs font-bold text-muted">
     {label}
     <input
       type="time"
@@ -92,7 +93,6 @@ export default function FlexStayPlanner({ destination, profile, onPlanAroundGap 
       className="mt-1 min-h-11 w-full min-w-0 border border-border bg-bg px-3 py-2 text-base text-text"
       style={{ fontSize: "16px" }}
       aria-label={label}
-      required={required}
     />
   </label>;
 
