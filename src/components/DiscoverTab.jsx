@@ -358,6 +358,16 @@ export default function DiscoverTab({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{rankedDishes.map((dish) => <DishCard key={dish.id} dish={dish} destination={destination} ranked={dish} formatCurrency={money} onAdd={() => addToPlan(dish,"dish")} inPlan={isInPlan(dish,"dish")} showOnMap={() => showPlaceOnMap(destination.places.find((place) => ["market","cafe"].includes(place.category))?.id || destination.places[0]?.id)}/>)}</div>
       {!rankedDishes.length && <p className="rounded-2xl border border-dashed border-border bg-surface p-6 text-sm text-muted">No dishes match every filter. Try a broader diet selection, a higher maximum spice or more budget.</p>}
     </section>}
+    {hostDraft && <DraftSheet
+      title="Ask the host"
+      description={"Prepare a message for " + hostDraft.experience.hostName + ". Review it before sharing."}
+      message={hostDraft.message}
+      onMessageChange={(message) => setHostDraft({ ...hostDraft, message: message.slice(0,500) })}
+      language={hostDraft.language}
+      onLanguageChange={(language) => setHostDraft({ ...hostDraft, language, message: buildHumanDraft({ kind: "host", hostName: hostDraft.experience.hostName, experienceTitle: hostDraft.experience.title, destinationCity: destination.city, language }) })}
+      disclaimer="Demo host. No live host is connected. Atithi AI does not send this message or create a booking."
+      onClose={() => setHostDraft(null)}
+    />}
   </section>;
 }
 
