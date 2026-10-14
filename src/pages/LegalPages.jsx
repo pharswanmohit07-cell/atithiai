@@ -46,7 +46,7 @@ export function PrivacyPolicy() {
       </section>
       <section>
         <h2 className="font-display text-2xl">Accounts, bookings and payments</h2>
-        <p>This prototype does not create a traveler account, take payment or complete travel bookings. Saving an experience request creates a note in this browser only. It does not contact a host.</p>
+        <p>This prototype does not create a traveler account, take payment or complete travel bookings. Hotel and host request messages are editable drafts prepared in the browser. Atithi AI does not send them or contact a hotel, host or staff member. If you choose Copy, Share or WhatsApp, review the destination and make the sending decision yourself. Saving an experience request or curator suggestion stores a note in this browser only; it does not contact a host or curator.</p>
       </section>
       <section>
         <h2 className="font-display text-2xl">Your choices</h2>
@@ -73,7 +73,7 @@ export function TermsAndConditions() {
       </section>
       <section>
         <h2 className="font-display text-2xl">No booking or emergency service</h2>
-        <p>The app does not reserve accommodation, book tickets, contact hosts, confirm availability or dispatch emergency assistance. An emergency button, where shown, opens the device's phone handler for the listed number. Check local emergency guidance and confirm the correct number for your location.</p>
+        <p>The app does not reserve accommodation, book tickets, contact hotels, hosts or staff, confirm availability, deliver curator suggestions, or dispatch emergency assistance. Hotel and host messages are drafts for the traveler to review and send themselves. An emergency link, where shown, opens the device's phone handler for the number from the selected destination pack; Atithi AI does not dispatch help. Check local emergency guidance and confirm the correct number for your location.</p>
       </section>
       <section>
         <h2 className="font-display text-2xl">AI and translation features</h2>
