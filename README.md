@@ -8,7 +8,7 @@
 >
 > **Build checks:** GitHub Actions runs source checks, the required site icon check, and the production build on pushes to `main` and pull requests.
 
-Atithi AI is a personalized travel companion for the hidden places, local stories and experiences that make a destination feel personal. It helps travelers explore beyond the usual, save ideas, assemble a flexible day plan, ask questions in their language, and translate signs or menus with Atithi Lens.
+Atithi AI is a travel-planning prototype for Jaipur, Ubud and Lisbon. It lets travelers filter destination-pack places, food and experiences, create an editable day plan, ask travel questions, and translate signs or menus with Atithi Lens.
 
 The current demonstration packs are Jaipur (India), Ubud (Bali, Indonesia) and Lisbon (Portugal). The interface is designed around travelers rather than a service-provider workflow.
 
