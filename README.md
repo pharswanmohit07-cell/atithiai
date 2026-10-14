@@ -1,10 +1,12 @@
 # Atithi AI: Travel planning for Jaipur, Ubud and Lisbon
 
-> **Project repository:** [pharswanmohit07-cell/atithiai](https://github.com/pharswanmohit07-cell/atithiai)
+> **Live demo:** [https://atithiai-omega.vercel.app](https://atithiai-omega.vercel.app/)
+>
+> **Source code:** [pharswanmohit07-cell/atithiai](https://github.com/pharswanmohit07-cell/atithiai)
 >
 > This is the traveler-facing Atithi AI prototype, not the similarly named hotel guest-services project.
 >
-> **Launch status: not ready.** An owner-controlled custom domain must be connected and the updated production deployment must be verified before launch.
+> **Launch note:** The Vercel demo link is available. Connect an owner-controlled custom domain and verify the final production build before treating it as a full public launch.
 >
 > **Build checks:** GitHub Actions runs source checks, the required site icon check, and the production build on pushes to `main` and pull requests.
 
