@@ -6,6 +6,9 @@ import {
 import { rankPlaces, rankDishes, rankExperiences } from "../lib/rank.js";
 import IconBadge from "./ui/IconBadge.jsx";
 import Chip from "./ui/Chip.jsx";
+import DraftSheet, { DRAFT_LANGUAGES } from "./ui/DraftSheet.jsx";
+import { buildHumanDraft } from "../lib/flexStay.js";
+import { readLocalSuggestions, saveLocalSuggestion } from "../lib/localSuggestions.js";
 
 const SEGMENTS = [
   { id: "hidden", label: "Hidden Gems", icon: Sparkles },
@@ -91,11 +94,12 @@ export default function DiscoverTab({
   const [suggestionArea, setSuggestionArea] = useState("");
   const [suggestionStory, setSuggestionStory] = useState("");
   const [suggestionSaved, setSuggestionSaved] = useState(false);
-  const [localSuggestions, setLocalSuggestions] = useState(() => readArray("atithi-local-suggestions:" + destination.id));
+  const [hostDraft, setHostDraft] = useState(null);
+  const [localSuggestions, setLocalSuggestions] = useState(() => readLocalSuggestions(destination.id));
 
   useEffect(() => {
     setSavedExperiences(readArray("atithi-saved-experiences:" + destination.id));
-    setLocalSuggestions(readArray("atithi-local-suggestions:" + destination.id));
+    setLocalSuggestions(readLocalSuggestions(destination.id));
     setSuggestionSaved(false);
     setTasteBudget(profile?.dailyBudget?.currencyCode === destination.currency.code && profile?.dailyBudget?.amount != null ? String(profile.dailyBudget.amount) : "");
     setTasteDiet(profile?.diet || "none");
@@ -220,24 +224,13 @@ export default function DiscoverTab({
   };
   const saveContributorSuggestion = (event) => {
     event.preventDefault();
-    const name = suggestionName.trim().slice(0, 100);
-    const area = suggestionArea.trim().slice(0, 120);
-    const details = suggestionStory.trim().slice(0, 700);
-    if (!name || !area || !details) return;
-    const suggestion = {
-      id: Date.now().toString(36),
-      name,
-      area,
-      details,
-      destinationId: destination.id,
-      createdAt: new Date().toISOString(),
-      status: "Thanks, a local curator would review this (demo)"
-    };
-    setLocalSuggestions((current) => {
-      const next = [suggestion, ...current].slice(0, 20);
-      writeArray("atithi-local-suggestions:" + destination.id, next);
-      return next;
+    const result = saveLocalSuggestion(destination.id, {
+      name: suggestionName,
+      area: suggestionArea,
+      details: suggestionStory
     });
+    if (!result.ok) return;
+    setLocalSuggestions(readLocalSuggestions(destination.id));
     setSuggestionName("");
     setSuggestionArea("");
     setSuggestionStory("");
