@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ClipboardEdit, Hotel, MessageCircle, Phone, Users, X } from "lucide-react";
 import DraftSheet, { DRAFT_LANGUAGES } from "./ui/DraftSheet.jsx";
 import { buildHumanDraft } from "../lib/flexStay.js";
@@ -11,6 +11,8 @@ export default function HumanHelpSheet({ destination, language = "en", onClose }
   const [area, setArea] = useState("");
   const [details, setDetails] = useState("");
   const [feedback, setFeedback] = useState("");
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
   const safeEmergencyNumber = String(destination?.emergencyNumber || "").replace(/[^0-9+]/g, "").slice(0, 20);
   const initialLanguage = DRAFT_LANGUAGES.some((item) => item.value === language) ? language : "en";
 
@@ -19,14 +21,14 @@ export default function HumanHelpSheet({ destination, language = "en", onClose }
     const previousTouchAction = document.body.style.touchAction;
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
-    const handleKeyDown = (event) => { if (event.key === "Escape") onClose(); };
+    const handleKeyDown = (event) => { if (event.key === "Escape") onCloseRef.current?.(); };
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.body.style.touchAction = previousTouchAction;
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
   const openDraft = (kind) => {
     const message = buildHumanDraft({ kind, destinationCity: destination.city, language: initialLanguage });
