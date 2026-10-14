@@ -28,7 +28,7 @@ function positiveGap(start, end, { allowOvernight = false } = {}) {
 
 export function computeGaps({ arrival = "", checkIn = "14:00", checkOut = "11:00", departure = "" } = {}) {
   const values = [arrival, checkIn || "14:00", checkOut || "11:00", departure];
-  if (values.some((value) => value !== "" && parseTime(value) === null)) return zeroGaps();
+  if (values.some((value) => value != null && value !== "" && parseTime(value) === null)) return zeroGaps();
 
   const arrivalMinutes = arrival ? parseTime(arrival) : null;
   const checkInMinutes = parseTime(checkIn || "14:00");
@@ -126,6 +126,7 @@ export function buildHumanDraft({ kind = "hotel", hostName = "there", experience
 
 export function detectHumanHelpIntent(value) {
   const message = String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return /\b(person|human|real person|staff|front desk|manager|complaint|complain|problem|issue|booking problem|reservation problem|help me|customer service|someone|refund|no show|wrong booking|persona|alguien|problema|queja|reclamacion|recepcion|ayuda humana|ayuda|probleme|reclamation|plainte|personne|aide|problema|reclamacao|reclamação|pessoa|ajuda|atendimento|orang|manusia|staf|keluhan|masalah|bantuan|orang sungguhan)\b/.test(message)
+  return /\b(person|human|real person|staff|front desk|manager|complaint|complain|problem|issue|booking problem|reservation problem|help me|customer service|someone|refund|no show|wrong booking|persona|alguien|problema|queja|reclamacion|recepcion|ayuda humana|ayuda|probleme|reclamation|plainte|personne|aide|problema|reclamacao|pessoa|ajuda|atendimento|orang|manusia|staf|keluhan|masalah|bantuan|orang sungguhan)\b/.test(message)
+    || /\b(booking|reservation|reserva|reservacion|reserva|reserva)\b.*\b(wrong|problem|issue|cancel|cancelled|canceled|charge|refund|changed|missing|problema|probleme|problème|problema|masalah)\b/.test(message)
     || /मदद|शिकायत|किसी से बात|व्यक्ति|समस्या|बुकिंग समस्या/.test(String(value || ""));
 }
