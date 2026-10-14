@@ -17,6 +17,8 @@ import { useTravelContext } from "./context/TravelContext.jsx";
 import { useProfile } from "./context/ProfileContext.jsx";
 import { rankPlaces, rankDishes, rankExperiences } from "./lib/rank.js";
 import { getDefaultLanguage, detectTextLanguage, languageBase, LANGUAGE_OPTIONS, targetLanguageTag, t } from "./i18n.js";
+import HumanHelpSheet from "./components/HumanHelpSheet.jsx";
+import { detectHumanHelpIntent } from "./lib/flexStay.js";
 
 const LensTab = lazy(() => import("./components/guest/LensTab.jsx"));
 const ProfileTab = lazy(() => import("./components/ProfileTab.jsx"));
@@ -226,6 +228,7 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
       <p>Built by Team BTC</p>
       <p className="max-w-2xl">Prototype information is not independently verified. Weather is provided by Open-Meteo when available. The app does not book or confirm services.</p>
       <nav aria-label="Legal" className="flex shrink-0 gap-4">
+        <a className="underline underline-offset-4" href="/about">About</a>
         <a className="underline underline-offset-4" href="/privacy">Privacy</a>
         <a className="underline underline-offset-4" href="/terms">Terms</a>
       </nav>
@@ -376,6 +379,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
     try { return localStorage.getItem("atithi-chat-language") || "auto"; } catch { return "auto"; }
   });
   const [addedResults, setAddedResults] = useState([]);
+  const [humanHelpOpen, setHumanHelpOpen] = useState(false);
   const writeLanguage = (value) => {
     setReplyLanguage(value);
     try { localStorage.setItem("atithi-chat-language", value); } catch { /* Keep the selection for this session. */ }
@@ -484,7 +488,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
   };
 
   return <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
-    <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><IconBadge icon={MessageCircle} tone="teal" /><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Tell Atithi what kind of place, food or experience you have in mind.</p></div></div>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-center gap-3"><IconBadge icon={MessageCircle} tone="teal" /><div><h2 className="font-serif text-2xl">{t("chatTitle", getDefaultLanguage())}</h2><p className="text-xs text-muted">Tell Atithi what kind of place, food or experience you have in mind.</p></div></div><button type="button" onClick={() => setHumanHelpOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 border border-border bg-surface-2 px-3 py-2 text-xs font-bold">Talk to a person</button>
       <label className="flex items-center gap-2 text-xs font-bold text-text">{t("replyLanguage", getDefaultLanguage())}<select value={replyLanguage} onChange={(event) => writeLanguage(event.target.value)} className="min-h-10 max-w-40 rounded-xl border border-border bg-bg px-2 py-2 text-xs"><option value="auto">{t("detectLanguage", getDefaultLanguage())}</option>{LANGUAGE_OPTIONS.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
     </div>
     {providerStatus.source !== "unknown" && <div role="status" className={"mb-3 rounded-xl border px-3 py-2 text-xs leading-relaxed " + (providerStatus.source === "gemini" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100" : providerStatus.source === "checking" ? "border-border bg-bg text-muted" : "border-amber-500/40 bg-amber-500/10 text-amber-100")}>
@@ -495,7 +499,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
           : <><strong>Local fallback active:</strong> {chatFallbackMessage(providerStatus.reason)}</>}
     </div>}
     <div className="mt-4 max-h-[min(62vh,640px)] space-y-3 overflow-y-auto rounded-2xl bg-bg p-3" aria-live="polite">
-      {chatMessages.map((message) => <div key={message.id} className={"max-w-[98%] rounded-2xl px-3 py-3 text-sm leading-relaxed " + (message.role === "guest" ? "ml-auto text-white" : "border border-border bg-surface text-text")} style={message.role === "guest" ? { backgroundColor: destination.themeColors.accent } : undefined}>
+      {chatMessages.map((message, messageIndex) => <React.Fragment key={message.id}><div className={"max-w-[98%] rounded-2xl px-3 py-3 text-sm leading-relaxed " + (message.role === "guest" ? "ml-auto text-white" : "border border-border bg-surface text-text")} style={message.role === "guest" ? { backgroundColor: destination.themeColors.accent } : undefined}>
         <p className="whitespace-pre-wrap">{message.text}</p><time className="mt-1 block text-[9px] opacity-60">{formatDate(message.createdAt, destination.locale, destination.timezone)}</time>
         {message.role === "assistant" && Array.isArray(message.results) && message.results.length > 0 && <div className="mt-3 space-y-2">{message.results.map((reference) => {
           const result = resolveChatResult(destination, reference);
@@ -503,11 +507,17 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
           const key = reference.itemType + ":" + reference.id;
           return <ChatResultCard key={key} destination={destination} result={result} added={addedResults.includes(key)} onAdd={() => { const stop = addItineraryItem(result, reference.itemType); if (stop) setAddedResults((current) => [...new Set([...current, key])]); }} onShowMap={() => result.mapPlaceId && onShowOnMap(result.mapPlaceId)}/>;
         })}</div>}
-      </div>)}
+      </div>
+        {message.role === "assistant" && chatMessages[messageIndex - 1]?.role === "guest" && detectHumanHelpIntent(chatMessages[messageIndex - 1].text) && <div className="border border-border bg-surface p-3">
+          <p className="text-sm leading-relaxed">This may be easier to resolve with a person. Atithi AI does not connect you to live staff in this demo.</p>
+          <button type="button" onClick={() => setHumanHelpOpen(true)} className="mt-2 inline-flex min-h-11 items-center gap-2 border border-border bg-surface-2 px-3 py-2 text-xs font-bold">Talk to a person</button>
+        </div>}
+      </React.Fragment>)}
       {sending && <p role="status" className="text-xs text-muted">{t("sending", getDefaultLanguage())}</p>}
     </div>
     <form onSubmit={submit} className="chat-composer mt-3 flex gap-2"><input type="text" inputMode="text" enterKeyHint="send" autoComplete="off" value={draft} onChange={(event) => setDraft(event.target.value)} maxLength={1200} placeholder={t("chatPlaceholder", getDefaultLanguage())} className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-sm" aria-label={t("chatPlaceholder", getDefaultLanguage())}/><button type="submit" disabled={!draft.trim() || sending} aria-label={t("send", getDefaultLanguage())} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: destination.themeColors.accent }}><Send size={15}/><span className="hidden sm:inline">{t("send", getDefaultLanguage())}</span></button></form>
     <DemoNote>Rank scores and reason chips come from deterministic rules. Stories, hosts and spending ranges are illustrative; only weather is live.</DemoNote>
+    {humanHelpOpen && <HumanHelpSheet destination={destination} language={profile?.languages?.[0] || "en"} onClose={() => setHumanHelpOpen(false)}/>}
   </section>;
 }
 export default function AtithiAI() {
@@ -520,6 +530,29 @@ export default function AtithiAI() {
   const [mapFocusId, setMapFocusId] = useState(null);
 
   useEffect(() => { document.title = "Atithi AI | Travel planning for Jaipur, Ubud and Lisbon"; }, []);
+  useEffect(() => {
+    const isEditableField = (target) => {
+      if (!(target instanceof HTMLElement)) return false;
+      if (target.tagName === "TEXTAREA") return true;
+      if (target.tagName !== "INPUT") return false;
+      return !/^(button|submit|reset|checkbox|radio|range|file|color|hidden)$/i.test(target.type);
+    };
+    const onFocusIn = (event) => {
+      if (isEditableField(event.target)) document.documentElement.classList.add("keyboard-open");
+    };
+    const onFocusOut = () => {
+      window.requestAnimationFrame(() => {
+        if (!isEditableField(document.activeElement)) document.documentElement.classList.remove("keyboard-open");
+      });
+    };
+    document.addEventListener("focusin", onFocusIn);
+    document.addEventListener("focusout", onFocusOut);
+    return () => {
+      document.removeEventListener("focusin", onFocusIn);
+      document.removeEventListener("focusout", onFocusOut);
+      document.documentElement.classList.remove("keyboard-open");
+    };
+  }, []);
   useEffect(() => { document.documentElement.setAttribute("data-destination", destination.id); }, [destination.id]);
   useEffect(() => {
     const openChat = (event) => {
@@ -565,10 +598,10 @@ export default function AtithiAI() {
 
   return <main className="min-h-screen bg-bg pb-[calc(5.75rem+env(safe-area-inset-bottom))] text-text">
     <DemoModeBar/>
-    <header className="app-header-safe safe-sticky-header sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 shadow-sm sm:px-6">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Travel planning for Jaipur, Ubud and Lisbon</span></span></button>
-        <div className="flex items-center gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-32 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-bold sm:max-w-48">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact/><a href={"tel:" + emergencyNumber} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-border px-2 py-2 text-xs font-extrabold text-text" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
+    <header className="app-header-safe safe-sticky-header sticky top-0 z-40 border-b border-border bg-surface/95 px-2 py-3 shadow-sm sm:px-6">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 sm:gap-3">
+        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-2 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-xl leading-none sm:text-2xl">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Travel planning for Jaipur, Ubud and Lisbon</span></span></button>
+        <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 w-24 max-w-24 rounded-xl border border-border bg-bg px-1 py-2 text-xs font-bold sm:w-auto sm:max-w-48 sm:px-2">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact className="header-theme-toggle"/><a href={"tel:" + emergencyNumber} className="header-sos inline-flex min-h-10 min-w-9 items-center justify-center gap-1 rounded-xl border border-border px-1 py-2 text-xs font-extrabold text-text sm:min-w-11 sm:px-2" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
       </div>
     </header>
 
@@ -580,8 +613,9 @@ export default function AtithiAI() {
           <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent-text">{destination.city} · {destination.country}</p>
           <h1 className="mt-3 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">Explore {destination.city} at your own pace.</h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">Browse local places, dishes and experiences. Build a day plan from your interests, budget and available time.</p>
-          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 px-4 py-2 text-sm font-bold">Browse places <ArrowRight size={16} aria-hidden="true" /></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 border border-border bg-surface px-4 py-2 text-sm font-bold text-text">Build my day</button></div></div>
+          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 px-4 py-2 text-sm font-bold">Browse places <ArrowRight size={16} aria-hidden="true" /></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 border border-border bg-surface px-4 py-2 text-sm font-bold text-text">Build my day</button><button type="button" onClick={buildPlan} className="inline-flex min-h-10 items-center gap-2 border border-border bg-bg px-3 py-2 text-xs font-bold text-text">Arriving early or leaving late?</button></div></div>
         </section>
+        <p className="text-sm font-semibold leading-relaxed text-text">Local picks that fit you, with reasons, and plans that adapt.</p>
         <WeatherPanel destination={destination} weather={weather} loading={weatherLoading} error={weatherError} formatNumber={formatNumber}/>
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="deck-heading font-serif text-2xl">A few places to begin</h2><p className="mt-1 text-xs text-muted">A changing mix of well-known landmarks and quieter corners.</p></div><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">All places <ArrowRight size={14}/></button></div>
           <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">{[...destination.places].sort((a,b)=>Number(b.isHiddenGem)-Number(a.isHiddenGem)).slice(0,3).map((place)=><PlaceCard key={place.id} place={place} destination={destination} formatCurrency={formatCurrency} inPlan={planIds.has(place.id)} onAdd={addItineraryStop} onRemove={removeItineraryStop}/>)}</div><DemoNote/>
@@ -611,7 +645,7 @@ export default function AtithiAI() {
       </Suspense></div>
     </div>
 
-    <footer className="app-footer mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 pb-24 pt-3 text-xs text-muted"><span>Built by Team BTC</span><span>Prototype content. Verify local details before travel.</span><nav aria-label="Legal" className="flex gap-4"><a className="underline underline-offset-4" href="/privacy">Privacy</a><a className="underline underline-offset-4" href="/terms">Terms</a></nav></footer>
+    <footer className="app-footer mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 pb-24 pt-3 text-xs text-muted"><span>Built by Team BTC</span><span>Prototype content. Verify local details before travel.</span><nav aria-label="Legal" className="flex gap-4"><a className="underline underline-offset-4" href="/about">About</a><a className="underline underline-offset-4" href="/privacy">Privacy</a><a className="underline underline-offset-4" href="/terms">Terms</a></nav></footer>
     <nav aria-label="Main navigation" className="bottom-nav-glass">
       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-1">
         {TABS.map(({ id, label, Icon }) => (

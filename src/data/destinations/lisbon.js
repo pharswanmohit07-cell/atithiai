@@ -6,6 +6,15 @@ const destination = {
   greeting:"Follow the neighbourhoods, tiled details and everyday rhythms that make Lisbon personal.",
   // Double-check this number before travel or real deployment.
   emergencyNumber:"112",
+  // Verify these phrases with a native speaker before publishing.
+  phraseLanguage:"Portuguese",
+  phrases:[
+    {english:"Hello",local:"Olá",pronunciation:"oh-LAH"},
+    {english:"Thank you",local:"Obrigado / Obrigada",pronunciation:"oh-bree-GAH-doo / oh-bree-GAH-dah"},
+    {english:"Please",local:"Por favor",pronunciation:"poor fah-VOR"},
+    {english:"Excuse me",local:"Com licença",pronunciation:"kohm lee-SEN-sah"},
+    {english:"How much is this?",local:"Quanto custa?",pronunciation:"KWAN-too KOOS-tah"}
+  ],
   themeColors:{accent:"#2D5E8B",accentSoft:"#E1EAF4"},
   places:[
     {id:"santa-luzia",name:"Miradouro de Santa Luzia",lat:38.7118,lon:-9.1303,category:"viewpoint",isHiddenGem:false,crowdLevel:"high",localStory:"The terrace is known for views over Alfama and the Tagus, as well as decorative tile panels and a garden. Its paths and outlook connect the viewpoint to the older streets nearby.",rainFriendly:false,indoor:false,bestTime:"morning",avgSpendLocal:0,durationMin:35,tags:["view","azulejo","alfama"]},

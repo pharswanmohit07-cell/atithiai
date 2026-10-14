@@ -14,14 +14,24 @@ Atithi AI is a travel-planning prototype for Jaipur, Ubud and Lisbon. It lets tr
 
 The current demonstration packs are Jaipur (India), Ubud (Bali, Indonesia) and Lisbon (Portugal). The interface is designed around travelers rather than a service-provider workflow.
 
+## Problem, users, advantage, and what is real vs demo
+
+**Problem:** Travelers can struggle to find places that feel local, understand signs and menus, adjust plans when weather changes, manage the time between check-out and departure (or arrival and check-in), and judge which app details are reliable.
+
+**Users:** Independent travelers exploring unfamiliar destinations who want recommendations that reflect their interests, pace, language, food preferences, budget and available time.
+
+**Advantage:** Atithi AI ranks the existing destination packs using explicit rules and shows reasons for recommendations. It combines discovery, food and experience suggestions, weather-aware itinerary adjustments, Lens translation, flexible-stay gap planning, and messages travelers can edit and send themselves.
+
+**What is real today vs demo:** Current weather uses Open-Meteo when available. Gemini chat and image interpretation require working server-side credentials and can fall back locally. Destination-pack places, local stories, crowd estimates, host names, spend ranges and simulated closures are demo or estimated content. Hotel and host messages are drafts only; Atithi AI does not send them or contact anyone. Curator suggestions are saved in this browser and are not delivered to a curator.
+
 ## What you can do
 
 - **Choose a destination:** select one of the three demonstration destinations from the welcome screen, header or Profile.
 - **Discover:** browse 12 places, six experience ideas and ten local dishes for the selected pack. Place and experience listings carry a small Demo content note.
-- **Plan:** save places from Discover or make a pack-based suggested day. The plan and conversation reset when the destination changes.
+- **Plan:** save places from Discover, generate a pack-based day, and use Flex Stay to estimate pre-check-in or post-check-out gaps with short ranked suggestions. Hotel requests remain editable drafts; Atithi AI does not send them.
 - **Atithi Lens:** scan a menu, fare board or notice, detect the text language, translate it, and optionally use speech playback. Menu notes are AI estimates. Price mode only works from amounts visibly readable in the image; it does not claim official rates or verified market prices.
-- **Chat:** the intent parser interprets your message first; deterministic ranking then filters and scores pack items, and Gemini only phrases a response from the top five results. Ask in the language you write in or choose a reply language in the chat header.
-- **Save notes:** save Lens results, food ideas and experience ideas into local travel notes.
+- **Chat:** deterministic ranking filters and scores pack items, and Gemini can phrase a response when configured. “Talk to a person” offers a local emergency link, hotel/host drafts, and a browser-local curator suggestion form. It does not connect to staff.
+- **Save notes:** save Lens results, food ideas, experience ideas and curator suggestions locally. Use “Say it like a local” for basic Hindi, Indonesian or Portuguese phrases. Phrase wording and pronunciation should be checked by native speakers before publication. Visit `/about` for traveler needs, comparison and real-vs-demo disclosure.
 - **Live weather:** see the latest available Open-Meteo observation for the selected pack's approximate coordinates and timezone.
 
 ## Personalization and ranking

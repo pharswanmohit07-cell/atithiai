@@ -264,3 +264,9 @@ button:active, [role="button"]:active { transform: none !important; }
   box-shadow: none !important;
 }
 .dark #root button[style*="background-color"] { color: #18231f !important; }
+
+@media (max-width: 360px) {
+  #header-destination { width: 4.5rem; max-width: 4.5rem; padding-left: .2rem; padding-right: .2rem; }
+  .header-theme-toggle { min-width: 2.25rem !important; min-height: 2.5rem !important; }
+  .header-sos { min-width: 2rem !important; }
+}

@@ -6,6 +6,15 @@ const destination = {
   greeting:"Follow the art, food and small rituals that give Ubud its character.",
   // Double-check this number before travel or real deployment.
   emergencyNumber:"112",
+  // Verify these phrases with a native speaker before publishing.
+  phraseLanguage:"Indonesian",
+  phrases:[
+    {english:"Hello",local:"Halo",pronunciation:"hah-loh"},
+    {english:"Thank you",local:"Terima kasih",pronunciation:"tuh-REE-mah KAH-see"},
+    {english:"Please",local:"Tolong",pronunciation:"TOH-long"},
+    {english:"Excuse me",local:"Permisi",pronunciation:"per-MEE-see"},
+    {english:"How much is this?",local:"Berapa harganya?",pronunciation:"buh-RAH-pah har-GAH-nyah"}
+  ],
   themeColors:{accent:"#2F8178",accentSoft:"#E1F1EB"},
   places:[
     {id:"ubud-palace",name:"Puri Saren Agung (Ubud Palace)",lat:-8.5069,lon:115.2625,category:"culture",isHiddenGem:false,crowdLevel:"high",localStory:"The palace complex sits in central Ubud and is associated with the local royal family. Access and cultural performances can depend on the area and current programme.",rainFriendly:true,indoor:true,bestTime:"afternoon",avgSpendLocal:0,durationMin:45,tags:["architecture","culture","dance"]},
