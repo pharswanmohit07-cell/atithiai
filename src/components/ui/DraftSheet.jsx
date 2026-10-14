@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Check, Copy, Share2, X } from "lucide-react";
 
 export const DRAFT_LANGUAGES = [
@@ -48,6 +48,8 @@ export default function DraftSheet({
   children
 }) {
   const [feedback, setFeedback] = useState("");
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -55,7 +57,7 @@ export default function DraftSheet({
     document.body.style.overflow = "hidden";
     document.body.style.touchAction = "none";
     const onKeyDown = (event) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current?.();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => {
