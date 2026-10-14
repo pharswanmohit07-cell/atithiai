@@ -28,19 +28,19 @@ for (const image of required) {
     const kb = (metadata.size / 1024).toFixed(1);
     console.log((validWebp ? "FOUND " : "INVALID WEBP ") + image.name + " · " + kb + " KB");
     if (!validWebp) {
-      console.warn("  Warning: file header is not a valid WebP signature.");
+      console.warn("WARNING: invalid WebP header for " + image.name + ".");
       warnings++;
     }
     if (metadata.size > image.maxBytes) {
-      console.warn("  Warning: exceeds " + Math.round(image.maxBytes / 1024) + " KB size budget.");
+      console.warn("WARNING: " + image.name + " exceeds " + Math.round(image.maxBytes / 1024) + " KB.");
       warnings++;
     }
   } catch (error) {
     if (error.code === "ENOENT") {
-      console.warn("MISSING " + image.name + " · add it to public/images/");
+      console.warn("WARNING: missing " + image.name + " · add it to public/images/");
       warnings++;
     } else {
-      console.warn("UNREADABLE " + image.name + " · " + error.message);
+      console.warn("WARNING: unreadable " + image.name + " · " + error.message);
       warnings++;
     }
   }
