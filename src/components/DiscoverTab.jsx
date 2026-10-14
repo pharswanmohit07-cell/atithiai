@@ -94,7 +94,6 @@ export default function DiscoverTab({
 
   useEffect(() => {
     setSavedExperiences(readArray("atithi-saved-experiences:" + destination.id));
-    setSuggestionSaved(false);
     setTasteBudget(profile?.dailyBudget?.currencyCode === destination.currency.code && profile?.dailyBudget?.amount != null ? String(profile.dailyBudget.amount) : "");
     setTasteDiet(profile?.diet || "none");
     setSpiceCap(Number(profile?.spiceTolerance) || 2);
