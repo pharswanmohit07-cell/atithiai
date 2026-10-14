@@ -261,10 +261,10 @@ export default function DiscoverTab({
   </section> : null;
 
   return <section className="space-y-5">
-    <div className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-7" style={{ "--destination-accent": destination.themeColors.accent }}>
-      <div className="flex items-center gap-3"><IconBadge icon={Compass} tone="coral"/><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Discover · {destination.city}</p><h1 className="deck-heading mt-1 font-display text-4xl">Go beyond the usual.</h1></div></div>
-      <p className="mt-2 max-w-2xl text-sm text-white/80">Find hidden corners, community-led ideas and dishes that say something about this place.</p>
-      <p className="mt-3 text-[10px] leading-relaxed text-white/75">Prototype content. Experiences, stories and prices are illustrative. Confirm details locally.</p>
+    <div className="pitch-hero overflow-hidden rounded-xl border border-border p-5 sm:p-7">
+      <div className="flex items-center gap-3"><IconBadge icon={Compass} tone="coral"/><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent-text">Discover · {destination.city}</p><h1 className="mt-1 font-display text-3xl sm:text-4xl">Places, experiences and food.</h1></div></div>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Filter the destination pack by interests, food preferences, crowd estimates and map location. Check availability and details locally.</p>
+      <p className="mt-3 text-xs leading-relaxed text-muted">Prototype content. Experience details, stories, crowd levels and prices are estimates, not verified listings.</p>
     </div>
 
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
