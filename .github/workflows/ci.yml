@@ -3,28 +3,35 @@ name: Atithi AI CI
 on:
   push:
     branches:
-      - feature/guest-onboarding
+      - main
+      - fix/nav-layout-and-images
   pull_request:
     branches:
-      - feature/dark-mode
+      - main
 
 permissions:
   contents: read
 
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-and-build:
+    name: Lint, assets and production build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out source
         uses: actions/checkout@v4
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - name: Install dependencies
-        run: npm ci
-      - name: Run lint
-        run: npm run lint
-      - name: Build production bundle
+        run: npm ci --no-audit --no-fund
+      - name: Check optional travel images
+        run: npm run check:images
+      - name: Lint and build production bundle
         run: npm run build
