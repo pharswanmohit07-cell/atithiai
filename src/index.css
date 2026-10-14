@@ -243,3 +243,16 @@ button:active, [role="button"]:active { transform: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+
+/* Keep legacy cards that still use light text classes readable on the solid surface. */
+.pitch-hero [class*="text-white"]:not([class~="bg-brand"]):not([class~="btn-primary"]) {
+  color: var(--text) !important;
+}
+.pitch-hero [class~="bg-white/10"] {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+}
+.pitch-hero [class~="text-white/75"],
+.pitch-hero [class~="text-white/80"] {
+  color: var(--text-muted) !important;
+}
