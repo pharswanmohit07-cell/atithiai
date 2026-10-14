@@ -82,9 +82,25 @@ export function buildRequestDraft({ kind = "early", time = "", hotelName = "", t
   const hotel = safeText(hotelName, 120);
   const traveler = safeText(travelerName, 80);
   const greeting = HOTEL_DRAFTS[lang][selectedKind](safeTime);
-  const prefix = hotel ? (lang === "hi" ? hotel + " जी, " : hotel + ", ") : "";
+  const opening = {
+    en: "Hello, ",
+    hi: "नमस्ते, ",
+    es: "Hola, ",
+    fr: "Bonjour, ",
+    pt: "Olá, ",
+    id: "Halo, "
+  }[lang];
+  const personalOpening = {
+    en: "Hello " + hotel + ", ",
+    hi: "नमस्ते " + hotel + " जी, ",
+    es: "Hola " + hotel + ", ",
+    fr: "Bonjour " + hotel + ", ",
+    pt: "Olá " + hotel + ", ",
+    id: "Halo " + hotel + ", "
+  }[lang];
+  const message = hotel ? personalOpening + greeting.slice(opening.length) : greeting;
   const signature = traveler ? (lang === "en" ? "\n\nThank you,\n" + traveler : "\n\n" + traveler) : "";
-  return (prefix + greeting + signature).slice(0, 500);
+  return (message + signature).slice(0, 500);
 }
 
 const HUMAN_DRAFTS = {
