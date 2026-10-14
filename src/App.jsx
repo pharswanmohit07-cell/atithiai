@@ -108,7 +108,7 @@ function localChatFallback(message, destination, language) {
   return (messages[chosen] || messages.en) + " " + destination.city + ".";
 }
 
-function DemoNote({ children = "Demo content · AI-assisted, verify locally" }) {
+function DemoNote({ children = "Illustrative destination data. Verify details locally." }) {
   return <p className="mt-2 text-[10px] leading-relaxed text-muted">{children}</p>;
 }
 
@@ -178,7 +178,7 @@ function WelcomeScreen({ destination, destinations, selectDestination, onStart }
         <IconBadge icon={Compass} tone="teal" size="lg" />
         <div>
           <p className="font-display text-3xl leading-none">Atithi AI</p>
-          <p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">Plan. Explore. Translate.</p>
+          <p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">Travel planning for Jaipur, Ubud and Lisbon</p>
         </div>
       </div>
       <ThemeToggle compact />
@@ -567,7 +567,7 @@ export default function AtithiAI() {
     <DemoModeBar/>
     <header className="app-header-safe safe-sticky-header sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 shadow-sm sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Plan. Explore. Translate.</span></span></button>
+        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Travel planning for Jaipur, Ubud and Lisbon</span></span></button>
         <div className="flex items-center gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-32 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-bold sm:max-w-48">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact/><a href={"tel:" + emergencyNumber} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-border px-2 py-2 text-xs font-extrabold text-text" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
       </div>
     </header>
