@@ -96,7 +96,7 @@ export function ProfileOnboarding({ destination, onFinish }) {
   </div></main>;
 }
 function AnimateStep({step,children}) {
-  return <div key={step} className="animate-[fade-in_180ms_ease-out]">{children}<span className="sr-only">Step {step+1}</span></div>;
+  return <div key={step} className="">{children}<span className="sr-only">Step {step+1}</span></div>;
 }
 
 export default function ProfileTab({ destination, destinations, selectDestination, requests, formatDate }) {
