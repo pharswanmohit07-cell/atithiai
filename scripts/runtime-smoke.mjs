@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
@@ -164,6 +165,34 @@ try {
     await assertHealthy(page, "feature-smoke", "Jaipur", "/" + route);
   }
 
+  // Captured viewport screenshots are uploaded as a CI artifact for visual review.
+  const screenshotDir = path.join(root, "artifacts", "screenshots");
+  await mkdir(screenshotDir, { recursive: true });
+  for (const viewport of [{ width: 390, height: 844, label: "390x844" }, { width: 1280, height: 800, label: "1280x800" }]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+    await page.locator("#header-destination").waitFor({ state: "visible", timeout: 12000 });
+    await page.locator('nav[aria-label="Main navigation"]').getByRole("button", { name: "Plan", exact: true }).click();
+    await page.locator("#flex-stay-title").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(screenshotDir, "plan-flex-stay-" + viewport.label + ".png"), fullPage: false });
+    await page.getByLabel("Arrival time (optional)").fill("10:00");
+    await page.getByRole("button", { name: "Draft a request to my hotel", exact: true }).first().click();
+    await page.getByRole("dialog").getByText(/hotel decides availability and fees/i).waitFor({ state: "visible" });
+    await page.screenshot({ path: path.join(screenshotDir, "hotel-draft-sheet-" + viewport.label + ".png"), fullPage: false });
+    await page.keyboard.press("Escape");
+    await page.locator('nav[aria-label="Main navigation"]').getByRole("button", { name: "Discover", exact: true }).click();
+    await page.getByRole("button", { name: "Local Experiences", exact: true }).click();
+    await page.getByRole("button", { name: "Ask the host", exact: true }).first().scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(screenshotDir, "discover-ask-host-" + viewport.label + ".png"), fullPage: false });
+    await page.locator('nav[aria-label="Main navigation"]').getByRole("button", { name: "Chat", exact: true }).click();
+    await page.getByRole("button", { name: "Talk to a person", exact: true }).first().click();
+    await page.getByRole("dialog").getByText(/does not connect you to live staff/i).waitFor({ state: "visible" });
+    await page.screenshot({ path: path.join(screenshotDir, "human-help-sheet-" + viewport.label + ".png"), fullPage: false });
+    await page.keyboard.press("Escape");
+    await page.goto(baseUrl + "/about", { waitUntil: "domcontentloaded" });
+    await page.getByRole("heading", { name: "Real traveler needs we solve" }).waitFor({ state: "visible" });
+    await page.screenshot({ path: path.join(screenshotDir, "about-page-" + viewport.label + ".png"), fullPage: true });
+  }
   assert.equal(apiRequestsDuringLocalDrafts.length, 0, "Draft preparation and help UI must not call any /api endpoint.");
   assert.equal(pageErrors.length, 0, "Runtime raised page errors: " + pageErrors.join(" | "));
   assert.equal(runtimeConsoleErrors.length, 0, "Runtime logged JavaScript exceptions: " + runtimeConsoleErrors.join(" | "));
