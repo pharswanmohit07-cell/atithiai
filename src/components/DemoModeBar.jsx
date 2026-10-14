@@ -45,8 +45,8 @@ export default function DemoModeBar() {
   };
 
   return <>
-    {!online && <div role="status" className="offline-banner relative z-[60] mx-3 mt-2 flex items-start gap-2 rounded-xl border border-amber-400/35 bg-surface/90 px-3 py-2 text-xs font-bold text-text shadow-glass backdrop-blur sm:mx-auto sm:max-w-6xl"><WifiOff size={15} className="mt-0.5 shrink-0 text-amber-500"/>Offline — live weather and uncached requests may be unavailable. Use cached demo results or retry when connected.</div>}
-    {showDeveloperStrip && <div className="dev-mode-strip relative z-[60] mt-2 border-y border-white/10 bg-violet-950/55 px-4 py-2 text-white/90 backdrop-blur-xl sm:px-6">
+    {!online && <div role="status" className="offline-banner relative z-[60] mx-3 mt-2 flex items-start gap-2 rounded-xl border border-amber-400/35 bg-surface/90 px-3 py-2 text-xs font-bold text-text shadow-glass backdrop-blur sm:mx-auto sm:max-w-6xl"><WifiOff size={15} className="mt-0.5 shrink-0 text-amber-500"/>Offline  -  live weather and uncached requests may be unavailable. Use cached demo results or retry when connected.</div>}
+    {showDeveloperStrip && <div className="dev-mode-strip relative z-[60] mt-2 border-y border-white/10 bg-surface px-4 py-2 text-white/90 backdrop-blur-xl sm:px-6">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2">
         <span className="inline-flex items-center gap-1.5 text-[11px] font-bold">{online ? <Wifi size={13}/> : <WifiOff size={13}/>} {online ? "Connection available" : "Offline"}</span>
         <label className="inline-flex min-h-9 items-center gap-2 text-xs font-semibold"><input type="checkbox" checked={cachedMode} onChange={toggleCacheMode} className="h-4 w-4 accent-brand"/><Database size={14}/>Demo mode: use cached results</label>

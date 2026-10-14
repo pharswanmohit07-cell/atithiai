@@ -34,7 +34,7 @@ function niceWord(value) {
   return String(value || "").replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 function money(value, destination) {
-  if (!Number.isFinite(Number(value))) return "—";
+  if (!Number.isFinite(Number(value))) return " - ";
   try {
     return new Intl.NumberFormat(destination.locale, {
       style: "currency",
@@ -44,7 +44,7 @@ function money(value, destination) {
   } catch { return new Intl.NumberFormat(destination.locale).format(Number(value)) + " " + destination.currency.code; }
 }
 function moneyRange(range, destination) {
-  if (!Array.isArray(range)) return "—";
+  if (!Array.isArray(range)) return " - ";
   return money(range[0], destination) + " – " + money(range[1], destination);
 }
 function story(item) {
@@ -210,7 +210,7 @@ export default function DiscoverTab({
       title: experience.title,
       category: "Experience request (demo)",
       detail: [
-        "Demo only — no host has been contacted and no booking exists.",
+        "Demo only  -  no host has been contacted and no booking exists.",
         "Illustrative host: " + experience.hostName,
         "Destination: " + destination.city + ", " + destination.country,
         "Experience idea: " + story(experience),
@@ -261,10 +261,10 @@ export default function DiscoverTab({
   </section> : null;
 
   return <section className="space-y-5">
-    <div className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-7" style={{ "--destination-accent": destination.themeColors.accent }}>
-      <div className="flex items-center gap-3"><IconBadge icon={Compass} tone="coral"/><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Discover · {destination.city}</p><h1 className="deck-heading mt-1 font-display text-4xl">Go beyond the usual.</h1></div></div>
-      <p className="mt-2 max-w-2xl text-sm text-white/80">Find hidden corners, community-led ideas and dishes that say something about this place.</p>
-      <p className="mt-3 text-[10px] leading-relaxed text-white/75">Demo content · Experiences, stories and prices are illustrative. Confirm details locally.</p>
+    <div className="pitch-hero overflow-hidden rounded-xl border border-border p-5 sm:p-7">
+      <div className="flex items-center gap-3"><IconBadge icon={Compass} tone="coral"/><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent-text">Discover · {destination.city}</p><h1 className="mt-1 font-display text-3xl sm:text-4xl">Places, experiences and food.</h1></div></div>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Filter the destination pack by interests, food preferences, crowd estimates and map location. Check availability and details locally.</p>
+      <p className="mt-3 text-xs leading-relaxed text-muted">Prototype content. Experience details, stories, crowd levels and prices are estimates, not verified listings.</p>
     </div>
 
     <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
@@ -277,7 +277,7 @@ export default function DiscoverTab({
 
     {mapSection}
 
-    {segment === "hidden" && <section className="space-y-4"><div className="segment-image-strip"><img src="/images/hidden-gems.webp" alt="Quiet viewpoint on a flower-lined coastal cliff at sunset" width="540" height="301" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }}/></div>
+    {segment === "hidden" && <section className="space-y-4">
       <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-serif text-2xl">Hidden gems and familiar landmarks</h2><p className="mt-1 text-xs text-muted">Sorted by your profile, interests, pace and current conditions.</p></div><Badge accent={{ color: destination.themeColors.accent, soft: destination.themeColors.accentSoft }}>{rankedPlaces.length} matches</Badge></div>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row"><label className="relative block min-w-0 flex-1"><span className="sr-only">Search places</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search place names, stories or tags" className="min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm"/></label><div className="flex rounded-xl border border-border bg-bg p-1" role="group" aria-label="Hidden versus famous filter">{[["hidden","Hidden gems"],["famous","Famous"],["all","All"]].map(([value,label]) => <button key={value} type="button" onClick={() => setGemFilter(value)} aria-pressed={gemFilter === value} className={"min-h-9 flex-1 rounded-lg px-3 py-1.5 text-xs font-bold " + (gemFilter === value ? "bg-surface-2 text-text" : "text-muted")}>{label}</button>)}</div></div>
@@ -312,7 +312,7 @@ export default function DiscoverTab({
       </section>
     </section>}
 
-    {segment === "experiences" && <section className="space-y-4"><div className="segment-image-strip"><img src="/images/local-experiences.webp" alt="Traveler learning pottery from a local artisan in a warm workshop" width="540" height="304" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }}/></div>
+    {segment === "experiences" && <section className="space-y-4">
       <div className="rounded-2xl border border-border bg-surface p-4"><h2 className="font-serif text-2xl">Local experiences</h2><p className="mt-1 text-xs text-muted">Community-led activity ideas ranked against your interests, pace and travel party. Hosts and prices are demo content.</p><p className="mt-1 text-[10px] text-muted">“Request via host (demo)” only saves a note here. It does not contact a host or create a booking.</p></div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">{rankedExperiences.map((experience) => {
         const saved = savedExperiences.includes(experience.id);
@@ -334,7 +334,7 @@ export default function DiscoverTab({
       {!rankedExperiences.length && <p className="rounded-2xl border border-dashed border-border bg-surface p-6 text-sm text-muted">No community-led activity matches this profile in the current pack.</p>}
     </section>}
 
-    {segment === "food" && <section className="space-y-4"><div className="segment-image-strip"><img src="/images/taste-local.webp" alt="Lantern-lit local street-food stall serving colorful regional dishes" width="540" height="301" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }}/></div>
+    {segment === "food" && <section className="space-y-4">
       <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><h2 className="font-serif text-2xl">Taste Local</h2><p className="mt-1 text-xs text-muted">Recommendations consider your food preference, spice tolerance, estimated spend and destination time.</p>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <label className="text-xs font-bold text-muted">Diet filter<select value={tasteDiet} onChange={(event) => setTasteDiet(event.target.value)} className="mt-1 min-h-10 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm text-text"><option value="none">No preference</option><option value="veg">Vegetarian</option><option value="vegan">Vegan</option><option value="non-veg">Non-vegetarian</option><option value="halal">Halal-tagged only</option><option value="gluten-aware">Gluten-aware</option></select></label>
@@ -367,7 +367,7 @@ function DishCard({ dish, destination, ranked, formatCurrency, onAdd, inPlan, sh
     <div className="flex flex-wrap items-start justify-between gap-3"><h3 className="font-serif text-2xl">{dish.name}</h3><Badge>Demo range</Badge></div>
     <p className="mt-2 flex-1 text-sm leading-relaxed text-muted">{dish.description}</p>
     <p className="mt-2 text-xs text-muted">Where to look: {dish.whereToEat}</p>
-    <p className="mt-2 text-xs text-muted">{dietNotes.length ? dietNotes.join(" · ") : "Dietary details unknown — check recipe and preparation"} · Spice {dish.spiceLevel}/3</p>
+    <p className="mt-2 text-xs text-muted">{dietNotes.length ? dietNotes.join(" · ") : "Dietary details unknown  -  check recipe and preparation"} · Spice {dish.spiceLevel}/3</p>
     <p className="mt-2 text-sm font-extrabold">{range}</p>
     {reasonChips(ranked)}
     <p className="mt-3 rounded-lg border border-border bg-bg p-2 text-[10px] leading-relaxed text-muted">Confirm ingredients with the restaurant. Recipes and preparation vary; no allergen-safety claim is made.</p>

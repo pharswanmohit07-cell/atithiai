@@ -1,14 +1,14 @@
-# Atithi AI — Go beyond the usual
+# Atithi AI: Travel planning for Jaipur, Ubud and Lisbon
 
-> **Live demo:** [atithiai-omega.vercel.app](https://atithiai-omega.vercel.app/)
->
 > **Project repository:** [pharswanmohit07-cell/atithiai](https://github.com/pharswanmohit07-cell/atithiai)
 >
-> This is the traveler-facing Atithi AI prototype (not the similarly named hotel guest-services project).
+> This is the traveler-facing Atithi AI prototype, not the similarly named hotel guest-services project.
 >
-> **Build checks:** GitHub Actions runs source checks, the optional image audit, and the production build on pushes to `main` and pull requests.
+> **Launch status: not ready.** An owner-controlled custom domain must be connected and the updated production deployment must be verified before launch.
+>
+> **Build checks:** GitHub Actions runs source checks, the required site icon check, and the production build on pushes to `main` and pull requests.
 
-Atithi AI is a personalized travel companion for the hidden places, local stories and experiences that make a destination feel personal. It helps travelers explore beyond the usual, save ideas, assemble a flexible day plan, ask questions in their language, and translate signs or menus with Atithi Lens.
+Atithi AI is a travel-planning prototype for Jaipur, Ubud and Lisbon. It lets travelers filter destination-pack places, food and experiences, create an editable day plan, ask travel questions, and translate signs or menus with Atithi Lens.
 
 The current demonstration packs are Jaipur (India), Ubud (Bali, Indonesia) and Lisbon (Portugal). The interface is designed around travelers rather than a service-provider workflow.
 

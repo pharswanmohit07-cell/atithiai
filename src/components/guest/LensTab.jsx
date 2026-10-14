@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AlertCircle, Camera, Check, Languages, LoaderCircle, MessageCircle, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import { AlertCircle, Camera, Check, Languages, LoaderCircle, MessageCircle, RotateCcw, Volume2, VolumeX, FileText, MapPin, Navigation } from "lucide-react";
 import { getSeedLensResult } from "../../data/lensCache.js";
 import { demoFetch, isCachedDemoMode } from "../../lib/demoCache.js";
 import IconBadge from "../ui/IconBadge.jsx";
@@ -15,9 +15,9 @@ const LANGUAGES = [
 ];
 const MODES = [["menu","Menu"],["sign","Sign"],["transport","Transport"],["general","Auto"]];
 const SAMPLES = [
-  { id:"sample-menu", title:"Sample menu", src:"/samples/sample-menu.jpg", mode:"menu" },
-  { id:"sample-sign", title:"Sample sign", src:"/samples/sample-sign.jpg", mode:"sign" },
-  { id:"sample-transport", title:"Sample transport", src:"/samples/sample-transport.jpg", mode:"transport" }
+  { id:"sample-menu", title:"Menu example", mode:"menu", Icon:FileText },
+  { id:"sample-sign", title:"Sign example", mode:"sign", Icon:MapPin },
+  { id:"sample-transport", title:"Transport example", mode:"transport", Icon:Navigation }
 ];
 function preferredLanguage() {
   try {
@@ -133,7 +133,7 @@ export default function LensTab({ onRequest }) {
       try { localStorage.setItem(LIST_KEY,JSON.stringify(next.slice(-100))); } catch { /* Keep the current session list. */ }
       return next;
     });
-    onRequest?.({ title:"Dish saved to my list", category:"Food list", detail: dish.name+" — "+dish.explanation+" ("+destination.city+")" });
+    onRequest?.({ title:"Dish saved to my list", category:"Food list", detail: dish.name+"  -  "+dish.explanation+" ("+destination.city+")" });
   };
   const analyse = async (prepared, selectedMode=mode, selectedLanguage=language, selectedSample=sampleId) => {
     if (!prepared?.base64) return;
@@ -182,25 +182,15 @@ export default function LensTab({ onRequest }) {
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Could not prepare this image."); }
   };
   const chooseSample = async (sample) => {
-    setMode(sample.mode);setSampleId(sample.id);setError("");setResult(null);setImage(null);setCachedDemo(false);
-    if (isCachedDemoMode()) {
-      setResult(cachedSample(sample.id,language));setCachedDemo(true);
-      return;
-    }
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(),5000);
-    try {
-      const response = await demoFetch(sample.src,{cache:"no-store",signal:controller.signal});
-      if (!response.ok) throw new Error("Sample image has not been added yet.");
-      const blob = await response.blob();
-      if (!blob.size) throw new Error("Sample image is empty.");
-      await processFile(new File([blob],sample.id+".jpg",{type:blob.type || "image/jpeg"}),sample.id,sample.mode);
-    } catch {
-      setResult(cachedSample(sample.id,language));setCachedDemo(true);setError("");
-    } finally {
-      window.clearTimeout(timeout);
-    }
+    setMode(sample.mode);
+    setSampleId(sample.id);
+    setError("");
+    setResult(cachedSample(sample.id, language));
+    setImage(null);
+    setCachedDemo(true);
+    setSpeechMessage("");
   };
+
   const changeLanguage = (next) => {
     setLanguage(next);
     try { localStorage.setItem(LANGUAGE_KEY,next); } catch { /* Selection remains active for this session. */ }
@@ -238,16 +228,16 @@ export default function LensTab({ onRequest }) {
       <label className="text-xs font-bold">Translate into<select value={language} onChange={(event)=>changeLanguage(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm">{LANGUAGES.map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
       <div><span className="block text-xs font-bold">What are you looking at?</span><div className="mt-1 grid grid-cols-4 rounded-xl border border-border bg-bg p-1" role="group" aria-label="Lens mode">{MODES.map(([value,label])=><button key={value} type="button" aria-pressed={mode===value} onClick={()=>{setMode(value);setResult(null);setError("");setCachedDemo(false);}} className={"min-h-9 rounded-lg px-1 text-[10px] font-bold sm:text-xs "+(mode===value?"bg-brand text-white":"text-muted hover:bg-surface-2")}>{label}</button>)}</div></div>
     </div>
-    <div className="rounded-2xl border border-border bg-bg p-3"><div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-xs font-bold">Try a sample</h3><span className="text-[10px] text-muted">Demo examples</span></div><div className="grid grid-cols-3 gap-2">{SAMPLES.map((sample)=><button type="button" key={sample.id} onClick={()=>void chooseSample(sample)} disabled={loading} className="lens-sample-card min-w-0 overflow-hidden rounded-xl border border-border bg-surface text-left transition hover:border-brand disabled:opacity-60"><img src={sample.src} alt={sample.title} width="360" height="180" loading="lazy" decoding="async" onError={(event)=>{event.currentTarget.style.display="none";}} className="image-fallback-surface h-16 w-full object-cover"/><span className="block px-2 py-2 text-[10px] font-bold leading-tight">{sample.title}</span></button>)}</div></div>
+    <div className="rounded-xl border border-border bg-surface p-3"><div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-xs font-bold">Try an example</h3><span className="text-[10px] text-muted">Stored demo output</span></div><p className="mb-3 text-xs leading-relaxed text-muted">These examples show the result format. They do not analyse a photograph.</p><div className="grid grid-cols-3 gap-2">{SAMPLES.map((sample)=>{const SampleIcon=sample.Icon;return <button type="button" key={sample.id} onClick={()=>void chooseSample(sample)} disabled={loading} className="lens-sample-card flex min-w-0 flex-col items-start gap-2 border border-border bg-surface p-3 text-left disabled:opacity-60"><SampleIcon size={20} aria-hidden="true"/><span className="text-xs font-semibold leading-tight">{sample.title}</span></button>;})}</div></div>
     <div className="image-fallback-panel rounded-2xl border border-dashed border-border bg-surface p-4"><input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={(event)=>{const file=event.target.files?.[0];event.target.value="";setSampleId(null);void processFile(file,null,mode);}} className="sr-only"/><button type="button" onClick={()=>fileRef.current?.click()} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-sm font-bold text-white"><Camera size={17}/>Take a photo or choose an image</button><p className="mt-2 text-center text-[10px] text-muted">JPEG, PNG or WebP · up to 4 MB after downscaling to 1024 px</p>{image&&<img src={image.dataUrl} alt="Preview of selected image" width="640" height="480" loading="lazy" decoding="async" onError={(event)=>{event.currentTarget.style.display="none";}} className="image-fallback-surface mx-auto mt-3 max-h-64 max-w-full rounded-xl border border-border object-contain"/>}</div>
     {loading&&<div role="status" aria-live="polite" className="animate-pulse space-y-3 rounded-2xl border border-border bg-surface p-4"><div className="flex items-center gap-2 text-sm font-bold"><LoaderCircle size={16} className="animate-spin"/>Reading visible details…</div><div className="h-3 w-2/3 rounded bg-surface-2"/><div className="h-3 w-full rounded bg-surface-2"/><div className="h-3 w-5/6 rounded bg-surface-2"/></div>}
     {error&&<div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"><AlertCircle size={15} className="mr-2 inline"/>{error}<button type="button" onClick={retry} className="ml-2 inline-flex items-center gap-1 font-bold underline"><RotateCcw size={12}/>Retry</button></div>}
     {result&&<article className="space-y-4 rounded-2xl border border-border bg-surface p-4">
-      <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-brand/10 px-3 py-1 text-[10px] font-bold text-brand">{cachedDemo?"Cached demo result":"Lens result"}</span><span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] font-bold">Confidence: {result.confidence}</span></div>
+      <div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-brand/10 px-3 py-1 text-[10px] font-bold text-brand">{sampleId?"Illustrative sample output":cachedDemo?"Cached demo result":"Lens result"}</span><span className="rounded-full bg-surface-2 px-3 py-1 text-[10px] font-bold">Confidence: {result.confidence}</span></div>
       <div><h3 className="text-xs font-bold uppercase tracking-wide text-muted">What this appears to be</h3><p className="mt-1 text-sm leading-relaxed">{result.whatIsThis}</p>{result.detectedLanguage&&<p className="mt-1 text-[10px] text-muted">Detected language: {result.detectedLanguage}</p>}</div>
       {result.translation&&<div className="rounded-xl border border-border bg-bg p-3"><h3 className="text-xs font-bold uppercase tracking-wide text-muted">Translation</h3><p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{result.translation}</p></div>}
       <div><h3 className="text-xs font-bold uppercase tracking-wide text-muted">Context that matters</h3><p className="mt-1 text-sm leading-relaxed text-muted">{result.explanation}</p></div>
-      {mode==="menu"&&<div><h3 className="text-sm font-bold">Dish notes</h3>{dishes.length?<div className="mt-2 space-y-2">{dishes.map((dish,index)=><div key={dish.name+"-"+index} className="rounded-xl border border-border bg-bg p-3"><div className="flex items-start justify-between gap-2"><h4 className="text-sm font-bold">{dish.name}</h4><button type="button" onClick={()=>saveDish(dish)} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-[10px] font-bold"><Check size={12}/>Add dish to my list</button></div><p className="mt-2 text-xs leading-relaxed text-muted">{dish.explanation}</p><p className="mt-2 text-[10px]"><strong>Diet:</strong> {dish.dietGuess||"Unclear — ask staff"}</p><p className="mt-1 text-[10px]"><strong>Spice:</strong> {dish.spiceGuess||"Unclear"}</p></div>)}</div>:<p className="mt-2 text-xs text-muted">No dishes could be identified with confidence.</p>}{savedDishes.length>0&&<p className="mt-2 text-[10px] text-muted">{savedDishes.length} dish{savedDishes.length===1?"":"es"} in your saved list.</p>}</div>}
+      {mode==="menu"&&<div><h3 className="text-sm font-bold">Dish notes</h3>{dishes.length?<div className="mt-2 space-y-2">{dishes.map((dish,index)=><div key={dish.name+"-"+index} className="rounded-xl border border-border bg-bg p-3"><div className="flex items-start justify-between gap-2"><h4 className="text-sm font-bold">{dish.name}</h4><button type="button" onClick={()=>saveDish(dish)} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-[10px] font-bold"><Check size={12}/>Add dish to my list</button></div><p className="mt-2 text-xs leading-relaxed text-muted">{dish.explanation}</p><p className="mt-2 text-[10px]"><strong>Diet:</strong> {dish.dietGuess||"Unclear  -  ask staff"}</p><p className="mt-1 text-[10px]"><strong>Spice:</strong> {dish.spiceGuess||"Unclear"}</p></div>)}</div>:<p className="mt-2 text-xs text-muted">No dishes could be identified with confidence.</p>}{savedDishes.length>0&&<p className="mt-2 text-[10px] text-muted">{savedDishes.length} dish{savedDishes.length===1?"":"es"} in your saved list.</p>}</div>}
       {mode==="transport"&&transport&&<div className="rounded-xl border border-border bg-bg p-3"><h3 className="text-sm font-bold">Transport details</h3><p className="mt-1 text-sm leading-relaxed">{transport.summary}</p>{formatPriceNote(transport.priceNote,destination)&&<p className="mt-2 text-xs text-muted">{formatPriceNote(transport.priceNote,destination)}</p>}<p className="mt-3 inline-flex rounded-full bg-brand/10 px-3 py-1.5 text-xs font-bold">{transport.verdict}</p><p className="mt-2 text-[10px] text-muted">No official rate is asserted.</p></div>}
       {result.tips.length>0&&<div><h3 className="text-xs font-bold uppercase tracking-wide text-muted">Practical tips</h3><div className="mt-2 flex flex-wrap gap-2">{result.tips.map((tip,index)=><span key={index} className="rounded-full border border-border bg-bg px-3 py-2 text-xs leading-relaxed">{tip}</span>)}</div></div>}
       <div className="flex flex-wrap gap-2"><button type="button" onClick={speak} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">{speaking?<VolumeX size={15}/>:<Volume2 size={15}/>}Read aloud</button><button type="button" onClick={askAtithi} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white"><MessageCircle size={15}/>Ask Atithi about this</button><button type="button" onClick={retry} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold"><RotateCcw size={15}/>Retry</button></div>

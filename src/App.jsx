@@ -1,11 +1,9 @@
-import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight, CalendarDays, Check, Compass, Heart, Route,
   Languages, MapPin, MessageCircle, Plus, Send, ShieldAlert,
   Sparkles, Sun, Users, X
 } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { useReducedEffects } from "./lib/reducedEffects.js";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import ImageCard from "./components/ui/ImageCard.jsx";
@@ -51,7 +49,7 @@ const DIET_OPTIONS = [
 
 function formatNumber(value, locale, options = {}) {
   const number = Number(value);
-  if (!Number.isFinite(number)) return "—";
+  if (!Number.isFinite(number)) return " - ";
   try { return new Intl.NumberFormat(locale, options).format(number); } catch { return String(number); }
 }
 function formatDate(value, locale, timezone) {
@@ -61,7 +59,7 @@ function formatDate(value, locale, timezone) {
 
 function formatPackMoney(value, destination) {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return "—";
+  if (!Number.isFinite(amount)) return " - ";
   try {
     return new Intl.NumberFormat(destination.locale, {
       style: "currency",
@@ -110,7 +108,7 @@ function localChatFallback(message, destination, language) {
   return (messages[chosen] || messages.en) + " " + destination.city + ".";
 }
 
-function DemoNote({ children = "Demo content · AI-assisted, verify locally" }) {
+function DemoNote({ children = "Illustrative destination data. Verify details locally." }) {
   return <p className="mt-2 text-[10px] leading-relaxed text-muted">{children}</p>;
 }
 
@@ -118,7 +116,7 @@ function PlaceCard({ place, destination, formatCurrency, inPlan, onAdd, onRemove
   const [saved, setSaved] = useState(false);
   const [toast, setToast] = useState("");
   return (
-    <motion.article layout className="flex min-w-0 flex-col rounded-2xl border border-border bg-bg p-4 transition-colors hover:bg-surface-2/50">
+    <article className="flex min-w-0 flex-col rounded-xl border border-border bg-bg p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold">{CATEGORY_LABELS[place.category] || niceWord(place.category)}</span>
         {place.isHiddenGem && <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ backgroundColor: destination.themeColors.accentSoft, color: destination.themeColors.accent }}><Sparkles size={11}/>Hidden-place pick</span>}
@@ -138,7 +136,7 @@ function PlaceCard({ place, destination, formatCurrency, inPlan, onAdd, onRemove
       </div>
       <DemoNote />
       <Toast message={toast} onDismiss={() => setToast("")} />
-    </motion.article>
+    </article>
   );
 }
 
@@ -147,81 +145,91 @@ function WeatherPanel({ destination, weather, loading, error, formatNumber }) {
     <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-accent-text">{weather?.source === "cached-demo" ? "Cached demo result · Open-Meteo snapshot" : "Live weather · Open-Meteo"}</p><h2 className="mt-1 font-serif text-2xl">{weather?.condition || (loading ? "Checking conditions…" : "Weather unavailable")}</h2></div><span className="rounded-xl px-3 py-2 text-xs font-bold" style={{ backgroundColor: destination.themeColors.accentSoft, color: destination.themeColors.accent }}>{destination.city}</span></div>
     {weather ? <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">{[
       ["Temperature", formatNumber(weather.temperatureC, destination.locale, { maximumFractionDigits: 0 }) + "°C"],
-      ["Feels like", weather.feelsLikeC == null ? "—" : formatNumber(weather.feelsLikeC, destination.locale, { maximumFractionDigits: 0 }) + "°C"],
-      ["Wind", weather.windKmh == null ? "—" : formatNumber(weather.windKmh, destination.locale, { maximumFractionDigits: 0 }) + " km/h"],
-      ["Humidity", weather.humidity == null ? "—" : formatNumber(weather.humidity, destination.locale, { maximumFractionDigits: 0 }) + "%"]
+      ["Feels like", weather.feelsLikeC == null ? " - " : formatNumber(weather.feelsLikeC, destination.locale, { maximumFractionDigits: 0 }) + "°C"],
+      ["Wind", weather.windKmh == null ? " - " : formatNumber(weather.windKmh, destination.locale, { maximumFractionDigits: 0 }) + " km/h"],
+      ["Humidity", weather.humidity == null ? " - " : formatNumber(weather.humidity, destination.locale, { maximumFractionDigits: 0 }) + "%"]
     ].map(([label, value]) => <div key={label} className="rounded-xl bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1 text-lg font-bold">{value}</p></div>)}</div> : <p className="mt-3 text-xs text-muted">{error || "A network connection is needed for live weather."}</p>}
     <DemoNote>Weather is the only live destination feed. It does not verify opening times, transport, crowds, access or safety.</DemoNote>
   </section>;
 }
 
 function WelcomeScreen({ destination, destinations, selectDestination, onStart }) {
-  const heroRef = useRef(null);
-  const prefersReducedMotion = useReducedMotion();
-  const [reduceEffects] = useReducedEffects();
-  const reduceMotion = prefersReducedMotion || reduceEffects;
-  const [heroActive, setHeroActive] = useState(true);
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero || typeof IntersectionObserver === "undefined") return undefined;
-    let intersects = false;
-    const update = () => setHeroActive(intersects && !document.hidden);
-    const observer = new IntersectionObserver((entries) => {
-      intersects = Boolean(entries[0]?.isIntersecting);
-      update();
-    }, { threshold: 0.01 });
-    observer.observe(hero);
-    const onVisibility = () => update();
-    document.addEventListener("visibilitychange", onVisibility);
-    return () => {
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, []);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 64]);
-  const destinationArt = {
-    jaipur: { src: "/images/jaipur.webp", alt: "Warmly lit Jaipur-inspired pink sandstone market at sunset" },
-    ubud: { src: "/images/ubud.webp", alt: "Lush Ubud rice terraces, palms and temple gates in morning mist" },
-    lisbon: { src: "/images/lisbon.webp", alt: "Lisbon hillside street with a glowing yellow tram and sunset rooftops" }
-  };
   const steps = [
-    { icon: MessageCircle, title: "Tell us your taste", description: "Share your pace, interests and travel style." },
-    { icon: Sparkles, title: "AI understands", description: "Your destination pack becomes more personal." },
-    { icon: Route, title: "Rules make it practical", description: "Ranked choices form a plan you can adjust." }
+    {
+      icon: Compass,
+      title: "Choose a destination",
+      description: "Select Jaipur, Ubud or Lisbon to load its place, food and experience pack."
+    },
+    {
+      icon: Heart,
+      title: "Set your priorities",
+      description: "Choose your pace, interests, food preferences, budget and languages."
+    },
+    {
+      icon: Route,
+      title: "Build an editable day plan",
+      description: "Review recommended stops, then adjust the order and timing to fit your day."
+    }
   ];
+
   return <main className="welcome-shell min-h-screen overflow-x-clip px-3 py-4 text-text sm:px-5 sm:py-6">
     <header className="mx-auto flex max-w-6xl items-center justify-between px-1 py-2">
-      <div className="flex items-center gap-3"><IconBadge icon={Compass} tone="gold" size="lg" /><div><p className="font-display text-3xl leading-none">Atithi AI</p><p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.18em] text-muted">Go beyond the usual</p></div></div>
-      <ThemeToggle compact/>
-    </header>
-    <motion.section ref={heroRef} className={"welcome-hero relative mx-auto mt-4 max-w-6xl overflow-hidden rounded-[1.75rem] sm:mt-6 sm:rounded-[2rem] " + (!heroActive ? "is-offscreen" : "")} style={{ "--destination-accent": destination.themeColors.accent }}>
-      <motion.div className="welcome-hero-art" style={{ y: reduceMotion || !heroActive ? 0 : heroY }} animate={reduceMotion || !heroActive ? { scale: 1 } : { scale: [1, 1.08, 1] }} transition={reduceMotion || !heroActive ? { duration: 0 } : { duration: 20, ease: "easeInOut", repeat: Infinity, repeatType: "reverse" }} aria-hidden="true">
-        <img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="eager" fetchPriority="high" decoding="async" onError={(event) => { event.currentTarget.style.opacity = "0"; }}/>
-      </motion.div>
-            <AnimatePresence initial={false} mode="wait">
-        {destinationArt[destination.id] && <motion.img key={destination.id} src={destinationArt[destination.id].src} alt="" aria-hidden="true" width="540" height="360" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }} className="welcome-destination-crossfade" initial={reduceMotion ? false : { opacity: 0 }} animate={{ opacity: 0.22 }} exit={{ opacity: 0 }} transition={{ duration: reduceMotion ? 0 : 0.4 }}/>}
-      </AnimatePresence>
-      <div className="welcome-hero-overlay" aria-hidden="true"/><div className="welcome-hero-glow" aria-hidden="true"/>
-      {!reduceMotion && <div className="welcome-fireflies" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <span key={index} style={{ "--firefly-index": index }}/>)}</div>}
-      <div className="welcome-hero-inner relative z-10 mx-auto grid max-w-6xl grid-cols-1 gap-7 px-5 py-7 sm:px-8 sm:py-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:gap-6 lg:px-10 lg:py-12 xl:px-12">
-        <div className="min-w-0 max-w-2xl">
-          <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-amber-200">A more personal way to explore</p>
-          <h1 className="mt-4 max-w-3xl font-display text-[clamp(2.8rem,6.4vw,6.2rem)] leading-[0.94] tracking-wide text-white">Find the places and stories that make a destination feel personal.</h1>
-          <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/85 sm:text-base">Discover neighbourhood details, local food and thoughtful experiences beyond the usual shortlist — at your own pace.</p>
-          <button type="button" onClick={onStart} className="btn-primary hero-shimmer mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl px-5 py-3 text-sm font-extrabold"><span>Start exploring</span><ArrowRight size={17}/></button>
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[10px] font-bold uppercase tracking-[0.13em] text-white/75"><span className="inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-teal-300"/>Personalized</span><span className="h-1 w-1 rounded-full bg-white/40"/><span>Locally inspired</span><span className="h-1 w-1 rounded-full bg-white/40"/><span>Rules-based plans</span></div>
-        </div>
-        <div className="destination-stack grid grid-cols-1 gap-3 sm:grid-cols-3 lg:mx-auto lg:flex lg:w-full lg:max-w-[25rem] lg:flex-col lg:gap-2.5">
-          {destinations.map((item, index) => { const art = destinationArt[item.id] || destinationArt.jaipur; return <ImageCard key={item.id} src={art.src} alt={art.alt} title={item.city} meta={item.country + " · " + item.primaryLanguages.slice(0, 2).join(" · ")} selected={destination.id === item.id} onClick={() => selectDestination(item.id)} className={index === 0 ? "destination-card-top" : index === 1 ? "destination-card-middle" : "destination-card-bottom"}/>; })}
+      <div className="flex items-center gap-3">
+        <IconBadge icon={Compass} tone="teal" size="lg" />
+        <div>
+          <p className="font-display text-3xl leading-none">Atithi AI</p>
+          <p className="mt-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-muted">Travel planning for Jaipur, Ubud and Lisbon</p>
         </div>
       </div>
-    </motion.section>
-    <section className="mx-auto mt-7 max-w-6xl rounded-3xl border border-white/10 bg-surface/70 px-4 py-5 shadow-glass backdrop-blur-xl sm:mt-8 sm:px-7 sm:py-6">
-      <SectionTitle eyebrow="A little magic, made practical" title="How it works" description="From your preferences to a day that feels like yours."/>
-      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">{steps.map(({ icon: StepIcon, title, description }, index) => <motion.article key={title} initial={reduceMotion ? false : { opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: reduceMotion ? 0 : index * 0.06 }} className="glass-card rounded-2xl p-4 sm:p-5"><IconBadge icon={StepIcon} tone={index === 0 ? "gold" : index === 1 ? "coral" : "teal"} size="md"/><h2 className="mt-3 font-serif text-xl">{title}</h2><p className="mt-1 text-sm leading-relaxed text-muted">{description}</p></motion.article>)}</div>
+      <ThemeToggle compact />
+    </header>
+
+    <section className="welcome-hero relative mx-auto mt-4 max-w-6xl overflow-hidden border border-border px-5 py-7 sm:mt-6 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+      <div className="welcome-hero-inner mx-auto grid max-w-6xl grid-cols-1 gap-7 lg:grid-cols-[1.1fr_.9fr] lg:items-center lg:gap-10">
+        <div className="min-w-0 max-w-2xl">
+          <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-accent-text">Jaipur, Ubud and Lisbon</p>
+          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-tight sm:text-5xl lg:text-6xl">Plan a day around local places, food and experiences.</h1>
+          <p className="mt-5 max-w-xl text-sm leading-relaxed text-muted sm:text-base">Choose a destination, compare suggestions using your interests, budget, pace and time, then edit your day plan before you head out.</p>
+          <button type="button" onClick={onStart} className="btn-primary mt-7 inline-flex min-h-11 items-center gap-2 px-5 py-3 text-sm font-bold">
+            <span>Choose a destination</span><ArrowRight size={17} aria-hidden="true" />
+          </button>
+          <p className="mt-4 max-w-xl text-xs leading-relaxed text-muted">Place details and spend estimates are illustrative. Confirm opening times, access, prices and safety locally.</p>
+        </div>
+        <div className="destination-stack grid grid-cols-1 gap-3 sm:grid-cols-3 lg:flex lg:w-full lg:flex-col lg:gap-2.5">
+          {destinations.map((item) => (
+            <ImageCard
+              key={item.id}
+              title={item.city}
+              meta={item.country + " · " + item.primaryLanguages.slice(0, 2).join(" · ")}
+              selected={destination.id === item.id}
+              onClick={() => selectDestination(item.id)}
+            />
+          ))}
+        </div>
+      </div>
     </section>
-    <footer className="mx-auto flex max-w-6xl flex-col gap-2 px-2 pb-5 pt-5 text-[10px] leading-relaxed text-muted sm:flex-row sm:items-center sm:justify-between"><p>Built by TeamBTC</p><p><span className="demo-badge">Demo content</span> Place details, stories and spend ranges are AI-assisted examples. Confirm details locally. Only weather is live.</p></footer>
+
+    <section className="mx-auto mt-7 max-w-6xl border border-border bg-surface px-4 py-5 sm:mt-8 sm:px-7 sm:py-6">
+      <SectionTitle eyebrow="Three steps" title="How it works" description="Start with a destination, set your priorities and make the final choices yourself." />
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {steps.map(({ icon: StepIcon, title, description }, index) => (
+          <article key={title} className="glass-card border border-border p-4 sm:p-5">
+            <IconBadge icon={StepIcon} tone={index === 0 ? "teal" : index === 1 ? "gold" : "coral"} size="md" />
+            <h2 className="mt-3 font-serif text-xl">{title}</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">{description}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <footer className="mx-auto flex max-w-6xl flex-col gap-3 px-2 pb-5 pt-5 text-xs leading-relaxed text-muted sm:flex-row sm:items-start sm:justify-between">
+      <p>Built by Team BTC</p>
+      <p className="max-w-2xl">Prototype information is not independently verified. Weather is provided by Open-Meteo when available. The app does not book or confirm services.</p>
+      <nav aria-label="Legal" className="flex shrink-0 gap-4">
+        <a className="underline underline-offset-4" href="/privacy">Privacy</a>
+        <a className="underline underline-offset-4" href="/terms">Terms</a>
+      </nav>
+    </footer>
   </main>;
 }
 function fallbackIntent(text, currencySymbol = "") {
@@ -483,7 +491,7 @@ function ChatView({ destination, weather, profile, chatMessages, addChatMessage,
       {providerStatus.source === "checking"
         ? "Checking live Gemini response…"
         : providerStatus.source === "gemini"
-          ? "Gemini connected — this reply was generated by Gemini."
+          ? "Gemini connected  -  this reply was generated by Gemini."
           : <><strong>Local fallback active:</strong> {chatFallbackMessage(providerStatus.reason)}</>}
     </div>}
     <div className="mt-4 max-h-[min(62vh,640px)] space-y-3 overflow-y-auto rounded-2xl bg-bg p-3" aria-live="polite">
@@ -506,15 +514,12 @@ export default function AtithiAI() {
   const { destination, destinations, selectDestination, weather, weatherLoading, weatherError, formatCurrency, formatNumber, emergencyNumber } = useDestination();
   const { itinerary, addItineraryStop, addItineraryItem, removeItineraryStop, clearItinerary, requests, addRequest, chatMessages, addChatMessage } = useTravelContext();
   const { profile } = useProfile();
-  const prefersReducedMotion = useReducedMotion();
-  const [reduceEffects] = useReducedEffects();
-  const disableMotion = prefersReducedMotion || reduceEffects;
   const [started, setStarted] = useState(readStarted);
   const [activeTab, setActiveTab] = useState("home");
   const [chatPrefill, setChatPrefill] = useState("");
   const [mapFocusId, setMapFocusId] = useState(null);
 
-  useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);
+  useEffect(() => { document.title = "Atithi AI | Travel planning for Jaipur, Ubud and Lisbon"; }, []);
   useEffect(() => { document.documentElement.setAttribute("data-destination", destination.id); }, [destination.id]);
   useEffect(() => {
     const openChat = (event) => {
@@ -562,20 +567,20 @@ export default function AtithiAI() {
     <DemoModeBar/>
     <header className="app-header-safe safe-sticky-header sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 shadow-sm sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Go beyond the usual</span></span></button>
+        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Travel planning for Jaipur, Ubud and Lisbon</span></span></button>
         <div className="flex items-center gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-32 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-bold sm:max-w-48">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact/><a href={"tel:" + emergencyNumber} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-border px-2 py-2 text-xs font-extrabold text-text" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
       </div>
     </header>
 
     <div className="app-content mx-auto max-w-6xl space-y-5 px-4 py-5 sm:px-6 sm:py-7">
-      <AnimatePresence mode="wait" initial={false}><motion.div key={activeTab} initial={disableMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={disableMotion ? undefined : { opacity: 0, y: -5 }} transition={{ duration: disableMotion ? 0 : 0.25 }}><Suspense fallback={<Skeleton label="Loading this section…" lines={3}/>}>
+      <div key={activeTab}><Suspense fallback={<Skeleton label="Loading this section…" lines={3}/>}>
       {activeTab === "home" && <div className="space-y-5">
-        <section className="app-home-hero pitch-hero relative overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-8" style={{ "--destination-accent": destination.themeColors.accent }}>
-          <div className="app-home-art" aria-hidden="true"><img src="/images/hero-bg.webp" alt="" width="680" height="379" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.style.display = "none"; }}/></div><div className="relative z-10">
-          <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/75">{destination.city} · {destination.country}</p>
-          <h1 className="deck-heading mt-3 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">{destination.greeting}</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/80">A personalised travel companion for hidden places, local stories and experiences that make a destination feel personal.</p>
-          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold">Discover the unexpected <ArrowRight size={16}/></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold text-white">Build my day</button></div></div>
+        <section className="app-home-hero pitch-hero relative overflow-hidden rounded-xl border border-border p-5 sm:p-8">
+          <div className="relative z-10">
+          <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent-text">{destination.city} · {destination.country}</p>
+          <h1 className="mt-3 max-w-3xl font-display text-4xl leading-tight sm:text-5xl">Explore {destination.city} at your own pace.</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">Browse local places, dishes and experiences. Build a day plan from your interests, budget and available time.</p>
+          <div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={() => setActiveTab("discover")} className="btn-primary inline-flex min-h-11 items-center gap-2 px-4 py-2 text-sm font-bold">Browse places <ArrowRight size={16} aria-hidden="true" /></button><button type="button" onClick={buildPlan} className="inline-flex min-h-11 items-center gap-2 border border-border bg-surface px-4 py-2 text-sm font-bold text-text">Build my day</button></div></div>
         </section>
         <WeatherPanel destination={destination} weather={weather} loading={weatherLoading} error={weatherError} formatNumber={formatNumber}/>
         <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="deck-heading font-serif text-2xl">A few places to begin</h2><p className="mt-1 text-xs text-muted">A changing mix of well-known landmarks and quieter corners.</p></div><button type="button" onClick={() => setActiveTab("discover")} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold">All places <ArrowRight size={14}/></button></div>
@@ -603,12 +608,25 @@ export default function AtithiAI() {
       {activeTab === "lens" && <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><LensTab onRequest={(request)=>addRequest({title:request.title,category:request.category,detail:request.detail})}/></section>}
       {activeTab === "chat" && <ChatView key={destination.id} destination={destination} weather={weather} profile={rankProfile} chatMessages={chatMessages} addChatMessage={addChatMessage} addRequest={addRequest} addItineraryItem={addItineraryItem} onShowOnMap={showOnMap} initialPrompt={chatPrefill} onPrefillConsumed={() => setChatPrefill("")}/>}
       {activeTab === "profile" && <ProfileTab destination={destination} destinations={destinations} selectDestination={selectDestination} requests={requests} formatDate={formatDate}/> }
-      </Suspense></motion.div></AnimatePresence>
+      </Suspense></div>
     </div>
 
-    <footer className="app-footer mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 pb-24 pt-3 text-[10px] text-muted"><span>Built by TeamBTC</span><span className="demo-badge">Demo content</span></footer>
+    <footer className="app-footer mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 pb-24 pt-3 text-xs text-muted"><span>Built by Team BTC</span><span>Prototype content. Verify local details before travel.</span><nav aria-label="Legal" className="flex gap-4"><a className="underline underline-offset-4" href="/privacy">Privacy</a><a className="underline underline-offset-4" href="/terms">Terms</a></nav></footer>
     <nav aria-label="Main navigation" className="bottom-nav-glass">
-       <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-0.5">{TABS.map(({id,label,Icon})=><motion.button key={id} type="button" whileTap={disableMotion ? undefined : reduceMotionSafeTap} onClick={()=>setActiveTab(id)} aria-current={activeTab===id?"page":undefined} className={"bottom-nav-item relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0.5 py-1 text-[9px] font-semibold sm:text-[10px] "+(activeTab===id?"text-text":"text-muted")}><span className="relative z-10 flex flex-col items-center justify-center gap-1">{activeTab===id&&<motion.span layoutId="active-nav-pill" className="nav-active-pill absolute inset-x-0 -inset-y-0.5 rounded-xl bg-brand/15 ring-1 ring-accent/20" transition={{ type:"spring", stiffness:420, damping:32 }}/>}<motion.span className="relative z-10" animate={activeTab===id&&!disableMotion?{y:[0,-2,0]}:{y:0}} transition={{duration:disableMotion?0:0.28}}><Icon size={18}/></motion.span><span className="bottom-nav-label relative z-10 max-w-full truncate">{label}</span></span></motion.button>)}</div>
-     </nav>
+      <div className="mx-auto flex max-w-3xl items-stretch justify-around gap-1">
+        {TABS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setActiveTab(id)}
+            aria-current={activeTab === id ? "page" : undefined}
+            className={"bottom-nav-item flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold " + (activeTab === id ? "text-text" : "text-muted")}
+          >
+            <Icon size={18} aria-hidden="true" />
+            <span className="bottom-nav-label max-w-full truncate">{label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
   </main>;
 }

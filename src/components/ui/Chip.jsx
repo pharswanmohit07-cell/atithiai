@@ -3,7 +3,7 @@ import React from "react";
 const TONES = {
   gold: "border-amber-300/30 bg-amber-300/10 text-amber-800 dark:text-amber-200",
   coral: "border-rose-300/30 bg-rose-300/10 text-rose-800 dark:text-rose-200",
-  violet: "border-violet-300/30 bg-violet-300/10 text-violet-800 dark:text-violet-200",
+  violet: "border-teal-300/40 bg-teal-50 text-teal-900 dark:border-teal-700 dark:bg-teal-950 dark:text-teal-100",
   teal: "border-teal-300/30 bg-teal-300/10 text-teal-800 dark:text-teal-200",
   sky: "border-sky-300/30 bg-sky-300/10 text-sky-800 dark:text-sky-200",
   emerald: "border-emerald-300/30 bg-emerald-300/10 text-emerald-800 dark:text-emerald-200"

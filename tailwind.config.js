@@ -5,10 +5,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Barlow", "sans-serif"],
-        serif: ["Barlow Condensed", "sans-serif"],
-        accent: ["Fraunces", "Georgia", "serif"],
-        display: ["Bebas Neue", "Barlow Condensed", "sans-serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        serif: ["Georgia", "serif"],
+        accent: ["Georgia", "serif"],
+        display: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
         bg: "rgb(var(--bg-rgb) / <alpha-value>)",
@@ -26,16 +26,7 @@ export default {
         "accent-text": "rgb(var(--accent-text-rgb) / <alpha-value>)",
         "destination-accent": "rgb(var(--destination-accent-rgb) / <alpha-value>)",
       },
-      backgroundImage: {
-        "sunrise": "linear-gradient(120deg, rgb(var(--brand-rgb)) 0%, rgb(var(--indigo-rgb)) 58%, rgb(var(--coral-rgb)) 120%)",
-        "sunrise-warm": "linear-gradient(120deg, rgb(var(--amber-rgb)) 0%, rgb(var(--coral-rgb)) 100%)",
-        "destination-haze": "radial-gradient(ellipse at 10% 0%, rgb(var(--amber-rgb) / 0.18), transparent 38%), radial-gradient(ellipse at 90% 35%, rgb(var(--teal-rgb) / 0.18), transparent 42%)",
-      },
-      boxShadow: {
-        glow: "0 10px 28px rgb(var(--brand-rgb) / 0.22)",
-        "glow-amber": "0 8px 24px rgb(var(--amber-rgb) / 0.25)",
-        glass: "0 16px 40px rgb(11 29 43 / 0.18)",
-      },
+      boxShadow: { glass: "0 2px 12px rgb(0 0 0 / 0.06)" },
       minHeight: { touch: "44px" },
       minWidth: { touch: "44px" },
       borderRadius: { "4xl": "2rem" },
