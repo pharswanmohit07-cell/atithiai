@@ -59,7 +59,7 @@ const HOTEL_DRAFTS = {
   },
   fr: {
     early: (time) => "Bonjour, serait-il possible d’arriver et de faire l’enregistrement à " + time + ", et y aurait-il des frais ? Merci beaucoup.",
-    late: (time) => "Bonjour, serait-il possible de quitter la chambre plus tard, jusqu’à " + time +, " et y aurait-il des frais ? Merci beaucoup."
+    late: (time) => "Bonjour, serait-il possible de quitter la chambre plus tard, jusqu’à " + time + " et y aurait-il des frais ? Merci beaucoup."
   },
   pt: {
     early: (time) => "Olá, seria possível fazer o check-in antecipado às " + time + " e haveria alguma taxa? Muito obrigado/a.",
