@@ -531,8 +531,12 @@ export default function AtithiAI() {
 
   useEffect(() => { document.title = "Atithi AI | Travel planning for Jaipur, Ubud and Lisbon"; }, []);
   useEffect(() => {
-    const isEditableField = (target) => target instanceof HTMLElement
-      && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+    const isEditableField = (target) => {
+      if (!(target instanceof HTMLElement)) return false;
+      if (target.tagName === "TEXTAREA") return true;
+      if (target.tagName !== "INPUT") return false;
+      return !/^(button|submit|reset|checkbox|radio|range|file|color|hidden)$/i.test(target.type);
+    };
     const onFocusIn = (event) => {
       if (isEditableField(event.target)) document.documentElement.classList.add("keyboard-open");
     };
