@@ -6,7 +6,7 @@
 >
 > **Launch status: not ready.** An owner-controlled custom domain must be connected and the updated production deployment must be verified before launch.
 >
-> **Build checks:** GitHub Actions runs source checks, the optional image audit, and the production build on pushes to `main` and pull requests.
+> **Build checks:** GitHub Actions runs source checks, the required site icon check, and the production build on pushes to `main` and pull requests.
 
 Atithi AI is a personalized travel companion for the hidden places, local stories and experiences that make a destination feel personal. It helps travelers explore beyond the usual, save ideas, assemble a flexible day plan, ask questions in their language, and translate signs or menus with Atithi Lens.
 
