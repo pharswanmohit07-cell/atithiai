@@ -173,11 +173,24 @@ try {
   await page.getByRole("dialog").getByRole("button", { name: /Draft a message to my hotel front desk/i }).click();
   await page.getByRole("dialog").getByText(/does not send this or contact anyone/i).waitFor({ state: "visible" });
   await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Talk to a person", exact: true }).click();
+  await page.getByRole("button", { name: /Suggest a correction or hidden gem for our local curators/i }).click();
+  await page.getByLabel("Place name").fill("A local courtyard");
+  await page.getByLabel("Area / neighbourhood").fill("Old city");
+  await page.getByLabel("Why is it special?").fill("A quiet place to pause between walks.");
+  await page.getByRole("button", { name: "Save suggestion locally", exact: true }).click();
+  await page.getByText("Thanks, a local curator would review this (demo).", { exact: true }).waitFor({ state: "visible" });
+  await assertHealthy(page, "feature-smoke", "Jaipur", "Curator suggestion");
 
   for (const route of ["about", "privacy", "terms"]) {
     await page.goto(baseUrl + "/" + route, { waitUntil: "domcontentloaded" });
     await page.getByRole("heading", { name: route === "about" ? "Real traveler needs we solve" : route === "privacy" ? "Privacy policy" : "Terms and conditions" }).waitFor({ state: "visible", timeout: 8000 });
-    await assertHealthy(page, "feature-smoke", "Jaipur", "/" + route);
+    for (const width of [320, 360, 390, 430, 768]) {
+      await page.setViewportSize({ width, height: 844 });
+      const hasOverflow = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) > window.innerWidth + 1);
+      assert.equal(hasOverflow, false, "/" + route + " has horizontal overflow at " + width + "px.");
+      await assertHealthy(page, "feature-smoke", "Jaipur", "/" + route + " at " + width + "px");
+    }
   }
 
   // Captured viewport screenshots are uploaded as a CI artifact for visual review.
