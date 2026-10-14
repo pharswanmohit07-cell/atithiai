@@ -15,9 +15,9 @@ function readStoredTheme() {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     return stored === "light" || stored === "dark" || stored === "system"
       ? stored
-      : "dark";
+      : "light";
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
@@ -58,7 +58,7 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     root.classList.toggle("dark", resolvedTheme === "dark");
     root.style.colorScheme = resolvedTheme;
-    const themeColor = resolvedTheme === "dark" ? "#1A0B2E" : "#FFF8EC";
+    const themeColor = resolvedTheme === "dark" ? "#18231F" : "#F7F6F1";
     const metas = Array.from(document.querySelectorAll('meta[name="theme-color"]'));
     const meta = metas[0] || document.createElement("meta");
     if (!metas.length) {
