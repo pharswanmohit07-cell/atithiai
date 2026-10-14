@@ -256,3 +256,11 @@ button:active, [role="button"]:active { transform: none !important; }
 .pitch-hero [class~="text-white/80"] {
   color: var(--text-muted) !important;
 }
+
+/* Keep actions within the same forest-green palette, including legacy inline colors. */
+#root button[style*="background-color"] {
+  background-color: var(--brand) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+.dark #root button[style*="background-color"] { color: #18231f !important; }
