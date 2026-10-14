@@ -270,6 +270,20 @@ export default function DiscoverTab({
 
     {mapSection}
 
+    {Array.isArray(destination.phrases) && destination.phrases.length > 0 && <section className="rounded-xl border border-border bg-surface p-4 sm:p-5" aria-labelledby="local-phrases-title">
+      <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted">{destination.phraseLanguage || "Local language"}</p>
+      <h2 id="local-phrases-title" className="mt-1 font-serif text-2xl">Say it like a local</h2>
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        {destination.phrases.slice(0,5).map((phrase) => <article key={phrase.english} className="min-w-0 border border-border bg-bg p-3">
+          <p className="text-xs text-muted">{phrase.english}</p>
+          <p className="mt-1 text-base font-bold">{phrase.local}</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted">Say: {phrase.pronunciation}</p>
+        </article>)}
+      </div>
+      <p className="mt-2 text-[10px] text-muted">Basic language help only. Phrase translations and pronunciation need native-speaker review before publication.</p>
+    </section>}
+
+
     {segment === "hidden" && <section className="space-y-4">
       <div className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="font-serif text-2xl">Hidden gems and familiar landmarks</h2><p className="mt-1 text-xs text-muted">Sorted by your profile, interests, pace and current conditions.</p></div><Badge accent={{ color: destination.themeColors.accent, soft: destination.themeColors.accentSoft }}>{rankedPlaces.length} matches</Badge></div>
@@ -321,6 +335,7 @@ export default function DiscoverTab({
           <p className="mt-3 text-sm font-extrabold">{money(experience.priceLocal, destination)} <span className="text-[10px] font-normal text-muted">· illustrative local-currency price</span></p>
           {reasonChips(experience)}
           <div className="mt-auto flex flex-wrap gap-2 pt-4"><SavedExperience saved={saved} onSave={() => toggleSavedExperience(experience.id)}/><button type="button" onClick={() => togglePlanItem(experience, "experience")} className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-bold text-white disabled:opacity-60">{inPlan ? <Check size={14}/> : <Plus size={14}/>} {inPlan ? "Remove from plan" : "Add to plan"}</button></div>
+          <button type="button" onClick={() => { const language = DRAFT_LANGUAGES.some((item) => item.value === profile?.languages?.[0]) ? profile.languages[0] : "en"; setHostDraft({ experience, language, message: buildHumanDraft({ kind: "host", hostName: experience.hostName, experienceTitle: experience.title, destinationCity: destination.city, language }) }); }} className="mt-2 inline-flex min-h-11 items-center justify-center gap-2 border border-border bg-surface-2 px-3 py-2 text-xs font-bold">Ask the host</button>
           <button type="button" disabled={requested} onClick={() => saveExperienceRequest(experience)} className="mt-2 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-bold disabled:opacity-60">{requested ? <Check size={14}/> : <Send size={14}/>} {requested ? "Request saved (demo)" : "Request via host (demo)"}</button>
         </article>;
       })}</div>
