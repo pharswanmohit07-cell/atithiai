@@ -612,15 +612,15 @@ export default function PlanTab() {
   const hasNoBudgetAmount = budget == null;
 
   return <section className="space-y-4">
-    <header className="pitch-hero overflow-hidden rounded-3xl p-5 text-white shadow-2xl sm:p-7" style={{ "--destination-accent": destination.themeColors.accent }}>
-      <div className="flex items-center gap-3"><IconBadge icon={CalendarDays} tone="gold"/><div><p className="text-xs font-extrabold uppercase tracking-[0.18em] text-white/70">Your personal plan · {destination.city}</p><h1 className="deck-heading mt-1 font-display text-4xl">A day with space to wander.</h1></div></div>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/80">A rules-based day plan that adapts to your travel pace, preferences and destination weather. Nothing is booked.</p>
+    <header className="pitch-hero overflow-hidden rounded-xl border border-border p-5 sm:p-7">
+      <div className="flex items-center gap-3"><IconBadge icon={CalendarDays} tone="gold"/><div><p className="text-xs font-extrabold uppercase tracking-[0.14em] text-accent-text">Plan · {destination.city}</p><h1 className="mt-1 font-display text-3xl sm:text-4xl">Build your day, stop by stop.</h1></div></div>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Create an editable route using your pace, preferences, time and available weather data. Nothing is booked.</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={generatePlan} className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm font-extrabold"><Sparkles size={16}/>Plan my day</button>
-        <button type="button" onClick={shareDay} disabled={!itinerary.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold disabled:opacity-50"><Share2 size={15}/>Share my day</button>
-        <button type="button" onClick={resetPlan} disabled={!itinerary.length && !changeLog.length && !activeDisruption} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/35 bg-white/10 px-4 py-2 text-sm font-bold disabled:opacity-50"><RotateCcw size={15}/>Reset plan</button>
+        <button type="button" onClick={shareDay} disabled={!itinerary.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-bold disabled:opacity-50"><Share2 size={15}/>Share my day</button>
+        <button type="button" onClick={resetPlan} disabled={!itinerary.length && !changeLog.length && !activeDisruption} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-surface-2 px-4 py-2 text-sm font-bold disabled:opacity-50"><RotateCcw size={15}/>Reset plan</button>
       </div>
-      {shareMessage && <p role="status" className="mt-3 text-xs text-white/90">{shareMessage}</p>}
+      {shareMessage && <p role="status" className="mt-3 text-xs text-text">{shareMessage}</p>}
     </header>
 
     <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
@@ -666,7 +666,7 @@ export default function PlanTab() {
             </div>
           </article>
         </li>;
-      })}</ol> : <div className="empty-image-fallback mt-4 rounded-2xl border border-dashed border-border p-6 text-center sm:p-8"><CalendarDaysFallback/><h3 className="mt-3 font-serif text-2xl">Your plan starts with curiosity.</h3><p className="mt-2 text-sm text-muted">Generate a one-day route, or add a place, dish or experience from Discover.</p><button type="button" onClick={generatePlan} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white"><Sparkles size={15}/>Plan my day</button></div>}
+      })}</ol> : <div className="empty-image-fallback mt-4 rounded-2xl border border-dashed border-border p-6 text-center sm:p-8"><CalendarDaysFallback/><h3 className="mt-3 font-serif text-2xl">No stops saved yet.</h3><p className="mt-2 text-sm text-muted">Generate a one-day route, or add a place, dish or experience from Discover.</p><button type="button" onClick={generatePlan} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand px-4 py-2 text-sm font-bold text-white"><Sparkles size={15}/>Plan my day</button></div>}
       <p className="mt-4 text-[10px] leading-relaxed text-muted">All place stories, prices and crowd levels are demo pack estimates. Travel times use straight-line distance at 20 km/h and are not road routes or traffic predictions.</p>
     </section>
 
