@@ -4,8 +4,6 @@ import {
   Languages, MapPin, MessageCircle, Plus, Send, ShieldAlert,
   Sparkles, Sun, Users, X
 } from "lucide-react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { useReducedEffects } from "./lib/reducedEffects.js";
 import ThemeToggle from "./components/ui/ThemeToggle.jsx";
 import IconBadge from "./components/ui/IconBadge.jsx";
 import ImageCard from "./components/ui/ImageCard.jsx";
@@ -118,7 +116,7 @@ function PlaceCard({ place, destination, formatCurrency, inPlan, onAdd, onRemove
   const [saved, setSaved] = useState(false);
   const [toast, setToast] = useState("");
   return (
-    <motion.article layout className="flex min-w-0 flex-col rounded-2xl border border-border bg-bg p-4 transition-colors hover:bg-surface-2/50">
+    <article className="flex min-w-0 flex-col rounded-xl border border-border bg-bg p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-surface-2 px-2.5 py-1 text-[10px] font-bold">{CATEGORY_LABELS[place.category] || niceWord(place.category)}</span>
         {place.isHiddenGem && <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ backgroundColor: destination.themeColors.accentSoft, color: destination.themeColors.accent }}><Sparkles size={11}/>Hidden-place pick</span>}
@@ -138,7 +136,7 @@ function PlaceCard({ place, destination, formatCurrency, inPlan, onAdd, onRemove
       </div>
       <DemoNote />
       <Toast message={toast} onDismiss={() => setToast("")} />
-    </motion.article>
+    </article>
   );
 }
 
@@ -516,15 +514,12 @@ export default function AtithiAI() {
   const { destination, destinations, selectDestination, weather, weatherLoading, weatherError, formatCurrency, formatNumber, emergencyNumber } = useDestination();
   const { itinerary, addItineraryStop, addItineraryItem, removeItineraryStop, clearItinerary, requests, addRequest, chatMessages, addChatMessage } = useTravelContext();
   const { profile } = useProfile();
-  const prefersReducedMotion = useReducedMotion();
-  const [reduceEffects] = useReducedEffects();
-  const disableMotion = prefersReducedMotion || reduceEffects;
   const [started, setStarted] = useState(readStarted);
   const [activeTab, setActiveTab] = useState("home");
   const [chatPrefill, setChatPrefill] = useState("");
   const [mapFocusId, setMapFocusId] = useState(null);
 
-  useEffect(() => { document.title = "Atithi AI · Go beyond the usual"; }, []);
+  useEffect(() => { document.title = "Atithi AI | Travel planning for Jaipur, Ubud and Lisbon"; }, []);
   useEffect(() => { document.documentElement.setAttribute("data-destination", destination.id); }, [destination.id]);
   useEffect(() => {
     const openChat = (event) => {
@@ -572,7 +567,7 @@ export default function AtithiAI() {
     <DemoModeBar/>
     <header className="app-header-safe safe-sticky-header sticky top-0 z-40 border-b border-border bg-surface/95 px-4 py-3 shadow-sm sm:px-6">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Go beyond the usual</span></span></button>
+        <button type="button" onClick={() => setActiveTab("home")} className="flex min-w-0 items-center gap-3 text-left"><IconBadge icon={Compass} tone="violet" /><span className="min-w-0"><span className="block truncate font-display text-2xl leading-none">Atithi AI</span><span className="mt-1 block truncate text-[9px] font-extrabold uppercase tracking-[0.16em] text-muted">Plan. Explore. Translate.</span></span></button>
         <div className="flex items-center gap-2"><label className="sr-only" htmlFor="header-destination">Choose destination</label><select id="header-destination" value={destination.id} onChange={(event) => selectDestination(event.target.value)} className="min-h-10 max-w-32 rounded-xl border border-border bg-bg px-2 py-2 text-xs font-bold sm:max-w-48">{destinations.map((item) => <option key={item.id} value={item.id}>{item.city}, {item.country}</option>)}</select><ThemeToggle compact/><a href={"tel:" + emergencyNumber} className="inline-flex min-h-10 items-center gap-1 rounded-xl border border-border px-2 py-2 text-xs font-extrabold text-text" aria-label={"Call local emergency number " + emergencyNumber}><ShieldAlert size={15}/><span className="hidden sm:inline">SOS</span></a></div>
       </div>
     </header>
