@@ -110,8 +110,22 @@ try {
         for (const width of [320, 360, 390, 430, 768]) {
           await page.setViewportSize({ width, height: 844 });
           await page.waitForTimeout(30);
-          const overflow = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) > window.innerWidth + 1);
-          assert.equal(overflow, false, scenario + "/" + destination.id + "/" + tab + " has horizontal overflow at " + width + "px.");
+          const overflow = await page.evaluate(() => {
+            const offenders = [...document.querySelectorAll("body *")].filter((element) => {
+              const rect = element.getBoundingClientRect();
+              return rect.width > 0 && (rect.right > window.innerWidth + 1 || rect.left < -1);
+            }).slice(0, 8).map((element) => {
+              const rect = element.getBoundingClientRect();
+              return { tag: element.tagName, id: element.id, className: String(element.className || "").slice(0, 100), left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width) };
+            });
+            return {
+              horizontal: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) > window.innerWidth + 1,
+              rootScrollWidth: document.documentElement.scrollWidth,
+              bodyScrollWidth: document.body.scrollWidth,
+              offenders
+            };
+          });
+          assert.equal(overflow.horizontal, false, scenario + "/" + destination.id + "/" + tab + " has horizontal overflow at " + width + "px: " + JSON.stringify(overflow));
           await assertHealthy(page, scenario, destination.city, tab + " at " + width + "px");
         }
       }
