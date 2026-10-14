@@ -8,7 +8,9 @@
     "build": "npm run lint && vite build",
     "lint": "node scripts/lint.mjs && eslint . --ext .js,.jsx,.mjs",
     "preview": "vite preview",
-    "check:images": "node scripts/check-images.mjs"
+    "check:images": "node scripts/check-images.mjs",
+    "test:lib": "node scripts/test-flex-stay.mjs",
+    "test:runtime": "node scripts/runtime-smoke.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.11.9",
