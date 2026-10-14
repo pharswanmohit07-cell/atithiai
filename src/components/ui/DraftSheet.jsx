@@ -65,7 +65,7 @@ export default function DraftSheet({
       document.body.style.touchAction = previousTouchAction;
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
   const safeMessage = String(message || "").slice(0, 500);
   const copy = async () => {
