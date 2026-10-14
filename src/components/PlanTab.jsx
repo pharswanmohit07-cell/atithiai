@@ -11,6 +11,7 @@ import { useTravelContext } from "../context/TravelContext.jsx";
 import DemoControls from "./DemoControls.jsx";
 import { demoFetch } from "../lib/demoCache.js";
 import IconBadge from "./ui/IconBadge.jsx";
+import FlexStayPlanner from "./FlexStayPlanner.jsx";
 
 const FLOW = [
   { id: "planned", label: "Planned route" },
@@ -345,6 +346,67 @@ export default function PlanTab() {
     });
   }, [targetCount, pace, budget, destination, profile, weather, setItinerary, setActiveDisruption, addPlanLog]);
 
+  const planAroundGap = useCallback(({ kind, gapMinutes }) => {
+    const freeMinutes = Math.max(15, Math.min(1440, Math.round(Number(gapMinutes) || 0)));
+    if (!freeMinutes) return;
+    const timeOfDay = kind === "early" ? "morning" : "afternoon";
+    const weatherText = String(weather?.kind || weather?.condition || "").toLowerCase();
+    const rainyOrStormy = /rain|storm|drizzle|shower/.test(weatherText);
+    const hot = Number(weather?.feelsLikeC ?? weather?.temperatureC) >= 35;
+    const weatherNeedsCare = rainyOrStormy || hot;
+    const rankContext = { weather, timeOfDay, freeMinutes };
+    const ranked = [
+      ...rankPlaces(destination.places, plannerProfile, { avoidCrowds: profile?.avoidCrowds === true }, rankContext).map((item) => ({ item, kind: "place" })),
+      ...rankExperiences(destination.experiences, plannerProfile, {}, rankContext).map((item) => ({ item, kind: "experience" })),
+      ...rankDishes(destination.dishes, plannerProfile, { diet: profile?.diet || "none", maxSpiceLevel: profile?.spiceTolerance || 2 }, rankContext).map((item) => ({ item, kind: "dish" }))
+    ].map((candidate) => {
+      const item = candidate.item;
+      const duration = Math.max(10, Number(item.durationMin) || (candidate.kind === "dish" ? 30 : 45));
+      const anchor = candidate.kind === "place" ? item : anchorPlace(destination, item, null);
+      const distance = distanceKm(
+        { lat: destination.lat, lon: destination.lon },
+        anchor
+      );
+      const lowEffortBonus = duration <= Math.min(60, freeMinutes / 2) ? 3 : 0;
+      const weatherBonus = weatherNeedsCare && (item.indoor === true || item.rainFriendly === true || item.shaded === true) ? 5 : 0;
+      return { ...candidate, duration, distance: distance ?? Number.POSITIVE_INFINITY, priority: (Number(item.score) || 0) + lowEffortBonus + weatherBonus };
+    }).filter((candidate) => candidate.duration <= freeMinutes)
+      .filter((candidate) => !itinerary.some((stop) => stop.itemType === candidate.kind && (stop.itemId || stop.placeId) === candidate.item.id))
+      .sort((a, b) => b.priority - a.priority || a.distance - b.distance || a.duration - b.duration);
+
+    const windowName = kind === "early" ? "morning" : "afternoon";
+    const chosen = [];
+    let remainingMinutes = freeMinutes;
+    for (const candidate of ranked) {
+      if (chosen.length >= 2) break;
+      if (candidate.duration > remainingMinutes) continue;
+      const stop = toStop(candidate.item, candidate.kind, destination, windowName);
+      const reasons = [...(stop.reasons || [])];
+      if (candidate.duration <= Math.min(60, freeMinutes / 2)) reasons.unshift("Short stop selected for this time gap");
+      if (weatherNeedsCare && (candidate.item.indoor === true || candidate.item.rainFriendly === true || candidate.item.shaded === true)) reasons.unshift("Weather-friendly option prioritized");
+      stop.reasons = [...new Set(reasons)].slice(0, 6);
+      stop.note = [stop.note, "Suggested for an estimated " + freeMinutes + "-minute gap. Confirm local access and conditions."].filter(Boolean).join("\n\n");
+      chosen.push(stop);
+      remainingMinutes -= candidate.duration;
+    }
+    if (!chosen.length) {
+      addPlanLog({
+        type: "flex-stay",
+        message: "No pack item fit the " + freeMinutes + "-minute time gap.",
+        reason: "The existing deterministic ranking engine found no suitable short item under the current constraints."
+      });
+      return;
+    }
+    setItinerary(scheduleStops([...itinerary, ...chosen], pace));
+    setActiveDisruption(null);
+    setPhase("planned");
+    addPlanLog({
+      type: "flex-stay",
+      message: "Added " + chosen.length + " suggested stop(s) to the flexible-stay gap plan.",
+      reason: "Ranked from the current destination pack and profile; proximity uses approximate pack coordinates, not device location. No hotel was contacted."
+    });
+  }, [weather, destination, plannerProfile, profile, itinerary, pace, setItinerary, setActiveDisruption, addPlanLog]);
+
   const currentAffectedStop = useMemo(() => {
     if (!activeDisruption?.affectedStopIds?.length) return null;
     return itinerary.find((stop) => activeDisruption.affectedStopIds.includes(stop.id) && stop.status !== "Skipped") || null;
@@ -628,6 +690,8 @@ export default function PlanTab() {
       <ol className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">{FLOW.map((item, index) => <li key={item.id} aria-current={index === phaseIndex ? "step" : undefined} className={"flex min-h-14 items-center gap-2 rounded-xl border p-3 " + (index === phaseIndex ? "border-transparent bg-brand text-white" : "border-border bg-bg text-muted")}><span className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold " + (index === phaseIndex ? "bg-white/20" : "bg-surface-2")}>{index < phaseIndex ? <Check size={14}/> : index + 1}</span><span className="text-xs font-bold">{item.label}</span></li>)}</ol>
       {weatherError && <p className="mt-3 text-[10px] leading-relaxed text-muted">{weatherError} Weather-driven disruptions use only destination weather returned by Open-Meteo.</p>}
     </section>
+
+    <FlexStayPlanner destination={destination} profile={profile} onPlanAroundGap={planAroundGap}/>
 
     <DemoControls onSimulate={simulateDisruption}/>
 
