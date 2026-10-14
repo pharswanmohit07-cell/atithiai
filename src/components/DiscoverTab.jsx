@@ -8,7 +8,7 @@ import IconBadge from "./ui/IconBadge.jsx";
 import Chip from "./ui/Chip.jsx";
 import DraftSheet, { DRAFT_LANGUAGES } from "./ui/DraftSheet.jsx";
 import { buildHumanDraft } from "../lib/flexStay.js";
-import { readLocalSuggestions, saveLocalSuggestion } from "../lib/localSuggestions.js";
+import LocalSuggestionForm from "./LocalSuggestionForm.jsx";
 
 const SEGMENTS = [
   { id: "hidden", label: "Hidden Gems", icon: Sparkles },
@@ -90,16 +90,10 @@ export default function DiscoverTab({
   const [eatNow, setEatNow] = useState(false);
   const [savedExperiences, setSavedExperiences] = useState(() => readArray("atithi-saved-experiences:" + destination.id));
   const [expandedStories, setExpandedStories] = useState([]);
-  const [suggestionName, setSuggestionName] = useState("");
-  const [suggestionArea, setSuggestionArea] = useState("");
-  const [suggestionStory, setSuggestionStory] = useState("");
-  const [suggestionSaved, setSuggestionSaved] = useState(false);
   const [hostDraft, setHostDraft] = useState(null);
-  const [localSuggestions, setLocalSuggestions] = useState(() => readLocalSuggestions(destination.id));
 
   useEffect(() => {
     setSavedExperiences(readArray("atithi-saved-experiences:" + destination.id));
-    setLocalSuggestions(readLocalSuggestions(destination.id));
     setSuggestionSaved(false);
     setTasteBudget(profile?.dailyBudget?.currencyCode === destination.currency.code && profile?.dailyBudget?.amount != null ? String(profile.dailyBudget.amount) : "");
     setTasteDiet(profile?.diet || "none");
@@ -222,21 +216,6 @@ export default function DiscoverTab({
       ].join("\n")
     });
   };
-  const saveContributorSuggestion = (event) => {
-    event.preventDefault();
-    const result = saveLocalSuggestion(destination.id, {
-      name: suggestionName,
-      area: suggestionArea,
-      details: suggestionStory
-    });
-    if (!result.ok) return;
-    setLocalSuggestions(readLocalSuggestions(destination.id));
-    setSuggestionName("");
-    setSuggestionArea("");
-    setSuggestionStory("");
-    setSuggestionSaved(true);
-  };
-
   const isInPlan = (item, type) => hasPlanItem(item, type);
   const [DestinationMap, setDestinationMap] = useState(null);
   useEffect(() => {
@@ -306,17 +285,7 @@ export default function DiscoverTab({
       </div>
       {!rankedPlaces.length && <p className="rounded-2xl border border-dashed border-border bg-surface p-6 text-sm text-muted">No places fit these filters. Choose “All” or try another search.</p>}
 
-      <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
-        <div className="flex items-center gap-2"><Sparkles size={17} className="text-accent-text"/><h2 className="font-serif text-2xl">Suggest a hidden gem</h2></div>
-        <p className="mt-1 text-xs leading-relaxed text-muted">Share a place or local story for a possible future community-curation workflow. Suggestions are stored only on this device; no curator is contacted.</p>
-        <form onSubmit={saveContributorSuggestion} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="text-xs font-bold text-muted">Place name<input required maxLength={100} value={suggestionName} onChange={(event) => setSuggestionName(event.target.value)} className="mt-1 min-h-10 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm font-normal text-text"/></label>
-          <label className="text-xs font-bold text-muted">Area / neighbourhood<input required maxLength={120} value={suggestionArea} onChange={(event) => setSuggestionArea(event.target.value)} className="mt-1 min-h-10 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm font-normal text-text"/></label>
-          <label className="text-xs font-bold text-muted sm:col-span-2">Why is it special?<textarea required maxLength={700} rows={3} value={suggestionStory} onChange={(event) => setSuggestionStory(event.target.value)} className="mt-1 w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm font-normal text-text" placeholder="A personal detail, craft, view or local story…"/></label>
-          <div className="flex flex-wrap items-center gap-3 sm:col-span-2"><button type="submit" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-brand px-4 py-2 text-xs font-bold text-white"><Send size={14}/>Save suggestion locally</button>{suggestionSaved && <p role="status" className="text-xs font-semibold text-accent-text">Thanks, a local curator would review this (demo).</p>}</div>
-        </form>
-        {localSuggestions.length > 0 && <p className="mt-3 text-[10px] text-muted">{localSuggestions.length} suggestion{localSuggestions.length === 1 ? "" : "s"} saved on this device.</p>}
-      </section>
+      <LocalSuggestionForm key={destination.id} destinationId={destination.id}/>
     </section>}
 
     {segment === "experiences" && <section className="space-y-4">
