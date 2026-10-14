@@ -369,7 +369,9 @@ export default function PlanTab() {
       );
       const lowEffortBonus = duration <= Math.min(60, freeMinutes / 2) ? 3 : 0;
       const weatherBonus = weatherNeedsCare && (item.indoor === true || item.rainFriendly === true || item.shaded === true) ? 5 : 0;
-      return { ...candidate, duration, distance: distance ?? Number.POSITIVE_INFINITY, priority: (Number(item.score) || 0) + lowEffortBonus + weatherBonus };
+      // Destination-centre coordinates are approximate, not a hotel or device location.
+      const proximityBonus = distance == null ? 0 : distance <= 3 ? 4 : distance <= 8 ? 2 : 0;
+      return { ...candidate, duration, distance: distance ?? Number.POSITIVE_INFINITY, priority: (Number(item.score) || 0) + lowEffortBonus + weatherBonus + proximityBonus };
     }).filter((candidate) => candidate.duration <= freeMinutes)
       .filter((candidate) => !itinerary.some((stop) => stop.itemType === candidate.kind && (stop.itemId || stop.placeId) === candidate.item.id))
       .sort((a, b) => b.priority - a.priority || a.distance - b.distance || a.duration - b.duration);
@@ -383,6 +385,7 @@ export default function PlanTab() {
       const stop = toStop(candidate.item, candidate.kind, destination, windowName);
       const reasons = [...(stop.reasons || [])];
       if (candidate.duration <= Math.min(60, freeMinutes / 2)) reasons.unshift("Short stop selected for this time gap");
+      if (candidate.distance <= 3) reasons.unshift("Near the destination centre (approximate pack coordinates)");
       if (weatherNeedsCare && (candidate.item.indoor === true || candidate.item.rainFriendly === true || candidate.item.shaded === true)) reasons.unshift("Weather-friendly option prioritized");
       stop.reasons = [...new Set(reasons)].slice(0, 6);
       stop.note = [stop.note, "Suggested for an estimated " + freeMinutes + "-minute gap. Confirm local access and conditions."].filter(Boolean).join("\n\n");
